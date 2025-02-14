@@ -1,0 +1,21 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: earthTalk
+  datasource:
+    driver-class-name: org.mariadb.jdbc.Driver
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: update # 엔티티로 등록된 클래스와 매핑되는 테이블 자동 생성 주석해도 됩니다.
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
+        # 자바에서 카멜로 필드 작성하면 DB에 스네이크로 기록
+    properties:
+      hibernate:
+        show_sql: true
+        format_sql: true
