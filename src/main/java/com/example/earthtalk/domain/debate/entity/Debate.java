@@ -1,0 +1,68 @@
+package com.example.earthtalk.domain.debate.entity;
+
+import com.example.earthtalk.domain.news.entity.News;
+import com.example.earthtalk.domain.news.entity.MemberNumberType;
+import com.example.earthtalk.domain.news.entity.TimeType;
+import com.example.earthtalk.global.baseTime.BaseTimeEntity;
+import com.example.earthtalk.global.constant.ContinentType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import java.time.LocalDateTime;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
+@Entity(name = "debates")
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
+@Builder
+@Getter
+@EntityListeners(AuditingEntityListener.class)
+public class Debate extends BaseTimeEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "news_id")
+    private News news;
+
+    @Column(nullable = false)
+    private String title;
+
+    @Enumerated(EnumType.STRING)
+    private MemberNumberType member;
+
+    @Enumerated(EnumType.STRING)
+    private ContinentType continent;
+
+    @Enumerated(EnumType.STRING)
+    private CategoryType category;
+
+    @Enumerated(EnumType.STRING)
+    private TimeType time;
+
+    private LocalDateTime endTime;
+
+    @Column(nullable = false)
+    private boolean isEnd;
+
+    @Column(nullable = false)
+    private Long agreeNumber;
+
+    @Column(nullable = false)
+    private Long disagreeNumber;
+}
