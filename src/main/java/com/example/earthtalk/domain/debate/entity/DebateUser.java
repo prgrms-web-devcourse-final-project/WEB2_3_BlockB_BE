@@ -5,11 +5,14 @@ import com.example.earthtalk.global.baseTime.BaseTimeEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -37,6 +40,14 @@ public class DebateUser extends BaseTimeEntity {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private boolean flag; // 찬/반 여부
+    private FlagType position;// 찬/반 여부
+
+    @PrePersist
+    public void setDefaultPosition() {
+        if (this.position == null) {
+            this.position = FlagType.NO_POSITION;
+        }
+    }
 }

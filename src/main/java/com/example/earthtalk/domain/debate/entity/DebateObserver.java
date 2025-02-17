@@ -10,6 +10,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -38,6 +39,13 @@ public class DebateObserver extends BaseTimeEntity {
     private User user;
 
     @Column(nullable = false)
-    private boolean flag;
+    private FlagType position;
+
+    @PrePersist
+    public void setDefaultPosition() {
+        if (this.position == null) {
+            this.position = FlagType.NO_POSITION;
+        }
+    }
 
 }
