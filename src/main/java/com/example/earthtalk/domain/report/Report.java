@@ -44,12 +44,19 @@ public class Report extends BaseTimeEntity {
     private Long targetId;
 
     @Enumerated(EnumType.STRING)
-    private ReportType reportType;
+    @Column(nullable = false)
+    private TargetType targetType; // 신고 대상
 
     @Column(nullable = false)
-    private String content;
+    private String content; // 신고 내용
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ReportType reportType; // 신고 사유
 
     private String reportContent; // 신고 처리한 내용
+
+    private ResultType resultType; // 신고 처리 유형
 
     private LocalDateTime reportedAt;
 }

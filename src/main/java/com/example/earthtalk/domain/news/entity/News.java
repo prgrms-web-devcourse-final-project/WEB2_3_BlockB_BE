@@ -38,9 +38,19 @@ public class News extends BaseTimeEntity {
     @Column(nullable = false)
     private String link;
 
+    @Column(nullable = false)
+    private String imgUrl;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private NewsType newsType;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private ContinentType continent;
+
+    @Column(nullable = false)
+    private String deliveryTime; // 기사 작성일자
 
     private String country;
 }
