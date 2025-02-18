@@ -17,6 +17,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import java.time.LocalDateTime;
+
+import jakarta.persistence.PrePersist;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -58,11 +60,18 @@ public class Debate extends BaseTimeEntity {
     private LocalDateTime endTime;
 
     @Column(nullable = false)
-    private boolean isEnd;
+    private RoomType status;
 
     @Column(nullable = false)
     private Long agreeNumber;
 
     @Column(nullable = false)
     private Long disagreeNumber;
+
+    @PrePersist
+    public void setDefaultPosition() {
+        if (this.status == null) {
+            this.status = RoomType.WAITING;
+        }
+    }
 }
