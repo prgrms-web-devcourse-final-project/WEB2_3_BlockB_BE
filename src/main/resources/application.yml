@@ -8,7 +8,7 @@ spring:
     driver-class-name: org.mariadb.jdbc.Driver
     url: ${DB_URL}
     username: ${DB_USERNAME}
-    password: ${DB_PASSWD}
+    password: ${DB_PASSWORD}
   jpa:
     hibernate:
       ddl-auto: update # 엔티티로 등록된 클래스와 매핑되는 테이블 자동 생성 주석해도 됩니다.
