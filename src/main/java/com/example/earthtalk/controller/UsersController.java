@@ -4,6 +4,7 @@ import com.example.earthtalk.domain.news.entity.News;
 import com.example.earthtalk.domain.news.service.NewsService;
 import com.example.earthtalk.domain.user.entity.User;
 import com.example.earthtalk.domain.user.service.UserService;
+import com.example.earthtalk.domain.user.userDto.UserInfoDto;
 import com.example.earthtalk.global.response.ApiResponse;
 import java.util.List;
 import java.util.Map;
@@ -24,7 +25,7 @@ public class UsersController {
 
     @GetMapping("/followers")
     public ResponseEntity<ApiResponse<Object>> getUserInfo() {
-        Map<String, Object> response = userService.getAllUsersInfo();
+        List<UserInfoDto> response = userService.getPopularUsersInfo();
         return ResponseEntity.ok().body(ApiResponse.createSuccess(response));
     }
 }

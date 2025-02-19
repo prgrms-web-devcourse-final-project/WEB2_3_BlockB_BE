@@ -25,50 +25,33 @@ public class UserService {
 
     private final UserRepository userRepository;
 
-    public Map<String, Object> getAllUsersInfo() {
+    // 모든 유저 정보 조회(인기순)
+    public List<UserInfoDto> getPopularUsersInfo() {
+        List<Object[]> userFollowFollowerData = userRepository.getFollowerFolloweeCount();
+        List<UserInfoDto> userInfoDTOList = new ArrayList<>();
 
-        Map<String, Object> response = null;
-        try {
-            List<Object[]> userFollowFollowerData = userRepository.getFollowerFolloweeCount();
-            List<UserInfoDto> userInfoDTOList = new ArrayList<>();
+        for (Object[] data : userFollowFollowerData) {
+            Long userId = (Long) data[0];
+            Long totalFollowers = (Long) data[1];
+            Long totalFollowees = (Long) data[2];
 
-            for (Object[] data : userFollowFollowerData) {
-                Long userId = (Long) data[0];
-                Long totalFollowers = (Long) data[1];
-                Long totalFollowees = (Long) data[2];
+            User userInfo = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
 
-                Optional<User> userInfo = userRepository.findById(userId);
+            UserInfoDto dto = new UserInfoDto(
+                userId,
+                userInfo.getNickname(),
+                userInfo.getProfile(),
+                userInfo.getIntroduction(),
+                totalFollowers,
+                totalFollowees,
+                userInfo.getWinNumber(),
+                userInfo.getDrawNumber(),
+                userInfo.getDefeatNumber()
+            );
 
-                UserInfoDto dto = new UserInfoDto(
-                    userId,
-                    userInfo.get().getNickname(),
-                    userInfo.get().getProfile(),
-                    userInfo.get().getIntroduction(),
-                    totalFollowers,
-                    totalFollowees,
-                    userInfo.get().getWinNumber(),
-                    userInfo.get().getDrawNumber(),
-                    userInfo.get().getDefeatNumber()
-                );
-
-                userInfoDTOList.add(dto);
-
-            }
-
-            response = new LinkedHashMap<>();
-            response.put("status", "성공");
-            response.put("message", null);
-            response.put("data", userInfoDTOList);
-        } catch (NotFoundException e) {
-            ErrorCode errorCode = ErrorCode.NOT_FOUND; //400 "유효하지 않은 사용자 정보입니다."
-            response.put("status", "실패");
-            response.put("message", errorCode.getMessage());
-        } catch (Exception e) {
-            ErrorCode errorCode = ErrorCode.USER_NOT_FOUND; //404 "해당 검색어에 대한 유저 정보가 없습니다..;;"
-            response.put("status", "실패");
-            response.put("message", errorCode.getMessage());
+            userInfoDTOList.add(dto);
         }
-
-        return response;
+        return userInfoDTOList;
     }
 }
