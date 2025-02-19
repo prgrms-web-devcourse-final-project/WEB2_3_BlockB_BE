@@ -9,6 +9,7 @@ import com.example.earthtalk.domain.report.service.ReportService;
 import com.example.earthtalk.global.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,9 +25,11 @@ public class AdminController {
 
     @GetMapping("/reports")
     public ResponseEntity<ApiResponse<Object>> getReports(@RequestParam(value = "q", required = false) String q,
-                                                                            @RequestParam(value = "type", required = false) ReportType reportType,
-                                                                            @RequestParam(value = "result", required = false) ResultType resultType) {
-        List<ReportListResponse> reports = reportService.getReports(q, reportType, resultType);
+                                                          @RequestParam(value = "type", required = false) ReportType reportType,
+                                                          @RequestParam(value = "result", required = false) ResultType resultType,
+                                                          @RequestParam(value = "p", required = false, defaultValue = "1") int page) {
+        page = page <= 1 ? 0 : page - 1;
+        Page<ReportListResponse> reports = reportService.getReports(q, reportType, resultType, page);
         if(reports == null) {
             return ResponseEntity.ok(ApiResponse.createError("신고리스트가 존재하지 않습니다."));
         }

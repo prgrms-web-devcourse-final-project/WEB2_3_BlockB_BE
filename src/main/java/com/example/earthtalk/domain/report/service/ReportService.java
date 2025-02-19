@@ -15,6 +15,10 @@ import com.example.earthtalk.domain.report.entity.TargetType;
 import com.example.earthtalk.domain.report.repository.ReportRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -24,11 +28,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ReportService {
 
-    @Autowired
     private final ReportRepository reportRepository;
-    @Autowired
     private final ObserverChatRepository observerChatRepository;
-    @Autowired
     private final DebateChatRepository debateChatRepository;
 
     // 신고하는 로직 간단하게 구현해놨습니다. 예외처리 따로 안되어있어요.
@@ -39,18 +40,20 @@ public class ReportService {
     }
 
     // 신고들을 필터링하여 List 로 가져오는 메서드
-    public List<ReportListResponse> getReports(String q, ReportType reportType, ResultType resultType) {
-        List<Report> reports = reportRepository.getReportsByParams(q, reportType, resultType);
+    public Page<ReportListResponse> getReports(String q, ReportType reportType, ResultType resultType, int page) {
+        Pageable pageable = PageRequest.of(page, 10);
+
+        Page<Report> reports = reportRepository.getReportsByParams(q, reportType, resultType, pageable);
 
         List<ReportListResponse> responses = new ArrayList<>();
-        for(Report report : reports) {
+        for(Report report : reports.getContent()) {
             if (report == null) {
                 return null;
             }
             responses.add(ReportListResponse.from(report));
         }
 
-        return responses;
+        return new PageImpl<>(responses, pageable, reports.getTotalElements());
     }
 
     // 하나의 신고에 대한 상세 조회하는 메서드
