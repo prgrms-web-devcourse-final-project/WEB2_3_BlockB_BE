@@ -8,5 +8,5 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 public interface UserRepositoryCustom {
-    List<Tuple> findAllWithFollowCountOrderBy();
+    List<Tuple> findAllWithFollowCountOrderBy(String query);
 }
