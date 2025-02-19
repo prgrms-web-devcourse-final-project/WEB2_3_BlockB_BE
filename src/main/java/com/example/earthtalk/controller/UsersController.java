@@ -25,7 +25,6 @@ public class UsersController {
     @GetMapping("/followers")
     public ResponseEntity<ApiResponse<Object>> getUserInfo() {
         Map<String, Object> response = userService.getAllUsersInfo();
-
         return ResponseEntity.ok().body(ApiResponse.createSuccess(response));
     }
 }

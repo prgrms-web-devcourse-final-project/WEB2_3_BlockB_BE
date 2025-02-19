@@ -23,7 +23,6 @@ import org.springframework.web.servlet.NoHandlerFoundException;
 @RequiredArgsConstructor
 public class UserService {
 
-    //private static final Logger logger = LoggerFactory.getLogger(UserService.class);
     private final UserRepository userRepository;
 
     public Map<String, Object> getAllUsersInfo() {
@@ -40,16 +39,17 @@ public class UserService {
 
                 Optional<User> userInfo = userRepository.findById(userId);
 
-                UserInfoDto dto = new UserInfoDto();
-                dto.setUserId(userId);
-                dto.setNickname(userInfo.get().getNickname());
-                dto.setProfile(userInfo.get().getProfile());
-                dto.setIntroduction(userInfo.get().getIntroduction());
-                dto.setTotalFollowers(totalFollowers);
-                dto.setTotalFollowees(totalFollowees);
-                dto.setWins(userInfo.get().getWinNumber());
-                dto.setDraws(userInfo.get().getDrawNumber());
-                dto.setLosses(userInfo.get().getDefeatNumber());
+                UserInfoDto dto = new UserInfoDto(
+                    userId,
+                    userInfo.get().getNickname(),
+                    userInfo.get().getProfile(),
+                    userInfo.get().getIntroduction(),
+                    totalFollowers,
+                    totalFollowees,
+                    userInfo.get().getWinNumber(),
+                    userInfo.get().getDrawNumber(),
+                    userInfo.get().getDefeatNumber()
+                );
 
                 userInfoDTOList.add(dto);
 
