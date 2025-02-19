@@ -1,5 +1,6 @@
-package com.example.earthtalk.domain.report;
+package com.example.earthtalk.domain.report.entity;
 
+import com.example.earthtalk.domain.report.dto.request.UpdateReportRequest;
 import com.example.earthtalk.domain.user.entity.User;
 import com.example.earthtalk.global.baseTime.BaseTimeEntity;
 import jakarta.persistence.Column;
@@ -34,18 +35,20 @@ public class Report extends BaseTimeEntity {
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    private User user;  // 신고한 회원
 
     @ManyToOne
     @JoinColumn(name = "target_user_id", nullable = false)
-    private User targetUser;
+    private User targetUser; // 신고된 회원
 
     @Column(nullable = false)
-    private Long targetId;
+    private Long targetRoomId; // 신고된 방 id
+
+    private Long targetId;  // 신고된 대상 ID (채팅)
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private TargetType targetType; // 신고 대상
+    private TargetType targetType; // 신고 대상 유형
 
     @Column(nullable = false)
     private String content; // 신고 내용
@@ -58,5 +61,19 @@ public class Report extends BaseTimeEntity {
 
     private ResultType resultType; // 신고 처리 유형
 
-    private LocalDateTime reportedAt;
+    private LocalDateTime reportedAt; // 신고 처리 날짜
+
+    public void updateReport(UpdateReportRequest request) {
+        if(request == null) {
+            this.reportContent = null;
+            this.resultType = null;
+            this.reportedAt = null;
+
+        } else {
+            Report updateReport = request.toEntity();
+            this.reportContent = updateReport.getReportContent();
+            this.resultType = updateReport.getResultType();
+            this.reportedAt = LocalDateTime.now();
+        }
+    }
 }
