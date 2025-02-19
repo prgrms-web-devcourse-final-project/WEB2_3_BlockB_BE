@@ -20,47 +20,34 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AdminController {
 
-    @Autowired
     private final ReportService reportService;
 
     @GetMapping("/reports")
-    public ResponseEntity<ApiResponse<Object>> getReports(@RequestParam(value = "q", required = false) String q,
+    public ResponseEntity<ApiResponse<Page<ReportListResponse>>> getReports(@RequestParam(value = "q", required = false) String q,
                                                           @RequestParam(value = "type", required = false) ReportType reportType,
                                                           @RequestParam(value = "result", required = false) ResultType resultType,
                                                           @RequestParam(value = "p", required = false, defaultValue = "1") int page) {
         page = page <= 1 ? 0 : page - 1;
         Page<ReportListResponse> reports = reportService.getReports(q, reportType, resultType, page);
-        if(reports == null) {
-            return ResponseEntity.ok(ApiResponse.createError("신고리스트가 존재하지 않습니다."));
-        }
         return ResponseEntity.ok(ApiResponse.createSuccess(reports));
     }
 
     @GetMapping("/reports/{reportId}")
-    public ResponseEntity<ApiResponse<Object>> getReportsById(@PathVariable("reportId") Long reportId) {
+    public ResponseEntity<ApiResponse<ReportDetailResponse>> getReportsById(@PathVariable("reportId") Long reportId) {
         ReportDetailResponse report = reportService.getReportById(reportId);
-        if(report == null) {
-            return ResponseEntity.ok(ApiResponse.createError("조회하신 신고가 존재하지 않습니다."));
-        }
         return ResponseEntity.ok(ApiResponse.createSuccess(report));
     }
 
     @PutMapping("/reports/{reportId}")
-    public ResponseEntity<ApiResponse<Object>> putReportsById(@PathVariable("reportId") Long reportId,
+    public ResponseEntity<ApiResponse<?>> putReportsById(@PathVariable("reportId") Long reportId,
                                                               @RequestBody UpdateReportRequest request) {
         Long id = reportService.updateReport(reportId, request);
-        if (id == null) {
-            return ResponseEntity.ok(ApiResponse.createError("조회하신 신고가 존재하지 않습니다."));
-        }
         return ResponseEntity.ok(ApiResponse.createSuccessWithNoData());
     }
 
     @PutMapping("/reports/{reportId}/restore")
-    public ResponseEntity<ApiResponse<Object>> putReportRestoreById(@PathVariable("reportId") Long reportId) {
+    public ResponseEntity<ApiResponse<?>> putReportRestoreById(@PathVariable("reportId") Long reportId) {
         Long id = reportService.restoreReport(reportId);
-        if (id == null) {
-            return ResponseEntity.ok(ApiResponse.createError("조회하신 신고가 존재하지 않습니다."));
-        }
         return ResponseEntity.ok(ApiResponse.createSuccessWithNoData());
     }
 }

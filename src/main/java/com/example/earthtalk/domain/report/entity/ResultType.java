@@ -1,5 +1,8 @@
 package com.example.earthtalk.domain.report.entity;
 
+import lombok.Getter;
+
+@Getter
 public enum ResultType {
     WARNING("경고"),
     SUSPENSION("일시정지"),

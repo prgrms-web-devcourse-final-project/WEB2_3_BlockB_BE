@@ -13,6 +13,8 @@ import com.example.earthtalk.domain.report.entity.ReportType;
 import com.example.earthtalk.domain.report.entity.ResultType;
 import com.example.earthtalk.domain.report.entity.TargetType;
 import com.example.earthtalk.domain.report.repository.ReportRepository;
+import com.example.earthtalk.global.exception.ErrorCode;
+import com.example.earthtalk.global.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -43,7 +45,7 @@ public class ReportService {
     public Page<ReportListResponse> getReports(String q, ReportType reportType, ResultType resultType, int page) {
         Pageable pageable = PageRequest.of(page, 10);
 
-        Page<Report> reports = reportRepository.getReportsByParams(q, reportType, resultType, pageable);
+        Page<Report> reports = reportRepository.findReportsByParams(q, reportType, resultType, pageable);
 
         List<ReportListResponse> responses = new ArrayList<>();
         for(Report report : reports.getContent()) {
@@ -58,32 +60,21 @@ public class ReportService {
 
     // 하나의 신고에 대한 상세 조회하는 메서드
     public ReportDetailResponse getReportById(Long id) {
-        Report report = reportRepository.findById(id).orElse(null);
-        if (report == null) {
-            return null;
-        }
-
+        Report report = reportRepository.findById(id).orElseThrow(() -> new NotFoundException(ErrorCode.NOT_FOUND));
         String reportContent = getTargetContent(report);
-
         return ReportDetailResponse.from(report, reportContent);
     }
 
     // 신고를 처리하는 메서드
     public Long updateReport(Long id, UpdateReportRequest request) {
-        Report report = reportRepository.findById(id).orElse(null);
-        if(report == null) {
-            return null;
-        }
+        Report report = reportRepository.findById(id).orElseThrow(() -> new NotFoundException(ErrorCode.NOT_FOUND));
         report.updateReport(request);
         return reportRepository.save(report).getId();
     }
 
     // 이미 처리된 신고를 복구하는 메서드
     public Long restoreReport(Long id) {
-        Report report = reportRepository.findById(id).orElse(null);
-        if(report == null) {
-            return null;
-        }
+        Report report = reportRepository.findById(id).orElseThrow(() -> new NotFoundException(ErrorCode.NOT_FOUND));
         report.updateReport(null);
         return reportRepository.save(report).getId();
     }
@@ -92,17 +83,13 @@ public class ReportService {
     // 신고된 타입 유형에따라 신고된 내용을 조회하는 메서드
     String getTargetContent(Report report) {
         if(report.getTargetType() == TargetType.CHAT) {
-            ObserverChat observerChat = observerChatRepository.findById(report.getId()).orElse(null);
-            if (observerChat != null) {
-                return observerChat.getContent();
-            }
+            ObserverChat observerChat = observerChatRepository.findById(report.getId()).orElseThrow(() -> new NotFoundException(ErrorCode.NOT_FOUND));
+            return observerChat.getContent();
         }
 
         if(report.getTargetType() == TargetType.DEBATE) {
-            DebateChat debateChat = debateChatRepository.findById(report.getId()).orElse(null);
-            if (debateChat != null) {
-                return debateChat.getContent();
-            }
+            DebateChat debateChat = debateChatRepository.findById(report.getId()).orElseThrow(() -> new NotFoundException(ErrorCode.NOT_FOUND));
+            return debateChat.getContent();
         }
 
         return null;

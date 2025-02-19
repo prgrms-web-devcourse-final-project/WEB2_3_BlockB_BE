@@ -19,7 +19,7 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
             "WHERE (:q IS NULL OR u.nickname LIKE CONCAT('%', :q, '%')) AND " +
             "(:reportType IS NULL OR r.reportType = :reportType) AND " +
             "(:resultType IS NULL OR r.resultType = :resultType)")
-    Page<Report> getReportsByParams(@Param("q") String q,
+    Page<Report> findReportsByParams(@Param("q") String q,
                                     @Param("reportType") ReportType reportType,
                                     @Param("resultType")ResultType resultType,
                                     Pageable pageable);

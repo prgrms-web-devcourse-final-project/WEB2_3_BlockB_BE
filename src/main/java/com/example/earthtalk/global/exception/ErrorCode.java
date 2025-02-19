@@ -31,9 +31,10 @@ public enum ErrorCode { // 예외 발생시, body에 실어 날려줄 상태, co
     INTERNAL_SERVER_ERROR(500, -3004, "서버 내부 오류입니다."),
     UNAUTHORIZED(401, -3005, "토큰 정보가 만료되었거나 존재하지 않습니다."),
     FORBIDDEN(403, -3006, "접근 권한이 없습니다."),
-    INVALID_SORT_TYPE(400, -3007, "올바르지 않은 정렬 타입입니다.");
+    INVALID_SORT_TYPE(400, -3007, "올바르지 않은 정렬 타입입니다."),
 
     //-4000 비즈니스 로직1
+    REPORT_NOT_FOUND(404, -4000, "조회된 신고가 존재하지 않습니다.");
     //-5000 비즈니스 로직2
 
     // 1. status = 날려줄 상태코드

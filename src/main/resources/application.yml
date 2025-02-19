@@ -6,9 +6,9 @@ spring:
     name: earthTalk
   datasource:
     driver-class-name: org.mariadb.jdbc.Driver
-    url: jdbc:mariadb://localhost:3306/earthTalk
-    username: 'root'
-    password: '!123456'
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWD}
   jpa:
     hibernate:
       ddl-auto: update # 엔티티로 등록된 클래스와 매핑되는 테이블 자동 생성 주석해도 됩니다.
