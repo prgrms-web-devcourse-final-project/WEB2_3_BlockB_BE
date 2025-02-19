@@ -1,8 +1,5 @@
 package com.example.earthtalk.domain.user.userDto;
 
-import lombok.Getter;
-import lombok.Setter;
-
 public record UserInfoDto (
     Long userId,
     String nickname,
