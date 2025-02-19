@@ -19,8 +19,8 @@ public class UsersController {
     private final UserService userService;
 
     @GetMapping("/followers")
-    public ResponseEntity<ApiResponse<List<UserInfoResponse>>> getUserInfo() {
-        List<UserInfoResponse> response = userService.getPopularUsersInfo();
+    public ResponseEntity<ApiResponse<List<UserInfoResponse>>> getUserInfo(@RequestParam(required = false) String q) {
+        List<UserInfoResponse> response = userService.getPopularUsersInfo( q );
         return ResponseEntity.ok().body(ApiResponse.createSuccess(response));
     }
 }
