@@ -33,12 +33,6 @@ public class ChatRoom {
 		this.continent = continent;
 	}
 
-	// 참여자 추가 메서드
-	public void addParticipant(Long userId) {
-		if (!participantIds.contains(userId)) {
-			participantIds.add(userId);
-		}
-	}
 
 	// 채팅방이 꽉 찼는지 확인
 	public boolean isFull() {
