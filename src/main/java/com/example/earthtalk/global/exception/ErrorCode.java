@@ -33,9 +33,9 @@ public enum ErrorCode { // 예외 발생시, body에 실어 날려줄 상태, co
     FORBIDDEN(403, -3006, "접근 권한이 없습니다."),
     INVALID_SORT_TYPE(400, -3007, "올바르지 않은 정렬 타입입니다."),
 
-
-
     //-4000 비즈니스 로직1
+    REPORT_NOT_FOUND(404, -4000, "조회된 신고가 존재하지 않습니다."),
+    CHAT_NOT_FOUND(404, -4001, "조회된 채팅이 존재하지 않습니다.");
     //-5000 비즈니스 로직2
     TOO_MANY_PARTICIPANTS(409, -5001, "참가자가 이미 최대 인원 입니다.");
 

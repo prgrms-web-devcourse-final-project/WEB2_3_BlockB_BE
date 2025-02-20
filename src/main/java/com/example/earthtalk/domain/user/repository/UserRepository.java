@@ -1,11 +1,10 @@
 package com.example.earthtalk.domain.user.repository;
 
 import java.util.Optional;
-
-import org.springframework.data.jpa.repository.JpaRepository;
-
 import com.example.earthtalk.domain.user.entity.User;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
-public interface UserRepository extends JpaRepository<User, Long> {
-	Optional<User> findByNickname(String nickname);
+@Repository
+public interface UserRepository extends JpaRepository<User, Long>, UserRepositoryCustom {
 }
