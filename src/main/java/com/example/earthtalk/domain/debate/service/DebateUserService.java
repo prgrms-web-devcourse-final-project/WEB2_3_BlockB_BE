@@ -63,6 +63,7 @@ public class DebateUserService {
 		if ("pro".equalsIgnoreCase(position)) {
 			proUsers.putIfAbsent(roomId, ConcurrentHashMap.newKeySet());
 			if (proUsers.get(roomId).size() < maxMembers) {
+				proUsers.get(roomId).add(userName);
 				sendUserJoinMessage(roomId, String.valueOf(userName));
 			} else {
 				throw new ConflictException(ErrorCode.TOO_MANY_PARTICIPANTS);
@@ -70,6 +71,7 @@ public class DebateUserService {
 		}else if ("con".equalsIgnoreCase(position)) {
 			conUsers.putIfAbsent(roomId, ConcurrentHashMap.newKeySet());
 			if (conUsers.get(roomId).size() < maxMembers) {
+				conUsers.get(roomId).add(userName);
 				sendUserJoinMessage(roomId, userName);
 			} else {
 				throw new ConflictException(ErrorCode.TOO_MANY_PARTICIPANTS);
@@ -80,7 +82,8 @@ public class DebateUserService {
 
 		sendUserCountUpdate(roomId);
 
-		if (proUsers.get(roomId).size() == maxMembers && conUsers.get(roomId).size() == maxMembers) {
+		if (proUsers.getOrDefault(roomId, Set.of()).size() == maxMembers &&
+			conUsers.getOrDefault(roomId, Set.of()).size() == maxMembers) {
 			debateManagementService.persistChatRoomIfFull(
 				roomId,
 				proUsers.get(roomId),

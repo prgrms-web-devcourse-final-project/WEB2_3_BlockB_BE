@@ -1,6 +1,5 @@
 package com.example.earthtalk.domain.debate.controller;
 
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -14,11 +13,9 @@ import com.example.earthtalk.domain.debate.service.ChatRoomService;
 @RequestMapping("/api/chat")
 public class ChatRoomController {
 	private final ChatRoomService chatRoomService;
-	private final ApplicationEventPublisher eventPublisher;
 
-	public ChatRoomController(ChatRoomService chatRoomService, ApplicationEventPublisher eventPublisher) {
+	public ChatRoomController(ChatRoomService chatRoomService) {
 		this.chatRoomService = chatRoomService;
-		this.eventPublisher = eventPublisher;
 	}
 
 	@PostMapping("/create")
