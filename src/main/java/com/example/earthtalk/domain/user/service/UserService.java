@@ -35,6 +35,7 @@ public class UserService {
             userInfoDTOList.add(UserInfoResponse.from(user, totalFollowers, totalFollowees));
         }
 
+        // 검색 시 일치하는 유저가 존재하지 않을 때
         if (userInfoDTOList.isEmpty()) {
             throw new NotFoundException(ErrorCode.USER_NOT_FOUND);
         }
