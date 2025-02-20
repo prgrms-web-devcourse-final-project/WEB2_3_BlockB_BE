@@ -9,10 +9,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class DebateMessage {
 	private String event;
-	private String roomId;
 	private Long userId;
 	private String userName;
 	private String position;
 	private String message;
-	private String timestamp;
 }

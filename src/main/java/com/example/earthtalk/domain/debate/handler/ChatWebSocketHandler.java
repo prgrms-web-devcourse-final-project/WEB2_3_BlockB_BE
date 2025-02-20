@@ -10,6 +10,7 @@ import org.springframework.stereotype.Controller;
 
 import com.example.earthtalk.domain.debate.dto.DebateMessage;
 import com.example.earthtalk.domain.debate.dto.ObserverMessage;
+import com.example.earthtalk.global.exception.ErrorCode;
 
 @Controller
 public class ChatWebSocketHandler {
@@ -17,11 +18,23 @@ public class ChatWebSocketHandler {
 	@MessageMapping("/debate/{roomId}")
 	@SendTo("/topic/debate/{roomId}")
 	public DebateMessage sendDebateMessage(@DestinationVariable String roomId, @Payload DebateMessage message) {
-		message.setRoomId(roomId);
 
-		if (message.getTimestamp() == null || message.getTimestamp().isEmpty()) {
-			message.setTimestamp(Instant.now().toString());
+		if (message.getEvent() == null || message.getEvent().trim().isEmpty()) {
+			throw new IllegalArgumentException(ErrorCode.INVALID_REQUEST_BODY.getMessage());
 		}
+		if (message.getUserId() == null) {
+			throw new IllegalArgumentException(ErrorCode.INVALID_REQUEST_BODY.getMessage());
+		}
+		if (message.getUserName() == null || message.getUserName().trim().isEmpty()) {
+			throw new IllegalArgumentException(ErrorCode.INVALID_REQUEST_BODY.getMessage());
+		}
+		if (message.getPosition() == null || message.getPosition().trim().isEmpty()) {
+			throw new IllegalArgumentException(ErrorCode.INVALID_REQUEST_BODY.getMessage());
+		}
+		if (message.getMessage() == null || message.getMessage().trim().isEmpty()) {
+			throw new IllegalArgumentException(ErrorCode.INVALID_REQUEST_BODY.getMessage());
+		}
+
 		return message;
 	}
 

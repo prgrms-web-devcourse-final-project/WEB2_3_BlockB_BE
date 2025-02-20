@@ -45,6 +45,9 @@ public class Debate extends BaseTimeEntity {
     @Column(nullable = false)
     private String title;
 
+    @Column(nullable = false)
+    private String description;
+
     @Enumerated(EnumType.STRING)
     private MemberNumberType member;
 
@@ -71,7 +74,13 @@ public class Debate extends BaseTimeEntity {
     @PrePersist
     public void setDefaultPosition() {
         if (this.status == null) {
-            this.status = RoomType.WAITING;
+            this.status = RoomType.DEBATE;
+        }
+        if (this.agreeNumber == null) {
+            this.agreeNumber = 0L;
+        }
+        if (this.disagreeNumber == null) {
+            this.disagreeNumber = 0L;
         }
     }
 }

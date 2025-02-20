@@ -2,12 +2,15 @@ package com.example.earthtalk.domain.debate.service;
 
 import java.util.Set;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
+import com.example.earthtalk.domain.debate.entity.Debate;
 import com.example.earthtalk.domain.debate.model.ChatRoom;
+import com.example.earthtalk.domain.user.repository.UserRepository;
 import com.example.earthtalk.global.exception.ErrorCode;
 import com.example.earthtalk.global.exception.ConflictException;
 
@@ -26,10 +29,15 @@ public class DebateUserService {
 	private final Map<String, Set<String>> proUsers = new ConcurrentHashMap<>();
 
 	private final Map<String, Set<String>> conUsers = new ConcurrentHashMap<>();
+	private final ChatRoomService chatRoomService;
+	private final UserRepository userRepository;
 
-	public DebateUserService(SimpMessagingTemplate messagingTemplate, DebateManagementService debateManagementService) {
+	public DebateUserService(SimpMessagingTemplate messagingTemplate, DebateManagementService debateManagementService,
+		ChatRoomService chatRoomService, UserRepository userRepository) {
 		this.messagingTemplate = messagingTemplate;
 		this.debateManagementService = debateManagementService;
+		this.chatRoomService = chatRoomService;
+		this.userRepository = userRepository;
 	}
 
 	/**
@@ -47,7 +55,7 @@ public class DebateUserService {
 	 * @throws ConflictException        이미 최대 인원 수가 초과된 경우 발생
 	 */
 	public void addUser(ChatRoom chatRoom, String userName, String position) {
-		int maxMembers = chatRoom.getMemberNumberType();
+		int maxMembers = chatRoom.getMemberNumberType().getValue();
 		String roomId = chatRoom.getRoomId();
 		if (maxMembers != 1 && maxMembers != 3) {
 			throw new IllegalArgumentException(ErrorCode.METHOD_NOT_ALLOWED.getMessage());
@@ -55,15 +63,13 @@ public class DebateUserService {
 		if ("pro".equalsIgnoreCase(position)) {
 			proUsers.putIfAbsent(roomId, ConcurrentHashMap.newKeySet());
 			if (proUsers.get(roomId).size() < maxMembers) {
-				proUsers.get(roomId).add(userName);
-				sendUserJoinMessage(roomId, userName);
+				sendUserJoinMessage(roomId, String.valueOf(userName));
 			} else {
 				throw new ConflictException(ErrorCode.TOO_MANY_PARTICIPANTS);
 			}
 		}else if ("con".equalsIgnoreCase(position)) {
 			conUsers.putIfAbsent(roomId, ConcurrentHashMap.newKeySet());
 			if (conUsers.get(roomId).size() < maxMembers) {
-				conUsers.get(roomId).add(userName);
 				sendUserJoinMessage(roomId, userName);
 			} else {
 				throw new ConflictException(ErrorCode.TOO_MANY_PARTICIPANTS);
@@ -74,6 +80,13 @@ public class DebateUserService {
 
 		sendUserCountUpdate(roomId);
 
+		if (proUsers.get(roomId).size() == maxMembers && conUsers.get(roomId).size() == maxMembers) {
+			debateManagementService.persistChatRoomIfFull(
+				roomId,
+				proUsers.get(roomId),
+				conUsers.get(roomId)
+			);
+		}
 
 	}
 
