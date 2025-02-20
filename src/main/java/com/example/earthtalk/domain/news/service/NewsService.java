@@ -8,6 +8,7 @@ import com.example.earthtalk.domain.news.repository.NewsRepository;
 import com.example.earthtalk.global.constant.ContinentType;
 import io.github.bonigarcia.wdm.WebDriverManager;
 import jakarta.annotation.PostConstruct;
+import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
@@ -44,16 +45,9 @@ public class NewsService {
         return newsRepository.findAll();
     }
 
-    // 매 시 정각마다 크롤링이 실행됩니다.
-    @Scheduled(cron = "0 0 * * * *")
-    public void refreshNews() {
-        crawlAllNews();
-    }
-
-
     @Transactional
+    @Scheduled(cron = "0 0 * * * *")
     public void crawlAllNews() {
-        //newsRepository.deleteAll();
         List<News> newsList = new ArrayList<>();
         // 모든 사이트 크롤링
         for (NewsSite newsSite : crawlConfig.getSites()) {
@@ -70,7 +64,7 @@ public class NewsService {
         log.info("기사 업데이트를 완료했습니다. 업데이트된 기사 총 갯수 : {}", newsList.size());
     }
 
-    public List<News> crawlNews(NewsSite newsSite, ContinentType continentType) {
+    public List<News> crawlNews(@NotNull NewsSite newsSite, ContinentType continentType) {
         WebDriverManager.chromedriver().setup();
 
         // 브라우저 옵션 설정
@@ -85,8 +79,6 @@ public class NewsService {
 
         List<News> newsList = new ArrayList<>();
         LocalDateTime latestArticleTime = getLatestNews(newsSite.getName(), continentType);
-        System.out.println(newsSite.getName().toString() + continentType);
-        System.out.println(latestArticleTime);
 
         try {
             String baseUrl = newsSite.getBaseUrl() + newsSite.getContinentUrl().get(continentType);
@@ -136,7 +128,8 @@ public class NewsService {
                         LocalDateTime deliveryTime = LocalDateTime.parse(date, formatter);
 
                         // 이미 크롤링 한 뉴스 중복 방지
-                        if (deliveryTime.isBefore(latestArticleTime) || deliveryTime.equals(latestArticleTime)) {
+                        if (deliveryTime.isBefore(latestArticleTime) || deliveryTime.equals(
+                            latestArticleTime)) {
                             stopFlag = true;
                             break;
                         }
@@ -162,7 +155,6 @@ public class NewsService {
                         }
 
                     } catch (Exception e) {
-                        log.error(e.getMessage());
                         // 예외발생은 이미지가 없는 기사의 경우가 대부분입니다.
                         // 그 외에 하나라도 빠지는 요소가 있을 경우 배제
                         log.error("크롤링 에러 : 일부 요소를 찾을 수 없습니다.");
