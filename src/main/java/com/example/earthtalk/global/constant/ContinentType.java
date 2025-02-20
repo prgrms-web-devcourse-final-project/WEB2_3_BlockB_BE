@@ -4,13 +4,13 @@ import lombok.Getter;
 
 @Getter
 public enum ContinentType {
-    AS("아시아"),
-    NA("북미"),
-    SA("남미"),
+    AS("아시아/호주"),
+    AM("미국/중남미"),
     EU("유럽"),
-    OC("오세아니아"),
-    AF("아프리카"),
-    ETC("기타");
+    JP("일본"),
+    CN("중국"),
+    AF("아프리카/중동"),
+    KR("한국");
 
     private final String value;
 
