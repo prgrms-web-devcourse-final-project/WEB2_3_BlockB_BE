@@ -19,8 +19,8 @@ public class UserService {
 
     // 모든 유저 정보 조회(인기순) / 유저 검색
     public List<UserInfoResponse> getPopularUsersInfo(String query) {
-        List<Tuple> userFollowFollowerData = userRepository.findAllWithFollowCountOrderBy();
-        List<User> userNicknameContainingData = userRepository.findByNicknameContaining(query);
+        List<Tuple> userFollowFollowerData = userRepository.findAllWithFollowCountOrderBy(query);
+
 
         List<UserInfoResponse> userInfoDTOList = new ArrayList<>();
 
@@ -33,6 +33,11 @@ public class UserService {
                 .orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
 
             userInfoDTOList.add(UserInfoResponse.from(user, totalFollowers, totalFollowees));
+        }
+
+        // 검색 시 일치하는 유저가 존재하지 않을 때
+        if (userInfoDTOList.isEmpty()) {
+            throw new NotFoundException(ErrorCode.USER_NOT_FOUND);
         }
         return userInfoDTOList;
     }
