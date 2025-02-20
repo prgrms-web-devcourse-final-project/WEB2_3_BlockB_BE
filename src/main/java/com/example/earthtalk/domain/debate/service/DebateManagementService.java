@@ -2,6 +2,7 @@ package com.example.earthtalk.domain.debate.service;
 
 import java.util.Set;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import com.example.earthtalk.domain.debate.entity.Debate;
@@ -29,6 +30,7 @@ import jakarta.transaction.Transactional;
  * </p>
  */
 @Service
+@RequiredArgsConstructor
 public class DebateManagementService {
 
 	private final DebateUserRepository debateUserRepository;
@@ -36,24 +38,6 @@ public class DebateManagementService {
 	private final DebateRepository debateRepository;
 	private final UserRepository userRepository;
 	private final ChatRoomService chatRoomService;
-
-	/**
-	 * DebateManagementService 생성자.
-	 *
-	 * @param debateUserRepository DebateUser 엔티티의 데이터 접근을 위한 리포지토리
-	 * @param debateChatRepository Debate 채팅 관련 데이터 접근을 위한 리포지토리
-	 * @param debateRepository     Debate 엔티티의 데이터 접근을 위한 리포지토리
-	 * @param userRepository       사용자(User) 엔티티의 데이터 접근을 위한 리포지토리
-	 * @param chatRoomService      채팅방 정보를 관리하는 ChatRoomService
-	 */
-	public DebateManagementService(DebateUserRepository debateUserRepository, DebateChatRepository debateChatRepository,
-		DebateRepository debateRepository, UserRepository userRepository, ChatRoomService chatRoomService) {
-		this.debateUserRepository = debateUserRepository;
-		this.debateChatRepository = debateChatRepository;
-		this.debateRepository = debateRepository;
-		this.userRepository = userRepository;
-		this.chatRoomService = chatRoomService;
-	}
 
 	/**
 	 * 주어진 roomId에 해당하는 채팅방의 캐시 정보가 존재하고, 채팅방이 꽉 찼다면,

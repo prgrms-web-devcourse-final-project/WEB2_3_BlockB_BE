@@ -1,5 +1,7 @@
 package com.example.earthtalk.domain.debate.controller;
 
+import com.example.earthtalk.global.response.ApiResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -18,13 +20,10 @@ import com.example.earthtalk.domain.debate.service.ChatRoomService;
  * </p>
  */
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/chat")
 public class ChatRoomController {
 	private final ChatRoomService chatRoomService;
-
-	public ChatRoomController(ChatRoomService chatRoomService) {
-		this.chatRoomService = chatRoomService;
-	}
 
 	/**
 	 * 클라이언트로부터 토론방 생성 요청을 받아 새로운 채팅방을 생성합니다.
@@ -37,10 +36,9 @@ public class ChatRoomController {
 	 * @return 생성된 채팅방의 고유 식별자를 포함하는 HTTP 응답 (200 OK)
 	 */
 	@PostMapping("/create")
-	public ResponseEntity<String> createRoom(@RequestBody CreateDebateRoomRequest request) {
+	public ResponseEntity<ApiResponse<String>> createRoom(@RequestBody CreateDebateRoomRequest request) {
 		String roomId = chatRoomService.createChatRoom(request);
-
-		return ResponseEntity.ok(roomId);
+		return ResponseEntity.ok(ApiResponse.createSuccess(roomId));
 	}
 
 }

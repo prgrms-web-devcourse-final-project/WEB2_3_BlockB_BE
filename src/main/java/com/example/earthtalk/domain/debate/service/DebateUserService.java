@@ -2,13 +2,12 @@ package com.example.earthtalk.domain.debate.service;
 
 import java.util.Set;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
-import com.example.earthtalk.domain.debate.entity.Debate;
 import com.example.earthtalk.domain.debate.model.ChatRoom;
 import com.example.earthtalk.domain.user.repository.UserRepository;
 import com.example.earthtalk.global.exception.ErrorCode;
@@ -22,6 +21,7 @@ import com.example.earthtalk.global.exception.ConflictException;
  * </p>
  */
 @Service
+@RequiredArgsConstructor
 public class DebateUserService {
 	private final SimpMessagingTemplate messagingTemplate;
 	private final DebateManagementService debateManagementService;
@@ -31,14 +31,6 @@ public class DebateUserService {
 	private final Map<String, Set<String>> conUsers = new ConcurrentHashMap<>();
 	private final ChatRoomService chatRoomService;
 	private final UserRepository userRepository;
-
-	public DebateUserService(SimpMessagingTemplate messagingTemplate, DebateManagementService debateManagementService,
-		ChatRoomService chatRoomService, UserRepository userRepository) {
-		this.messagingTemplate = messagingTemplate;
-		this.debateManagementService = debateManagementService;
-		this.chatRoomService = chatRoomService;
-		this.userRepository = userRepository;
-	}
 
 	/**
 	 * 토론방에 사용자를 추가합니다.

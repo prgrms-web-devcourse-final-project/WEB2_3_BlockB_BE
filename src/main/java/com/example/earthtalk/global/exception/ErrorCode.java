@@ -35,7 +35,7 @@ public enum ErrorCode { // 예외 발생시, body에 실어 날려줄 상태, co
 
     //-4000 비즈니스 로직1
     REPORT_NOT_FOUND(404, -4000, "조회된 신고가 존재하지 않습니다."),
-    CHAT_NOT_FOUND(404, -4001, "조회된 채팅이 존재하지 않습니다.");
+    CHAT_NOT_FOUND(404, -4001, "조회된 채팅이 존재하지 않습니다."),
     //-5000 비즈니스 로직2
     TOO_MANY_PARTICIPANTS(409, -5001, "참가자가 이미 최대 인원 입니다.");
 

@@ -4,6 +4,7 @@ import java.util.UUID;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import com.example.earthtalk.domain.debate.dto.CreateDebateRoomRequest;
@@ -21,6 +22,7 @@ import com.example.earthtalk.domain.user.repository.UserRepository;
  * </p>
  */
 @Service
+@RequiredArgsConstructor
 public class ChatRoomService {
 
 	/**
@@ -32,13 +34,6 @@ public class ChatRoomService {
 	private final DebateRepository debateRepository;
 	private final DebateUserRepository debateUserRepository;
 	private final UserRepository userRepository;
-
-	public ChatRoomService(DebateRepository debateRepository, DebateUserRepository debateUserRepository,
-		UserRepository userRepository) {
-		this.debateRepository = debateRepository;
-		this.debateUserRepository = debateUserRepository;
-		this.userRepository = userRepository;
-	}
 
 	/**
 	 * 새로운 채팅방을 생성하고, 캐시에 저장합니다.

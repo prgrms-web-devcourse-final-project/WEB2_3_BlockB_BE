@@ -1,12 +1,12 @@
 package com.example.earthtalk.domain.debate.component;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.messaging.SessionConnectedEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.example.earthtalk.domain.debate.dto.SessionInfo;
@@ -21,6 +21,7 @@ import com.example.earthtalk.global.exception.ErrorCode;
  * 세션별 사용자 정보를 관리하고, DebateUserService를 통해 사용자 입장/퇴장 처리를 수행합니다.
  */
 @Component
+@RequiredArgsConstructor
 public class WebSocketEventListener {
 
 	private final DebateUserService debateUserService;
@@ -28,12 +29,6 @@ public class WebSocketEventListener {
 
 	// 여러 개의 맵 대신 세션 ID와 관련된 정보를 하나의 객체(SessionInfo)로 관리
 	private final Map<String, SessionInfo> sessionInfoMap = new ConcurrentHashMap<>();
-
-
-	public WebSocketEventListener(DebateUserService debateUserService, ChatRoomService chatRoomService) {
-		this.debateUserService = debateUserService;
-		this.chatRoomService = chatRoomService;
-	}
 
 	/**
 	 * WebSocket 연결 이벤트를 처리하여 세션 정보를 저장하고, 해당 채팅방에 사용자를 추가합니다.

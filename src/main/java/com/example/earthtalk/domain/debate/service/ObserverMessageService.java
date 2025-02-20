@@ -1,5 +1,6 @@
 package com.example.earthtalk.domain.debate.service;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
@@ -14,12 +15,9 @@ import com.example.earthtalk.domain.debate.dto.ObserverMessage;
  * 현재 아직 구현만 된 코드라 손 볼 부분이 많습니다. 이 부분은 건너뛰셔도 될 것 같습니다.
  */
 @Service
+@RequiredArgsConstructor
 public class ObserverMessageService {
 	private final SimpMessagingTemplate messagingTemplate;
-
-	public ObserverMessageService(SimpMessagingTemplate messagingTemplate) {
-		this.messagingTemplate = messagingTemplate;
-	}
 
 	public void sendObserverMessage(ObserverMessage message) {
 		String destination = "/topic/observer/" + message.getRoomId();
