@@ -89,6 +89,8 @@ public class DebateUserService {
 				proUsers.get(roomId),
 				conUsers.get(roomId)
 			);
+			proUsers.remove(roomId);
+			conUsers.remove(roomId);
 		}
 
 	}
