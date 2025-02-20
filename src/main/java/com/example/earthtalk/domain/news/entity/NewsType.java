@@ -1,14 +1,24 @@
 package com.example.earthtalk.domain.news.entity;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
 @Getter
 public enum NewsType {
-    SEOUL("서울신문"),
-    KHAN("경향신문"),
+
+    @JsonProperty("JOONGANG")
+    JOONGANG("중앙일보"),
+
+    @JsonProperty("HANI")
+    HANI("한겨레"),
+
+    @JsonProperty("HANKYUNG")
     HANKYUNG("한국경제"),
-    DONGA("동아일보"),
+
+    @JsonProperty("HANKOOK")
     HANKOOK("한국일보"),
+
+    @JsonProperty("SEGYE")
     SEGYE("세계일보");
 
     private final String value;
