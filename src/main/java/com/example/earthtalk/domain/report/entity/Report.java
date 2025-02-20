@@ -41,10 +41,7 @@ public class Report extends BaseTimeEntity {
     @JoinColumn(name = "target_user_id", nullable = false)
     private User targetUser; // 신고된 회원
 
-    @Column(nullable = false)
     private Long targetRoomId; // 신고된 방 id
-
-    private Long targetId;  // 신고된 대상 ID (채팅)
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -59,6 +56,8 @@ public class Report extends BaseTimeEntity {
 
     private String reportContent; // 신고 처리한 내용
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private ResultType resultType; // 신고 처리 유형
 
     private LocalDateTime reportedAt; // 신고 처리 날짜
@@ -66,7 +65,7 @@ public class Report extends BaseTimeEntity {
     public void updateReport(UpdateReportRequest request) {
         if(request == null) {
             this.reportContent = null;
-            this.resultType = null;
+            this.resultType = ResultType.UNKNOWN;
             this.reportedAt = null;
 
         } else {
@@ -75,5 +74,12 @@ public class Report extends BaseTimeEntity {
             this.resultType = updateReport.getResultType();
             this.reportedAt = LocalDateTime.now();
         }
+    }
+
+    public static String getStringByResultType(ResultType resultType) {
+        if(resultType == null) {
+            return null;
+        }
+        return resultType.getValue();
     }
 }
