@@ -19,8 +19,8 @@ public class UserService {
 
     // 모든 유저 정보 조회(인기순) / 유저 검색
     public List<UserInfoResponse> getPopularUsersInfo(String query) {
-        List<Tuple> userFollowFollowerData = userRepository.findAllWithFollowCountOrderBy();
-        List<User> userNicknameContainingData = userRepository.findByNicknameContaining(query);
+        List<Tuple> userFollowFollowerData = userRepository.findAllWithFollowCountOrderBy(query);
+
 
         List<UserInfoResponse> userInfoDTOList = new ArrayList<>();
 
@@ -34,6 +34,7 @@ public class UserService {
 
             userInfoDTOList.add(UserInfoResponse.from(user, totalFollowers, totalFollowees));
         }
+
         return userInfoDTOList;
     }
 }
