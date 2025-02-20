@@ -17,17 +17,16 @@ public record ReportDetailResponse(
         String nickname,
         TargetType targetType,
         Long targetRoomId,
-        Long targetId,
+        Long targetUserId,
         String targetNickname,
-        String targetContent,
         String content,
-        ReportType reportType,
-        ResultType reportResult,
+        String reportType,
+        String reportResult,
         String reportContent,
         LocalDateTime createdAt
 ) {
 
-    public static ReportDetailResponse from(Report report, String targetContent) {
+    public static ReportDetailResponse from(Report report) {
         return new ReportDetailResponse(
                 report.getId(),
                 report.getUser().getNickname(),
@@ -35,10 +34,9 @@ public record ReportDetailResponse(
                 report.getTargetRoomId(),
                 report.getTargetUser().getId(),
                 report.getTargetUser().getNickname(),
-                targetContent,
                 report.getContent(),
-                report.getReportType(),
-                report.getResultType(),
+                report.getReportType().getValue(),
+                Report.getStringByResultType(report.getResultType()),
                 report.getReportContent(),
                 report.getCreatedAt()
         );
