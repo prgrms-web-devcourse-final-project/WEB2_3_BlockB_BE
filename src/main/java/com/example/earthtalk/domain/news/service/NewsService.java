@@ -3,6 +3,7 @@ package com.example.earthtalk.domain.news.service;
 import com.example.earthtalk.domain.news.entity.News.NewsBuilder;
 import com.example.earthtalk.domain.news.entity.NewsSite;
 import com.example.earthtalk.domain.news.entity.News;
+import com.example.earthtalk.domain.news.entity.NewsType;
 import com.example.earthtalk.domain.news.repository.NewsRepository;
 import com.example.earthtalk.global.constant.ContinentType;
 import io.github.bonigarcia.wdm.WebDriverManager;
@@ -12,7 +13,10 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoField;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.By;
@@ -49,7 +53,7 @@ public class NewsService {
 
     @Transactional
     public void crawlAllNews() {
-        newsRepository.deleteAll();
+        //newsRepository.deleteAll();
         List<News> newsList = new ArrayList<>();
         // 모든 사이트 크롤링
         for (NewsSite newsSite : crawlConfig.getSites()) {
@@ -61,10 +65,7 @@ public class NewsService {
                 }
             }
         }
-        //크롤링 결과가 너무 적을 경우 롤백
-        if (newsList.size() < 500) {
-            throw new RuntimeException("크롤링한 기사의 수가 너무 작습니다.");
-        }
+
         newsRepository.saveAll(newsList);
         log.info("기사 업데이트를 완료했습니다. 업데이트된 기사 총 갯수 : {}", newsList.size());
     }
@@ -83,16 +84,21 @@ public class NewsService {
         WebDriver driver = new ChromeDriver(options);
 
         List<News> newsList = new ArrayList<>();
+        LocalDateTime latestArticleTime = getLatestNews(newsSite.getName(), continentType);
+        System.out.println(newsSite.getName().toString() + continentType);
+        System.out.println(latestArticleTime);
 
         try {
             String baseUrl = newsSite.getBaseUrl() + newsSite.getContinentUrl().get(continentType);
 
             int currentPage = 1;
             int cnt = 0;
-            while (true) {
+            boolean stopFlag = false;
+            while (!stopFlag) {
                 String pageUrl = baseUrl + "?" + newsSite.getPageParam() + "=" + currentPage;
                 log.info("현재 크롤링 중인 페이지 : " + pageUrl);
                 driver.get(pageUrl);
+                Thread.sleep(500);
                 // 뉴스 목록 가져오기 (XPath 기반)
                 List<WebElement> articles = driver.findElements(
                     By.xpath(newsSite.getArticleXpath()));
@@ -129,6 +135,12 @@ public class NewsService {
 
                         LocalDateTime deliveryTime = LocalDateTime.parse(date, formatter);
 
+                        // 이미 크롤링 한 뉴스 중복 방지
+                        if (deliveryTime.isBefore(latestArticleTime) || deliveryTime.equals(latestArticleTime)) {
+                            stopFlag = true;
+                            break;
+                        }
+
                         News news = News.builder()
                             .newsType(newsSite.getName())
                             .link(link)
@@ -144,8 +156,13 @@ public class NewsService {
                         // 크롤링한 뉴스 갯수
                         cnt++;
 
-                    } catch (Exception e) {
+                        if (cnt >= 50) {
+                            stopFlag = true;
+                            break;
+                        }
 
+                    } catch (Exception e) {
+                        log.error(e.getMessage());
                         // 예외발생은 이미지가 없는 기사의 경우가 대부분입니다.
                         // 그 외에 하나라도 빠지는 요소가 있을 경우 배제
                         log.error("크롤링 에러 : 일부 요소를 찾을 수 없습니다.");
@@ -154,10 +171,7 @@ public class NewsService {
 
                 currentPage++;
 
-                // 기사 갯수 수요에 따라 바뀔수 있습니다.
-                if (cnt >= 50) {
-                    break;
-                }
+
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -165,6 +179,13 @@ public class NewsService {
             // 브라우저 종료
             driver.quit();
         }
+        log.info(newsSite.getName().getValue() + "에서 총 " + newsList.size() + "개의 뉴스를 크롤링했습니다.");
         return newsList;
+    }
+
+    // 뉴스 사이트별, 대륙별로 DB에 저장된 가장 최신기사의 작성시간 확인
+    // 그 이전에 작성된 기사는 크롤링 하지 않습니다. (중복 방지)
+    public LocalDateTime getLatestNews(NewsType newsType, ContinentType continentType) {
+        return newsRepository.latestNews(newsType, continentType);
     }
 }
