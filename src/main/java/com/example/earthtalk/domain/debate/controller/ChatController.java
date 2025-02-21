@@ -1,4 +1,4 @@
-package com.example.earthtalk.domain.debate.handler;
+package com.example.earthtalk.domain.debate.controller;
 
 import java.time.Instant;
 
@@ -6,8 +6,10 @@ import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.stereotype.Controller;
 
+import com.example.earthtalk.domain.debate.store.ChatMessageStore;
 import com.example.earthtalk.domain.debate.dto.DebateMessage;
 import com.example.earthtalk.domain.debate.dto.ObserverMessage;
 import com.example.earthtalk.global.exception.ErrorCode;
@@ -20,7 +22,13 @@ import com.example.earthtalk.global.exception.ErrorCode;
  * </p>
  */
 @Controller
-public class ChatWebSocketHandler {
+public class ChatController {
+
+	private final ChatMessageStore chatMessageStore;
+
+	public ChatController(ChatMessageStore chatMessageStore) {
+		this.chatMessageStore = chatMessageStore;
+	}
 
 	/**
 	 * 토론 메시지를 처리하여 검증된 DebateMessage를 브로드캐스트합니다.
@@ -37,20 +45,19 @@ public class ChatWebSocketHandler {
 	 */
 	@MessageMapping("/debate/{roomId}")
 	@SendTo("/topic/debate/{roomId}")
-	public DebateMessage sendDebateMessage(@DestinationVariable String roomId, @Payload DebateMessage message) {
+	public DebateMessage sendDebateMessage(@DestinationVariable String roomId,
+		@Payload DebateMessage message,
+		SimpMessageHeaderAccessor headerAccessor
+	) {
 
-		if (message.getEvent() == null || message.getEvent().trim().isEmpty()) {
+		if (message.getEvent() == null || message.getEvent().trim().isEmpty() ||
+			message.getUserName() == null || message.getUserName().trim().isEmpty() ||
+			message.getPosition() == null || message.getPosition().trim().isEmpty() ||
+			message.getMessage() == null || message.getMessage().trim().isEmpty()) {
 			throw new IllegalArgumentException(ErrorCode.INVALID_REQUEST_BODY.getMessage());
 		}
-		if (message.getUserName() == null || message.getUserName().trim().isEmpty()) {
-			throw new IllegalArgumentException(ErrorCode.INVALID_REQUEST_BODY.getMessage());
-		}
-		if (message.getPosition() == null || message.getPosition().trim().isEmpty()) {
-			throw new IllegalArgumentException(ErrorCode.INVALID_REQUEST_BODY.getMessage());
-		}
-		if (message.getMessage() == null || message.getMessage().trim().isEmpty()) {
-			throw new IllegalArgumentException(ErrorCode.INVALID_REQUEST_BODY.getMessage());
-		}
+
+		chatMessageStore.addChatMessage(roomId, message);
 
 		return message;
 	}
@@ -72,7 +79,7 @@ public class ChatWebSocketHandler {
 	@MessageMapping("/observer/{roomId}")
 	@SendTo("/topic/observer/{roomId}")
 	public ObserverMessage sendObserverMessage(@DestinationVariable String roomId, @Payload ObserverMessage message) {
-		message.setRoomId(roomId);
+		message.setUuid(roomId);
 
 		if (message.getTimestamp() == null || message.getTimestamp().isEmpty()) {
 			message.setTimestamp(Instant.now().toString());
@@ -80,4 +87,5 @@ public class ChatWebSocketHandler {
 
 		return message;
 	}
+
 }

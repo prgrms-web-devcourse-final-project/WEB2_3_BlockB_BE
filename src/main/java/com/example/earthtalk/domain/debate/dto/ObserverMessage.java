@@ -9,9 +9,15 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ObserverMessage {
 	private String event;
-	private String roomId;
+
+	private String uuid;
+
 	private Long userId;
+
 	private String userName;
+
 	private String message;
+
 	private String timestamp;
+
 }
