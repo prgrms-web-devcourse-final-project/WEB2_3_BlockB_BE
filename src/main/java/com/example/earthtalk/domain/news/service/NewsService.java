@@ -1,23 +1,19 @@
 package com.example.earthtalk.domain.news.service;
 
-import com.example.earthtalk.domain.news.entity.News.NewsBuilder;
+import com.example.earthtalk.domain.news.config.CrawlConfig;
 import com.example.earthtalk.domain.news.entity.NewsSite;
 import com.example.earthtalk.domain.news.entity.News;
 import com.example.earthtalk.domain.news.entity.NewsType;
 import com.example.earthtalk.domain.news.repository.NewsRepository;
 import com.example.earthtalk.global.constant.ContinentType;
 import io.github.bonigarcia.wdm.WebDriverManager;
-import jakarta.annotation.PostConstruct;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoField;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.By;
@@ -25,8 +21,6 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.devtools.v85.runtime.Runtime;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -64,7 +58,7 @@ public class NewsService {
         log.info("기사 업데이트를 완료했습니다. 업데이트된 기사 총 갯수 : {}", newsList.size());
     }
 
-    public List<News> crawlNews(@NotNull NewsSite newsSite, ContinentType continentType) {
+    private List<News> crawlNews(@NotNull NewsSite newsSite, ContinentType continentType) {
         WebDriverManager.chromedriver().setup();
 
         // 브라우저 옵션 설정
@@ -177,7 +171,7 @@ public class NewsService {
 
     // 뉴스 사이트별, 대륙별로 DB에 저장된 가장 최신기사의 작성시간 확인
     // 그 이전에 작성된 기사는 크롤링 하지 않습니다. (중복 방지)
-    public LocalDateTime getLatestNews(NewsType newsType, ContinentType continentType) {
+    private LocalDateTime getLatestNews(NewsType newsType, ContinentType continentType) {
         return newsRepository.latestNews(newsType, continentType);
     }
 }
