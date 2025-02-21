@@ -7,12 +7,12 @@ import lombok.Getter;
  */
 @Getter
 public enum MemberNumberType {
-    T1("1:1"),
-    T2("3:3");
+    T1(1),
+    T2(3);
 
-    private final String value;
+    private final int value;
 
-    MemberNumberType(String value) {
+    MemberNumberType(int value) {
         this.value = value;
     }
 }

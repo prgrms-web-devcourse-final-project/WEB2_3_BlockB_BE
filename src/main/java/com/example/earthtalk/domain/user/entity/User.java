@@ -19,7 +19,6 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @Entity(name = "users")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
-@Builder
 @Getter
 @EntityListeners(AuditingEntityListener.class)
 public class User extends BaseTimeEntity {
@@ -35,18 +34,40 @@ public class User extends BaseTimeEntity {
     private String nickname;
 
     @Column(nullable = false)
-    private String introduction;
+    private String introduction; // 한줄 소개
 
     @Column(nullable = false)
-    private String profile;
+    private String profileUrl; // 프로필 이미지
+
+    private Long winNumber; // 승리 횟수
+
+    private Long drawNumber; // 무승부 횟수
+
+    private Long defeatNumber; // 패배 횟수
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role;
 
-    private Long winNumber;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private SocialType socialType;
 
-    private Long drawNumber;
+    private String socialId; // 로그인한 소셜 타입 식별값
 
-    private Long defeatNumber;
+    @Builder
+    public User(String email, String nickname, String introduction, String profileUrl,
+        Long winNumber, Long drawNumber, Long defeatNumber, Role role, SocialType socialType,
+        String socialId) {
+        this.email = email;
+        this.nickname = nickname;
+        this.introduction = introduction;
+        this.profileUrl = profileUrl;
+        this.winNumber = winNumber;
+        this.drawNumber = drawNumber;
+        this.defeatNumber = defeatNumber;
+        this.role = role;
+        this.socialType = socialType;
+        this.socialId = socialId;
+    }
 }

@@ -104,5 +104,14 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(errorCode.getStatus())
             .body(ApiResponse.createError(errorCode.getMessage()));
     }
+
+    // 토론장에 너무 많은 사람이 한꺼번에 몰릴 경우
+    @ExceptionHandler(ConflictException.class)
+    public ResponseEntity<ApiResponse<Object>> handleMaxParticipantsExceededException(ConflictException e) {
+        log.error("[MaxParticipantsExceededException] message: {}, errorCode: {}", e.getMessage(), e.getErrorCode());
+        ErrorCode errorCode = ErrorCode.TOO_MANY_PARTICIPANTS;
+        return ResponseEntity.status(errorCode.getStatus())
+            .body(ApiResponse.createError(errorCode.getMessage()));
+    }
 }
 
