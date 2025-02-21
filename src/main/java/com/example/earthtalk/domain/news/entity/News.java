@@ -10,6 +10,8 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -50,7 +52,5 @@ public class News extends BaseTimeEntity {
     private ContinentType continent;
 
     @Column(nullable = false)
-    private String deliveryTime; // 기사 작성일자
-
-    private String country;
+    private LocalDateTime deliveryTime; // 기사 작성일자
 }
