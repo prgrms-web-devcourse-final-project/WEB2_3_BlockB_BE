@@ -14,10 +14,10 @@ import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Component;
 
 @Configuration
-@ConfigurationProperties("news")
-@Setter
 @Getter
+@ConfigurationProperties("news")
+@RequiredArgsConstructor
 public class CrawlConfig {
 
-    private List<NewsSite> sites;
+    private final List<NewsSite> sites;
 }
