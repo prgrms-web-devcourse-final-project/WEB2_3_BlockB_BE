@@ -71,7 +71,7 @@ public class ReportService {
         Report report = reportRepository.findById(id).orElseThrow(() -> new NotFoundException(ErrorCode.REPORT_NOT_FOUND));
         report.updateReport(request);
         SendNotificationRequest sendNotificationRequest = new SendNotificationRequest(report.getTargetUser().getId(), NotificationType.REPORT, report.getTargetRoomId());
-        notificationService.sendNotification(sendNotificationRequest);
+        // notificationService.sendNotification(sendNotificationRequest);
         return reportRepository.save(report).getId();
     }
 
