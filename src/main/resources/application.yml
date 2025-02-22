@@ -4,6 +4,8 @@ server:
 spring:
   application:
     name: earthTalk
+  config:
+    import: classpath:application-news.yml
   datasource:
     driver-class-name: org.mariadb.jdbc.Driver
     url: ${DB_URL}
