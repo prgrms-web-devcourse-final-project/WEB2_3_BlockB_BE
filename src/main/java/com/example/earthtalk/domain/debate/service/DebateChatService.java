@@ -2,6 +2,7 @@ package com.example.earthtalk.domain.debate.service;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -59,34 +60,26 @@ public class DebateChatService {
 		Debate debate = debateService.getDebateByRoomId(uuid);
 
 		List<DebateChat> chatList = messages.stream()
+			.filter(message -> message.getEvent().equals("chat")) //
 			.map(message -> {
-				if (message.getEvent().equals("chat")) {
-					DebateUser debateUser = debateUserService.getDebateUserByUserName(message.getUserName());
-					FlagType flag;
-					if (message.getPosition().equals("pro")) {
-						flag = FlagType.PRO;
-					} else if (message.getPosition().equals("con")) {
-						flag = FlagType.CON;
-					} else {
-						flag = FlagType.NO_POSITION;
-					}
-					if (debateUser == null) {
-						return null;
-					}
-					return DebateChat.builder()
-						.debate(debate)
-						.debateUser(debateUser)
-						.flagType(flag)
-						.content(message.getMessage())
-						.time(message.getTime())
-						.build();
-				} else {
-					return null;
+				DebateUser debateUser = debateUserService.getDebateUserByUserName(message.getUserName());
+				if (debateUser == null) {
+					return Optional.<DebateChat>empty(); // Optional 사용하여 null 방지
 				}
+				// FlagType 변환을 Enum 메서드로 추출하여 가독성 향상
+				FlagType flag = FlagType.fromString(message.getPosition());
+				return Optional.of(DebateChat.builder()
+					.debate(debate)
+					.debateUser(debateUser)
+					.flagType(flag)
+					.content(message.getMessage())
+					.time(message.getTime())
+					.build());
 			})
-			.filter(Objects::nonNull)
+			.flatMap(Optional::stream) // Optional을 활용하여 null 제거
 			.toList();
-		
+
+
 		int batchSize = 100;
 		for (int i = 0; i < chatList.size(); i += batchSize) {
 			int end = Math.min(i + batchSize, chatList.size());
