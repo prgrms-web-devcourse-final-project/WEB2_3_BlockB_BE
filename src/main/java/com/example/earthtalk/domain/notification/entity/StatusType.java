@@ -4,7 +4,7 @@ import lombok.Getter;
 
 @Getter
 public enum StatusType {
-    SEND("보냄"),
+    UNREAD("안읽음"),
     READ("읽음");
 
     private final String value;

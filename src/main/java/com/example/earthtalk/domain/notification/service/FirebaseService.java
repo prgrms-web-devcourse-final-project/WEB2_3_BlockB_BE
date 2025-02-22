@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 public class FirebaseService {
 
     // 푸시 알림 전송 메서드
-    public String sendPushNotification(String token, String content) throws Exception {
+    public String pushNotification(String token, String content) throws Exception {
         // firebase 기반 notification 객체 생성
         Notification notification = Notification.builder()
                 .setTitle("알림")
