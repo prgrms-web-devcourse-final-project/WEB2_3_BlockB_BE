@@ -91,7 +91,7 @@ public class DebateManagementServiceTest {
 		// Debate 엔티티에서는 description 필드에 채팅방의 부제(Subtitle)를 사용했다고 가정
 		assertEquals("Test Subtitle", savedDebate.getDescription());
 		assertEquals(MemberNumberType.T2, savedDebate.getMember());
-		assertEquals("아시아", savedDebate.getContinent().getValue());
+		assertEquals("아시아/호주", savedDebate.getContinent().getValue());
 		assertEquals("칼럼", savedDebate.getCategory().getValue());
 		assertEquals(5, savedDebate.getTime().getValue());
 		assertEquals(RoomType.DEBATE, savedDebate.getStatus());

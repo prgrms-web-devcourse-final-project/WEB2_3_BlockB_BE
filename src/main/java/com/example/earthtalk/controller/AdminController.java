@@ -33,21 +33,21 @@ public class AdminController {
     }
 
     @GetMapping("/reports/{reportId}")
-    public ResponseEntity<ApiResponse<ReportDetailResponse>> getReportsById(@PathVariable("reportId") Long reportId) {
+    public ResponseEntity<ApiResponse<ReportDetailResponse>> getReportById(@PathVariable("reportId") Long reportId) {
         ReportDetailResponse report = reportService.getReportById(reportId);
         return ResponseEntity.ok(ApiResponse.createSuccess(report));
     }
 
     @PutMapping("/reports/{reportId}")
-    public ResponseEntity<ApiResponse<?>> putReportsById(@PathVariable("reportId") Long reportId,
-                                                              @RequestBody UpdateReportRequest request) {
+    public ResponseEntity<ApiResponse<Long>> putReportById(@PathVariable("reportId") Long reportId,
+                                                              @RequestBody UpdateReportRequest request) throws Exception{
         Long id = reportService.updateReport(reportId, request);
-        return ResponseEntity.ok(ApiResponse.createSuccessWithNoData());
+        return ResponseEntity.ok(ApiResponse.createSuccess(id));
     }
 
     @PutMapping("/reports/{reportId}/restore")
-    public ResponseEntity<ApiResponse<?>> putReportRestoreById(@PathVariable("reportId") Long reportId) {
+    public ResponseEntity<ApiResponse<Long>> putReportRestoreById(@PathVariable("reportId") Long reportId) {
         Long id = reportService.restoreReport(reportId);
-        return ResponseEntity.ok(ApiResponse.createSuccessWithNoData());
+        return ResponseEntity.ok(ApiResponse.createSuccess(id));
     }
 }
