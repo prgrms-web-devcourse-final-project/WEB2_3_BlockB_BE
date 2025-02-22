@@ -4,6 +4,9 @@ import com.example.earthtalk.domain.chat.ObserverChat;
 import com.example.earthtalk.domain.chat.repository.ObserverChatRepository;
 import com.example.earthtalk.domain.debate.entity.DebateChat;
 import com.example.earthtalk.domain.debate.repository.DebateChatRepository;
+import com.example.earthtalk.domain.notification.dto.request.SendNotificationRequest;
+import com.example.earthtalk.domain.notification.entity.NotificationType;
+import com.example.earthtalk.domain.notification.service.NotificationService;
 import com.example.earthtalk.domain.report.dto.request.InsertReportRequest;
 import com.example.earthtalk.domain.report.dto.request.UpdateReportRequest;
 import com.example.earthtalk.domain.report.dto.response.ReportDetailResponse;
@@ -31,8 +34,7 @@ import java.util.List;
 public class ReportService {
 
     private final ReportRepository reportRepository;
-    private final ObserverChatRepository observerChatRepository;
-    private final DebateChatRepository debateChatRepository;
+    private final NotificationService notificationService;
 
     // 신고하는 로직 간단하게 구현해놨습니다. 예외처리 따로 안되어있어요.
     // 각 위치에서 신고에 대한 기능 만들 때 예외 처리 해야합니다.
@@ -64,10 +66,12 @@ public class ReportService {
         return ReportDetailResponse.from(report);
     }
 
-    // 신고를 처리하는 메서드
-    public Long updateReport(Long id, UpdateReportRequest request) {
+    // 신고를 처리하는 메서드 - 알림 추가
+    public Long updateReport(Long id, UpdateReportRequest request) throws Exception {
         Report report = reportRepository.findById(id).orElseThrow(() -> new NotFoundException(ErrorCode.REPORT_NOT_FOUND));
         report.updateReport(request);
+        SendNotificationRequest sendNotificationRequest = new SendNotificationRequest(report.getTargetUser().getId(), NotificationType.REPORT, report.getTargetRoomId());
+        notificationService.sendNotification(sendNotificationRequest);
         return reportRepository.save(report).getId();
     }
 
