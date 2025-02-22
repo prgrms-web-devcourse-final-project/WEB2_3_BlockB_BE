@@ -1,5 +1,6 @@
 package com.example.earthtalk.domain.notification.service;
 
+import com.example.earthtalk.domain.notification.dto.request.SaveNotificationRequest;
 import com.example.earthtalk.domain.notification.dto.request.SaveTokenRequest;
 import com.example.earthtalk.domain.notification.dto.request.SendNotificationRequest;
 import com.example.earthtalk.domain.notification.dto.response.NotificationListResponse;
@@ -27,6 +28,7 @@ public class NotificationService {
     private final FirebaseService firebaseService;
     private final ReportRepository reportRepository;
 
+    // 접속중인 사용자의 id 값을 전달해주면 그와 관련된 알림을 조회하여 반환합니다.
     public List<NotificationListResponse> getNotifications(Long userId) {
         User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
 
@@ -39,18 +41,41 @@ public class NotificationService {
         return responses;
     }
 
+    // FE 에서 받은 토큰을 fcmToken 값을 user 테이블에 저장하는 메서드입니다.
     public void saveToken(SaveTokenRequest request) {
         User user = request.toEntity(userRepository.findById(request.userId()).orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND)));
         userRepository.save(user);
     }
 
+    /*
+     * 알림 전송 메서드입니다.
+     * 알림 전송 로직에 관한 설명
+     * 0. FirebaseConfig.java 클래스를 통해 Firebase 를 초기화시킵니다. (@Configuration)
+     * 1. request 의 userId 값을 통해 user 객체를 찾습니다.
+     * 2. user 객체를 통해 token 값을 찾습니다.
+     * 3. request 를 통해 content 값을 지정합니다. - getContent(request) 메서드 (필요 시 변경 가능)
+     * 4. 만들어진 알림에 대한 정보를 DB 에 저장합니다.
+     * 5. token 값과 content 값으로 firebaseService 의 pushNotification 메서드를 호출합니다.
+     * 6. content 값을 통해 firebase 의 Notification 객체를 생성합니다.
+     * 7. token 값과 Notification 객체를 통해 Message 객체를 생성합니다.
+     * 8. 0번에서 초기화되었던 firebase 를 통해 알림을 전송하고 response 를 반환합니다.
+     */
     public String sendNotification(SendNotificationRequest request) throws Exception {
         User user = userRepository.findById(request.userId()).orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
         String token = user.getFCMToken();
         String content = getContent(request);
-        return firebaseService.sendPushNotification(token, content);
+        SaveNotificationRequest saveNotificationRequest = new SaveNotificationRequest(user, request.notificationType(), request.typeId(), content);
+        notificationRepository.save(saveNotificationRequest.toEntity());
+        return firebaseService.pushNotification(token, content);
     }
 
+    // 사용자가 알림을 확인했을 때 status 를 read 로 변경시키는 메서드.
+    public void readNotification(Long notificationId) {
+        Notification notification = notificationRepository.findById(notificationId).orElseThrow(() -> new NotFoundException(ErrorCode.NOT_FOUND));
+        notification.read();
+    }
+
+    // notiType 에 따라 content 를 가져오는 메서드.
     public String getContent(SendNotificationRequest request) {
         NotificationType type = request.notificationType();
         StringBuilder sb = new StringBuilder();

@@ -35,4 +35,8 @@ public class Notification extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private StatusType statusType;
+
+    public void read() {
+        this.statusType = StatusType.READ;
+    }
 }
