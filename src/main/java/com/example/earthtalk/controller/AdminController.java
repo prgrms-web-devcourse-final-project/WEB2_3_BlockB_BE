@@ -7,46 +7,63 @@ import com.example.earthtalk.domain.report.entity.ReportType;
 import com.example.earthtalk.domain.report.entity.ResultType;
 import com.example.earthtalk.domain.report.service.ReportService;
 import com.example.earthtalk.global.response.ApiResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/api/admin")
 @RequiredArgsConstructor
+@Tag(name = "👩‍🔧 Admin", description = "관리자 권한 API")
 public class AdminController {
 
     private final ReportService reportService;
 
+    @Operation(summary = "신고 목록 조회&검색 API", description = "신고 목록을 queryString에 따라 조회 및 검색합니다.")
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "성공")})
     @GetMapping("/reports")
-    public ResponseEntity<ApiResponse<Page<ReportListResponse>>> getReports(@RequestParam(value = "q", required = false) String q,
-                                                          @RequestParam(value = "type", required = false) ReportType reportType,
-                                                          @RequestParam(value = "result", required = false) ResultType resultType,
-                                                          @RequestParam(value = "p", required = false, defaultValue = "1") int page) {
+    public ResponseEntity<ApiResponse<Page<ReportListResponse>>> getReports(
+            @RequestParam(value = "q", required = false) String q,
+            @RequestParam(value = "type", required = false) ReportType reportType,
+            @RequestParam(value = "result", required = false) ResultType resultType,
+            @RequestParam(value = "p", required = false, defaultValue = "1") int page) {
         page = page <= 1 ? 0 : page - 1;
-        Page<ReportListResponse> reports = reportService.getReports(q, reportType, resultType, page);
+        Page<ReportListResponse> reports = reportService.getReports(q, reportType, resultType,
+            page);
         return ResponseEntity.ok(ApiResponse.createSuccess(reports));
     }
 
+    @Operation(summary = "신고 상세정보 조회 API", description = "신고 상세정보를 조회합니다.")
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "성공")})
     @GetMapping("/reports/{reportId}")
-    public ResponseEntity<ApiResponse<ReportDetailResponse>> getReportsById(@PathVariable("reportId") Long reportId) {
+    public ResponseEntity<ApiResponse<ReportDetailResponse>> getReportsById(
+        @PathVariable("reportId") Long reportId) {
         ReportDetailResponse report = reportService.getReportById(reportId);
         return ResponseEntity.ok(ApiResponse.createSuccess(report));
     }
 
+    @Operation(summary = "신고 상세정보 수정 API", description = "신고 상세정보(대상, 내용, 처리상태 등)를 수정합니다.")
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "성공")})
     @PutMapping("/reports/{reportId}")
     public ResponseEntity<ApiResponse<?>> putReportsById(@PathVariable("reportId") Long reportId,
-                                                              @RequestBody UpdateReportRequest request) {
+        @RequestBody UpdateReportRequest request) {
         Long id = reportService.updateReport(reportId, request);
         return ResponseEntity.ok(ApiResponse.createSuccessWithNoData());
     }
 
+    @Operation(summary = "신고 복구 API", description = "처리된 신고를 복구합니다.")
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "성공")})
     @PutMapping("/reports/{reportId}/restore")
-    public ResponseEntity<ApiResponse<?>> putReportRestoreById(@PathVariable("reportId") Long reportId) {
+    public ResponseEntity<ApiResponse<?>> putReportRestoreById(
+        @PathVariable("reportId") Long reportId) {
         Long id = reportService.restoreReport(reportId);
         return ResponseEntity.ok(ApiResponse.createSuccessWithNoData());
     }
