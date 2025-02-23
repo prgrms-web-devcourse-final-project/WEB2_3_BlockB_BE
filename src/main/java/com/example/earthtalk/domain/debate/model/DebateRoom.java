@@ -12,7 +12,7 @@ import com.example.earthtalk.global.constant.ContinentType;
 import lombok.Getter;
 
 @Getter
-public class ChatRoom {
+public class DebateRoom {
 	private final String roomId;
 	private final MemberNumberType memberNumberType;
 	private final String title;
@@ -23,7 +23,7 @@ public class ChatRoom {
 
 	private final Set<Long> participantIds = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
-	public ChatRoom(String roomId, MemberNumberType memberNumberType, String title, String subtitle, TimeType time, CategoryType category, ContinentType continent) {
+	public DebateRoom(String roomId, MemberNumberType memberNumberType, String title, String subtitle, TimeType time, CategoryType category, ContinentType continent) {
 		this.roomId = String.valueOf(roomId);
 		this.memberNumberType = memberNumberType;
 		this.title = title;

@@ -20,13 +20,13 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-@Entity(name = "debate_users")
+@Entity(name = "debate_participants")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 @Builder
 @Getter
 @EntityListeners(AuditingEntityListener.class)
-public class DebateUser extends BaseTimeEntity {
+public class DebateParticipants extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -39,6 +39,10 @@ public class DebateUser extends BaseTimeEntity {
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private DebateRole role;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

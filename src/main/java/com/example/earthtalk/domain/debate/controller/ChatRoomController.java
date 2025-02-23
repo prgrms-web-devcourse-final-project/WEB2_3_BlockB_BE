@@ -1,5 +1,6 @@
 package com.example.earthtalk.domain.debate.controller;
 
+import com.example.earthtalk.domain.debate.service.DebateRoomService;
 import com.example.earthtalk.global.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -9,13 +10,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.earthtalk.domain.debate.dto.CreateDebateRoomRequest;
-import com.example.earthtalk.domain.debate.service.ChatRoomService;
-
 
 /**
  * ChatRoomController는 REST API를 통해 토론방(채팅방)을 생성하는 엔드포인트를 제공합니다.
  * <p>
- * 클라이언트로부터 토론방 생성 요청을 받아 {@link ChatRoomService}를 통해 새로운 채팅방을 생성하고,
+ * 클라이언트로부터 토론방 생성 요청을 받아 {@link DebateRoomService}를 통해 새로운 채팅방을 생성하고,
  * 생성된 채팅방의 고유 식별자(roomId)를 응답으로 반환합니다.
  * </p>
  */
@@ -23,12 +22,12 @@ import com.example.earthtalk.domain.debate.service.ChatRoomService;
 @RequiredArgsConstructor
 @RequestMapping("/api/chat")
 public class ChatRoomController {
-	private final ChatRoomService chatRoomService;
+	private final DebateRoomService debateRoomService;
 
 	/**
 	 * 클라이언트로부터 토론방 생성 요청을 받아 새로운 채팅방을 생성합니다.
 	 * <p>
-	 * 요청 본문에 담긴 {@link CreateDebateRoomRequest} 정보를 사용하여 {@link ChatRoomService#createChatRoom(CreateDebateRoomRequest)}
+	 * 요청 본문에 담긴 {@link CreateDebateRoomRequest} 정보를 사용하여 {@link DebateRoomService#createDebateRoom(CreateDebateRoomRequest)}
 	 * 메서드를 호출하고, 생성된 채팅방의 고유 식별자(roomId)를 HTTP 200 응답과 함께 반환합니다.
 	 * </p>
 	 *
@@ -37,7 +36,7 @@ public class ChatRoomController {
 	 */
 	@PostMapping("/create")
 	public ResponseEntity<ApiResponse<String>> createRoom(@RequestBody CreateDebateRoomRequest request) {
-		String roomId = chatRoomService.createChatRoom(request);
+		String roomId = debateRoomService.createDebateRoom(request);
 		return ResponseEntity.ok(ApiResponse.createSuccess(roomId));
 	}
 

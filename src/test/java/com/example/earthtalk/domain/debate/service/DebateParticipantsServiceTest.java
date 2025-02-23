@@ -7,19 +7,17 @@ import static org.mockito.Mockito.*;
 import java.util.*;
 
 import com.example.earthtalk.domain.debate.entity.Debate;
+import com.example.earthtalk.domain.debate.entity.DebateParticipants;
 import com.example.earthtalk.domain.debate.entity.FlagType;
+import com.example.earthtalk.domain.debate.model.DebateRoom;
 import com.example.earthtalk.domain.user.entity.Role;
 import com.example.earthtalk.domain.user.entity.User;
-import com.example.earthtalk.domain.user.repository.UserRepository;
-import com.example.earthtalk.domain.debate.entity.DebateUser;
-import com.example.earthtalk.domain.debate.model.ChatRoom;
 import com.example.earthtalk.domain.news.entity.MemberNumberType;
 import com.example.earthtalk.domain.news.entity.TimeType;
 import com.example.earthtalk.domain.debate.entity.CategoryType;
 import com.example.earthtalk.global.constant.ContinentType;
-import com.example.earthtalk.domain.debate.repository.DebateUserRepository;
 import com.example.earthtalk.global.exception.ConflictException;
-import com.example.earthtalk.global.exception.ErrorCode;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,21 +27,21 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 @ExtendWith(MockitoExtension.class)
-public class DebateUserServiceTest {
+public class DebateParticipantsServiceTest {
 
 	@Mock
 	private SimpMessagingTemplate messagingTemplate;
 
 	@Mock
-	private ChatRoomService chatRoomService;
+	private DebateRoomService debateRoomService;
 
 	@InjectMocks
 	private DebateUserService debateUserService;
 
-	private ChatRoom chatRoom;
+	private DebateRoom debateRoom;
 
-	private DebateUser createTestDebateUser(Debate debate, User user, FlagType position, FlagType afterPosition) {
-		return DebateUser.builder()
+	private DebateParticipants createTestDebateUser(Debate debate, User user, FlagType position, FlagType afterPosition) {
+		return DebateParticipants.builder()
 			.debate(debate)
 			.user(user)
 			.position(position != null ? position : FlagType.NO_POSITION)
@@ -53,8 +51,8 @@ public class DebateUserServiceTest {
 
 	@BeforeEach
 	public void setup() {
-		chatRoom = new ChatRoom("room123", MemberNumberType.T2, "Test Room", "Test Subtitle", TimeType.T5, CategoryType.CO, ContinentType.AF);
-		when(chatRoomService.getChatRoom("room123")).thenReturn(chatRoom);
+		debateRoom = new DebateRoom("room123", MemberNumberType.T2, "Test Room", "Test Subtitle", TimeType.T5, CategoryType.CO, ContinentType.AF);
+		when(debateRoomService.getDebateRoom("room123")).thenReturn(debateRoom);
 		Debate debate = mock(Debate.class);
 		// 올바른 `User` 객체를 반환하도록 설정
 		User user = User.builder()
@@ -70,18 +68,18 @@ public class DebateUserServiceTest {
 			.socialId("123456789")
 			.build();
 
-		DebateUser debateUser = createTestDebateUser(debate, user, FlagType.PRO, null);
+		DebateParticipants debateParticipants = createTestDebateUser(debate, user, FlagType.PRO, null);
 
-		assertNotNull(debateUser);
-		assertEquals(debate, debateUser.getDebate());
-		assertEquals(user, debateUser.getUser());
-		assertEquals(FlagType.PRO, debateUser.getPosition());
-		assertEquals(FlagType.NO_POSITION, debateUser.getAfterPosition()); // 기본값 적용 확인
+		assertNotNull(debateParticipants);
+		assertEquals(debate, debateParticipants.getDebate());
+		assertEquals(user, debateParticipants.getUser());
+		assertEquals(FlagType.PRO, debateParticipants.getPosition());
+		assertEquals(FlagType.NO_POSITION, debateParticipants.getAfterPosition()); // 기본값 적용 확인
 	}
 
 	@Test
 	public void testAddUser_pro() {
-		debateUserService.addUser(chatRoom, "proUser", "pro");
+		debateUserService.addUser(debateRoom, "proUser", "pro");
 
 		verify(messagingTemplate, atLeastOnce()).convertAndSend(eq("/topic/debate/room123"), (Object) argThat(message -> {
 			if (!(message instanceof Map)) return false;
@@ -93,7 +91,7 @@ public class DebateUserServiceTest {
 
 	@Test
 	public void testAddUser_con() {
-		debateUserService.addUser(chatRoom, "conUser", "con");
+		debateUserService.addUser(debateRoom, "conUser", "con");
 
 		verify(messagingTemplate, atLeastOnce()).convertAndSend(eq("/topic/debate/room123"), (Object) argThat(message -> {
 			if (!(message instanceof Map)) return false;
@@ -105,19 +103,19 @@ public class DebateUserServiceTest {
 
 	@Test
 	public void testAddUser_exceedCapacity_pro() {
-		debateUserService.addUser(chatRoom, "user1", "pro");
-		debateUserService.addUser(chatRoom, "user2", "pro");
-		debateUserService.addUser(chatRoom, "user3", "pro");
+		debateUserService.addUser(debateRoom, "user1", "pro");
+		debateUserService.addUser(debateRoom, "user2", "pro");
+		debateUserService.addUser(debateRoom, "user3", "pro");
 
 		assertThrows(ConflictException.class, () -> {
-			debateUserService.addUser(chatRoom, "user4", "pro");
+			debateUserService.addUser(debateRoom, "user4", "pro");
 		});
 	}
 
 	@Test
 	public void testRemoveUser() {
-		debateUserService.addUser(chatRoom, "proUser1", "pro");
-		debateUserService.addUser(chatRoom, "conUser1", "con");
+		debateUserService.addUser(debateRoom, "proUser1", "pro");
+		debateUserService.addUser(debateRoom, "conUser1", "con");
 
 		Map<String, Integer> initialCount = debateUserService.getUserCount("room123");
 		assertEquals(1, initialCount.get("pro").intValue());
@@ -134,8 +132,8 @@ public class DebateUserServiceTest {
 
 	@Test
 	public void testSendUserCountUpdate() {
-		debateUserService.addUser(chatRoom, "userA", "pro");
-		debateUserService.addUser(chatRoom, "userB", "con");
+		debateUserService.addUser(debateRoom, "userA", "pro");
+		debateUserService.addUser(debateRoom, "userB", "con");
 
 		verify(messagingTemplate, atLeast(1)).convertAndSend(eq("/topic/debate/room123"), (Object) any());
 	}

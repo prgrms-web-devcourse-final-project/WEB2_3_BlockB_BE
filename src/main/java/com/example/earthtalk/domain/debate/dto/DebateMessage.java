@@ -19,5 +19,5 @@ public class DebateMessage {
 
 	private String message;
 
-	private LocalDateTime time;
+	private LocalDateTime timestamp;
 }

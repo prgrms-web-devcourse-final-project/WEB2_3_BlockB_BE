@@ -17,12 +17,12 @@ import com.example.earthtalk.domain.debate.dto.DebateMessage;
  * </p>
  */
 @Component
-public class ChatMessageStore {
+public class DebateMessageStore {
 
 	/**
 	 * 채팅방 ID를 키(key)로, 해당 채팅방의 DebateMessage 리스트를 값(value)으로 갖는 맵.
 	 */
-	private final Map<String, List<DebateMessage>> chatMessagesMap = new ConcurrentHashMap<>();
+	private final Map<String, List<DebateMessage>> debateMessagesMap = new ConcurrentHashMap<>();
 
 	/**
 	 * 지정된 roomId에 해당하는 DebateMessage 리스트를 반환합니다.
@@ -33,8 +33,8 @@ public class ChatMessageStore {
 	 * @param roomId 채팅방의 식별자
 	 * @return 해당 채팅방의 DebateMessage 리스트
 	 */
-	public List<DebateMessage> getOrCreateChatMessages(String roomId) {
-		return chatMessagesMap.computeIfAbsent(roomId, k -> new ArrayList<>());
+	public List<DebateMessage> getOrCreateDebateMessages(String roomId) {
+		return debateMessagesMap.computeIfAbsent(roomId, k -> new ArrayList<>());
 	}
 
 	/**
@@ -43,8 +43,8 @@ public class ChatMessageStore {
 	 * @param roomId  채팅방의 식별자
 	 * @param message 추가할 DebateMessage 객체
 	 */
-	public void addChatMessage(String roomId, DebateMessage message) {
-		getOrCreateChatMessages(roomId).add(message);
+	public void addDebateMessage(String roomId, DebateMessage message) {
+		getOrCreateDebateMessages(roomId).add(message);
 	}
 
 	/**
@@ -56,8 +56,8 @@ public class ChatMessageStore {
 	 * @param roomId 채팅방의 식별자
 	 * @return 제거된 DebateMessage 리스트, 존재하지 않으면 null
 	 */
-	public List<DebateMessage> removeChatMessages(String roomId) {
-		return chatMessagesMap.remove(roomId);
+	public List<DebateMessage> removeDebateMessages(String roomId) {
+		return debateMessagesMap.remove(roomId);
 	}
 
 	/**
@@ -68,7 +68,7 @@ public class ChatMessageStore {
 	 *
 	 * @return 채팅방 ID와 DebateMessage 리스트의 맵
 	 */
-	public Map<String, List<DebateMessage>> getAllChatMessages() {
-		return chatMessagesMap;
+	public Map<String, List<DebateMessage>> getAllDebateMessages() {
+		return debateMessagesMap;
 	}
 }

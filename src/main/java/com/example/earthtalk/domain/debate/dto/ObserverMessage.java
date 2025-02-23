@@ -1,5 +1,7 @@
 package com.example.earthtalk.domain.debate.dto;
 
+import java.time.LocalDateTime;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -10,14 +12,10 @@ import lombok.NoArgsConstructor;
 public class ObserverMessage {
 	private String event;
 
-	private String uuid;
-
-	private Long userId;
-
 	private String userName;
 
 	private String message;
 
-	private String timestamp;
+	private LocalDateTime timestamp;
 
 }

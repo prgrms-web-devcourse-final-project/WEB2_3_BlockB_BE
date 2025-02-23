@@ -6,9 +6,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.example.earthtalk.domain.debate.dto.CreateDebateRoomRequest;
-import com.example.earthtalk.domain.debate.service.ChatRoomService;
+import com.example.earthtalk.domain.debate.service.DebateRoomService;
 import com.example.earthtalk.domain.news.entity.MemberNumberType;
-import com.example.earthtalk.domain.debate.controller.ChatRoomController;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,10 +18,10 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-public class ChatRoomControllerTest {
+public class DebateRoomControllerTest {
 
 	private MockMvc mockMvc;
-	private ChatRoomService chatRoomService; // 목 객체
+	private DebateRoomService debateRoomService; // 목 객체
 	private ObjectMapper objectMapper;
 
 	@BeforeAll
@@ -35,10 +34,10 @@ public class ChatRoomControllerTest {
 
 	@BeforeEach
 	public void setup() {
-		// ChatRoomService 목 객체 생성
-		chatRoomService = Mockito.mock(ChatRoomService.class);
+		// DebateRoomService 목 객체 생성
+		debateRoomService = Mockito.mock(DebateRoomService.class);
 		// ChatRoomController 인스턴스 생성 후 목 객체 주입
-		ChatRoomController controller = new ChatRoomController(chatRoomService);
+		ChatRoomController controller = new ChatRoomController(debateRoomService);
 		// standaloneSetup을 통해 MockMvc 인스턴스 생성
 		mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
 		objectMapper = new ObjectMapper();
@@ -56,7 +55,7 @@ public class ChatRoomControllerTest {
 
 		// 예상되는 roomId (예: in-memory용 UUID)
 		String expectedRoomId = "test-uuid-1234";
-		when(chatRoomService.createChatRoom(Mockito.any(CreateDebateRoomRequest.class)))
+		when(debateRoomService.createDebateRoom(Mockito.any(CreateDebateRoomRequest.class)))
 			.thenReturn(expectedRoomId);
 
 
