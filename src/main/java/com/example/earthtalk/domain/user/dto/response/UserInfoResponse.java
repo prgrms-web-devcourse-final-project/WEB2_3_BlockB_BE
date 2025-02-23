@@ -16,7 +16,7 @@ public record UserInfoResponse(
         return new UserInfoResponse(
             user.getId(),
             user.getNickname(),
-            user.getProfile(),
+            user.getProfileUrl(),
             user.getIntroduction(),
             totalFollowers,
             totalFollowees,

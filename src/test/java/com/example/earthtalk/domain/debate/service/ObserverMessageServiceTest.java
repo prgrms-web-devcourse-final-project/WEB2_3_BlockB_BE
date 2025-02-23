@@ -23,7 +23,7 @@ public class ObserverMessageServiceTest {
 	public void testSendObserverMessage() {
 		// ObserverMessage 객체 생성 (필요한 필드는 실제 클래스에 맞게 설정)
 		ObserverMessage message = new ObserverMessage();
-		message.setRoomId("room123");
+		message.setUuid("room123");
 		message.setMessage("Test Content"); // 예시로 content 필드가 있다고 가정
 
 		// sendObserverMessage 호출

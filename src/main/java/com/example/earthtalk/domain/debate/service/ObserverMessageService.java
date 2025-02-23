@@ -20,7 +20,7 @@ public class ObserverMessageService {
 	private final SimpMessagingTemplate messagingTemplate;
 
 	public void sendObserverMessage(ObserverMessage message) {
-		String destination = "/topic/observer/" + message.getRoomId();
+		String destination = "/topic/observer/" + message.getUuid();
 		messagingTemplate.convertAndSend(destination, message);
 	}
 }
