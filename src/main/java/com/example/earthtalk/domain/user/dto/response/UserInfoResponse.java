@@ -12,11 +12,12 @@ public record UserInfoResponse(
     Long wins,
     Long draws,
     Long losses
-) {public static UserInfoResponse from(User user, Long totalFollowers, Long totalFollowees) {
+) {
+    public static UserInfoResponse from(User user, Long totalFollowers, Long totalFollowees) {
         return new UserInfoResponse(
             user.getId(),
             user.getNickname(),
-            user.getProfile(),
+            user.getProfileUrl(),
             user.getIntroduction(),
             totalFollowers,
             totalFollowees,
