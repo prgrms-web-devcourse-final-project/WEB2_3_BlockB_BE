@@ -25,25 +25,26 @@ spring:
       client:
         registration:
           google:
-            client-name: Google
+            client-name: google
             client-id: ${GOOGLE_CLIENT_ID}
             client-secret: ${GOOGLE_CLIENT_SECRET}
             redirect-uri: ${GOOGLE_CLIENT_REDIRECT_URL}
             authorization-grant-type: authorization_code
             scope: profile, email
           naver:
-            client-name: Naver
+            client-name: naver
             client-id: ${NAVER_CLIENT_ID}
             client-secret: ${NAVER_CLIENT_SECRET}
             redirect-uri: ${NAVER_CLIENT_REDIRECT_URL}
             authorization-grant-type: authorization_code
             scope: email, profile_image
           kakao:
-            client-name: Kakao
+            client-name: kakao
             client-id: ${KAKAO_CLIENT_ID}
             client-secret: ${KAKAO_CLIENT_SECRET}
             redirect-uri: ${KAKAO_CLIENT_REDIRECT_URL}
             authorization-grant-type: authorization_code
+            client-authentication-method: client_secret_post
             scope: profile_nickname, profile_image
         provider:
           naver:
@@ -78,3 +79,8 @@ springdoc:
   writer-with-default-pretty-printer: true # JSON을 예쁘게 출력
 #  paths-to-match:
 #    - /api/v1/** # 특정 경로의 API만 매칭
+
+jwt:
+  secret-key: ${SECRET_KEY}
+  access-expire-time: ${ACCESS_EXPIRE_TIME}
+  refresh-expire-time: ${REFRESH_EXPIRE_TIME}
