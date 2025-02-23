@@ -1,6 +1,7 @@
 package com.example.earthtalk.domain.debate.service;
 
 import java.util.Set;
+import java.util.UUID;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -58,6 +59,7 @@ public class DebateManagementService {
 		if (chatRoom != null && chatRoom.isFull()) {
 			Debate debate = Debate.builder()
 				.title(chatRoom.getTitle())
+				.uuid(UUID.fromString(roomId))
 				.description(chatRoom.getSubtitle())
 				.member(chatRoom.getMemberNumberType())
 				.continent(chatRoom.getContinent())

@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.transaction.Transactional;
 import java.util.Date;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -50,20 +51,17 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         response.getWriter().write(responseBody);
     }
 
-    private void saveRefreshToken(CustomOAuth2User oAuth2User, String refreshToken) {
+    public void saveRefreshToken(CustomOAuth2User oAuth2User, String refreshToken) {
         String userEmail = oAuth2User.getEmail();
 
-        // 기존 Refresh Token 삭제
-        if (refreshTokenRepository.existsByUserEmail(userEmail)) {
-            refreshTokenRepository.deleteByUserEmail(userEmail);
-        }
+        RefreshToken refreshTokenEntity = refreshTokenRepository.findByUserEmail(userEmail)
+            .orElse(RefreshToken.builder()
+                .userEmail(userEmail)
+                .build());
 
-        // 리프레시 토큰 DB에 저장
-        refreshTokenRepository.save(
-            RefreshToken.builder()
-            .userEmail(oAuth2User.getEmail())
-            .token(refreshToken)
-            .build()
-        );
+        refreshTokenEntity.updateToken(refreshToken); // 새로운 토큰 값 설정
+
+        refreshTokenRepository.save(refreshTokenEntity); // 토큰 존재하면 수정, 없으면 저장
     }
+
 }

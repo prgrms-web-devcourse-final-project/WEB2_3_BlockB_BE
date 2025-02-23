@@ -40,6 +40,7 @@ public enum ErrorCode { // 예외 발생시, body에 실어 날려줄 상태, co
 
     //-5000 DEBATE
     TOO_MANY_PARTICIPANTS(409, -5001, "참가자가 이미 최대 인원 입니다."),
+    DEBATEROOM_NOT_FOUND(404, -5002, "토론방 내역을 찾을 수 없습니다."),
 
     //-6000 OAUTH
     OAUTH_NOT_FOUND(404, -6000, "소셜로그인 계정 정보가 존재하지 않습니다."),
