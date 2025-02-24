@@ -13,7 +13,7 @@ public class NewsListDTO {
     private String title;
     private String content;
     private String imgUrl;
-    private NewsType newsType;
+    private String newsType;
     private LocalDateTime deliveryTime;
     private Long like;
     private Long bookmark;
@@ -23,9 +23,12 @@ public class NewsListDTO {
         this.title = news.getTitle();
         this.content = news.getContent();
         this.imgUrl = news.getImgUrl();
-        this.newsType = news.getNewsType();
+        this.newsType = news.getNewsType().getValue();
         this.deliveryTime = news.getDeliveryTime();
         this.like = like;
         this.bookmark = bookmark;
+    }
+    public void setNewsType(NewsType newsType) {
+        this.newsType = newsType.getValue();
     }
 }

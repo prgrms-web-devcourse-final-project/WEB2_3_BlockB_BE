@@ -1,6 +1,8 @@
 package com.example.earthtalk.domain.news.repository;
 
 import com.example.earthtalk.domain.news.dto.NewsListDTO;
+import com.example.earthtalk.domain.news.entity.Bookmark;
+import com.example.earthtalk.domain.news.entity.Like;
 import com.example.earthtalk.domain.news.entity.News;
 import com.example.earthtalk.domain.news.entity.QBookmark;
 import com.example.earthtalk.domain.news.entity.QLike;
@@ -45,7 +47,11 @@ public class NewsFilterRepositoryImpl implements NewsFilterRepository {
         BooleanBuilder builder = new BooleanBuilder();
 
         if (continent != null && !continent.isEmpty()) {
-            builder.and(news.continent.eq(ContinentType.valueOf(continent)));
+            try {
+                builder.and(news.continent.eq(ContinentType.valueOf(continent)));
+            } catch (Exception e) {
+                log.error("존재하지 않는 대륙 구분입니다. continent={}", continent);
+            }
         }
         if (query != null && !query.isEmpty()) {
             builder.and(news.title.containsIgnoreCase(query)
@@ -57,15 +63,16 @@ public class NewsFilterRepositoryImpl implements NewsFilterRepository {
         if (sort == null || sort.equals("latest")) {
             LocalDateTime deliveryTimeOfLastNews = newsRepository.getNewsDeliveryTime(newsId);
             orderSpecifier = news.deliveryTime.desc();
-            if(newsId != null) {
+            if (newsId != null) {
                 builder.and(news.deliveryTime.lt(deliveryTimeOfLastNews)) // 마지막 뉴스보다 더 이전에 작성된
-                    .or(news.deliveryTime.eq(deliveryTimeOfLastNews).and(news.id.gt(newsId))); // 작성시간 같을경우 아이디로 비교
+                    .or(news.deliveryTime.eq(deliveryTimeOfLastNews)
+                        .and(news.id.gt(newsId))); // 작성시간 같을경우 아이디로 비교
             }
 
         } else if (sort.equals("popular")) {
             Long likesOfLastNews = newsRepository.countNewsLike(newsId);
             orderSpecifier = like.count().desc();
-            if(newsId != null) {
+            if (newsId != null) {
                 builder.and(like.count().gt(likesOfLastNews)) // 라이크 갯수가 마지막 뉴스보다 많은
                     .or(like.count().eq(likesOfLastNews)
                         .and(news.id.gt(newsId))); // 라이크 갯수가 같을 경우 아이디로 비교
@@ -92,6 +99,45 @@ public class NewsFilterRepositoryImpl implements NewsFilterRepository {
         }
 
         return new SliceImpl<>(newsList, PageRequest.of(0, 12), hasNextPage);
+    }
+
+    @Override
+    public List<NewsListDTO> newsRanking() {
+        QNews news = QNews.news;
+        QBookmark bookmark = QBookmark.bookmark;
+        QLike like = QLike.like;
+        return jpaQueryFactory
+            .select(Projections.constructor(NewsListDTO.class,
+                news, like.count(), bookmark.count()))
+            .from(news)
+            .leftJoin(like).on(news.id.eq(like.news.id))
+            .leftJoin(bookmark).on(news.id.eq(bookmark.news.id))
+            .groupBy(news.id)
+            .orderBy(like.count().desc())
+            .limit(10)
+            .fetch();
+    }
+
+    @Override
+    public boolean isLiked(Long userId, Long newsId) {
+        QLike like = QLike.like;
+        Integer result = jpaQueryFactory
+            .selectOne()
+            .from(like)
+            .where(like.user.id.eq(userId).and(like.news.id.eq(newsId)))
+            .fetchFirst();
+        return result != null;
+    }
+
+    @Override
+    public boolean isMarked(Long userId, Long newsId) {
+        QBookmark mark = QBookmark.bookmark;
+        Integer result = jpaQueryFactory
+            .selectOne()
+            .from(mark)
+            .where(mark.user.id.eq(userId).and(mark.news.id.eq(newsId)))
+            .fetchFirst();
+        return result != null;
     }
 
 }
