@@ -12,7 +12,6 @@ import com.example.earthtalk.domain.debate.entity.DebateChat;
 import com.example.earthtalk.domain.debate.entity.DebateParticipants;
 import com.example.earthtalk.domain.debate.entity.DebateRole;
 import com.example.earthtalk.domain.debate.entity.FlagType;
-import com.example.earthtalk.domain.debate.model.DebateRoom;
 import com.example.earthtalk.domain.debate.repository.DebateChatRepository;
 import com.example.earthtalk.global.exception.ErrorCode;
 

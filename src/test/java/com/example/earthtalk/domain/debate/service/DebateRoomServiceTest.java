@@ -7,10 +7,12 @@ import java.util.Map;
 
 import com.example.earthtalk.domain.debate.dto.CreateDebateRoomRequest;
 import com.example.earthtalk.domain.debate.entity.CategoryType;
-import com.example.earthtalk.domain.debate.model.DebateRoom;
+import com.example.earthtalk.domain.debate.entity.Debate;
+import com.example.earthtalk.domain.debate.repository.DebateRepository;
 import com.example.earthtalk.domain.debate.store.DebateRoomStore;
 import com.example.earthtalk.domain.news.entity.MemberNumberType;
 import com.example.earthtalk.domain.news.entity.TimeType;
+import com.example.earthtalk.domain.news.repository.NewsRepository;
 import com.example.earthtalk.global.constant.ContinentType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,18 +21,20 @@ public class DebateRoomServiceTest {
 
 	private DebateRoomService debateRoomService;
 	private DebateRoomStore debateRoomStore;
+	private DebateRepository debateRepository;
+	private NewsRepository newsRepository;
 
 	// 간단한 인메모리 구현체
 	static class InMemoryDebateRoomStore extends DebateRoomStore {
-		private final Map<String, DebateRoom> store = new HashMap<>();
+		private final Map<String, Debate> store = new HashMap<>();
 
 		@Override
-		public void put(DebateRoom debateRoom) {
-			store.put(debateRoom.getRoomId(), debateRoom);
+		public void put(Debate debate) {
+			store.put(debate.getUuid().toString(), debate);
 		}
 
 		@Override
-		public DebateRoom get(String roomId) {
+		public Debate get(String roomId) {
 			return store.get(roomId);
 		}
 
@@ -43,7 +47,7 @@ public class DebateRoomServiceTest {
 	@BeforeEach
 	public void setup() {
 		debateRoomStore = new InMemoryDebateRoomStore();
-		debateRoomService = new DebateRoomService(debateRoomStore);
+		debateRoomService = new DebateRoomService(debateRoomStore, debateRepository, newsRepository);
 	}
 
 	@Test
@@ -62,11 +66,11 @@ public class DebateRoomServiceTest {
 		assertNotNull(roomId, "생성된 roomId는 null이면 안 됩니다.");
 
 		// then: 생성된 roomId로 ChatRoom이 저장되었는지 확인
-		DebateRoom debateRoom = debateRoomService.getDebateRoom(roomId);
-		assertNotNull(debateRoom, "캐시에 저장된 ChatRoom은 null이면 안 됩니다.");
-		assertEquals(roomId, debateRoom.getRoomId(), "ChatRoom의 roomId가 일치해야 합니다.");
-		assertEquals("Test Debate Room", debateRoom.getTitle(), "채팅방 제목이 일치해야 합니다.");
-		assertEquals("Test Description", debateRoom.getSubtitle(), "채팅방 설명이 일치해야 합니다.");
+		Debate debate = debateRoomService.getDebateRoom(roomId);
+		assertNotNull(debate, "캐시에 저장된 ChatRoom은 null이면 안 됩니다.");
+		assertEquals(roomId, debate.getUuid(), "ChatRoom의 roomId가 일치해야 합니다.");
+		assertEquals("Test Debate Room", debate.getTitle(), "채팅방 제목이 일치해야 합니다.");
+		assertEquals("Test Description", debate.getDescription(), "채팅방 설명이 일치해야 합니다.");
 	}
 
 	@Test

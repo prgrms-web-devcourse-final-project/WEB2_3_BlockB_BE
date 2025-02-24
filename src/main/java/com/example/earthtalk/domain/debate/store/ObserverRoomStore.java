@@ -1,7 +1,9 @@
 package com.example.earthtalk.domain.debate.store;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -47,5 +49,13 @@ public class ObserverRoomStore {
 	public int getMaxObserverCount(String roomId) {
 		AtomicInteger max = maxObserverCountMap.get(roomId);
 		return max == null ? 0 : max.get();
+	}
+
+	public Map<String, Integer> getObserverCounts() {
+		Map<String, Integer> observerCounts = new HashMap<>();
+		for (String roomId : roomObservers.keySet()) {
+			observerCounts.put(roomId, roomObservers.get(roomId).size());
+		}
+		return observerCounts;
 	}
 }

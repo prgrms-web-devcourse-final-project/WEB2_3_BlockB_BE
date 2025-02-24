@@ -1,5 +1,6 @@
 package com.example.earthtalk.domain.debate.component;
 
+import static com.example.earthtalk.domain.debate.entity.QDebate.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
@@ -9,7 +10,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 import com.example.earthtalk.domain.debate.dto.DebateMessage;
-import com.example.earthtalk.domain.debate.model.DebateRoom;
+import com.example.earthtalk.domain.debate.entity.Debate;
 import com.example.earthtalk.domain.debate.service.DebateRoomService;
 import com.example.earthtalk.domain.debate.service.DebateChatManagementService;
 import com.example.earthtalk.domain.debate.service.DebateUserService;
@@ -63,8 +64,9 @@ public class WebSocketEventListenerTest {
 	 */
 	private void simulateConnection(String sessionId, String roomId, String userName, String position) {
 		// roomId에 대해 DebateRoom 객체를 반환하도록 stubbing
-		DebateRoom debateRoom = new DebateRoom(roomId, null, "Test Room", "Test Subtitle", null, null, null);
-		when(debateRoomService.getDebateRoom(roomId)).thenReturn(debateRoom);
+		Debate debate = Debate.builder()
+			.build();
+		when(debateRoomService.getDebateRoom(roomId)).thenReturn(debate);
 
 		Map<String, Object> sessionAttributes = new HashMap<>();
 		sessionAttributes.put("roomId", roomId);
@@ -93,8 +95,8 @@ public class WebSocketEventListenerTest {
 		sessionAttributes.put("position", "pro");
 
 		// DebateRoom stub 설정
-		DebateRoom debateRoom = new DebateRoom("room123", null, "Test Room", "Test Subtitle", null, null, null);
-		when(debateRoomService.getDebateRoom("room123")).thenReturn(debateRoom);
+		Debate debate = Debate.builder().build();
+		when(debateRoomService.getDebateRoom("room123")).thenReturn(debate);
 
 		StompHeaderAccessor accessor = StompHeaderAccessor.create(StompCommand.CONNECTED);
 		accessor.setSessionAttributes(sessionAttributes);
@@ -105,7 +107,7 @@ public class WebSocketEventListenerTest {
 
 		eventListener.handleWebSocketConnectListener(connectEvent);
 
-		verify(debateUserService, times(1)).addUser(debateRoom, "testUser", "pro");
+		verify(debateUserService, times(1)).addUser(debate, "testUser", "pro");
 	}
 
 	@Test

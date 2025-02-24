@@ -7,9 +7,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
+import com.example.earthtalk.domain.debate.entity.Debate;
+import com.example.earthtalk.domain.debate.repository.DebateRepository;
 import com.example.earthtalk.domain.debate.store.DebateUserStore;
 import com.example.earthtalk.domain.debate.entity.DebateParticipants;
-import com.example.earthtalk.domain.debate.model.DebateRoom;
 import com.example.earthtalk.domain.debate.repository.DebateParticipantsRepository;
 import com.example.earthtalk.domain.user.repository.UserRepository;
 import com.example.earthtalk.global.exception.ErrorCode;
@@ -35,6 +36,7 @@ public class DebateUserService {
 
 	// 사용자 상태 관리를 담당하는 별도의 컴포넌트
 	private final DebateUserStore debateUserStore;
+	private final DebateRepository debateRepository;
 
 	/**
 	 * 토론방에 사용자를 추가합니다.
@@ -44,15 +46,15 @@ public class DebateUserService {
 	 * 방의 최대 인원 수는 chatRoom의 MemberNumberType에 의해 제한되며, 허용되는 최대 인원은 1 또는 3입니다.
 	 * </p>
 	 *
-	 * @param debateRoom debateRoom model
+	 * @param debate debateRoom model
 	 * @param userName 사용자 이름
 	 * @param position 사용자의 포지션 ("pro" 또는 "con")
 	 * @throws IllegalArgumentException 최대 인원이 1 또는 3이 아닌 경우, 또는 position이 올바르지 않은 경우 발생
 	 * @throws ConflictException        이미 최대 인원 수를 초과한 경우 발생
 	 */
-	public void addUser(DebateRoom debateRoom, String userName, String position) {
-		int maxMembers = debateRoom.getMemberNumberType().getValue();
-		String roomId = debateRoom.getRoomId();
+	public void addUser(Debate debate, String userName, String position) {
+		int maxMembers = debate.getMember().getValue();
+		String roomId = debate.getUuid().toString();
 		if (maxMembers != 1 && maxMembers != 3) {
 			throw new IllegalArgumentException(ErrorCode.METHOD_NOT_ALLOWED.getMessage());
 		}
@@ -81,7 +83,7 @@ public class DebateUserService {
 		if (debateUserStore.getProUsers(roomId).size() == maxMembers &&
 			debateUserStore.getConUsers(roomId).size() == maxMembers) {
 			debateManagementService.persistChatRoomIfFull(
-				roomId,
+				debate,
 				debateUserStore.getProUsers(roomId),
 				debateUserStore.getConUsers(roomId)
 			);

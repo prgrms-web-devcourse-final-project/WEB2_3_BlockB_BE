@@ -2,6 +2,8 @@ package com.example.earthtalk.domain.debate.controller;
 
 import com.example.earthtalk.domain.debate.service.DebateRoomService;
 import com.example.earthtalk.global.response.ApiResponse;
+
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -34,6 +36,11 @@ public class ChatRoomController {
 	 * @param request 토론방 생성에 필요한 정보를 담고 있는 {@link CreateDebateRoomRequest} 객체
 	 * @return 생성된 채팅방의 고유 식별자를 포함하는 HTTP 응답 (200 OK)
 	 */
+	@Operation(summary = "토론방 생성 API", description = "토론방 생성 요청 정보를 받아 새로운 토론방을 생성하고, 생성된 토론방의 ID를 반환합니다.")
+	@io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "토론방 생성에 성공했습니다."),
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "서버 오류가 발생했습니다.")
+	})
 	@PostMapping("/create")
 	public ResponseEntity<ApiResponse<String>> createRoom(@RequestBody CreateDebateRoomRequest request) {
 		String roomId = debateRoomService.createDebateRoom(request);

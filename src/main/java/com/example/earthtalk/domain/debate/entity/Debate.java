@@ -69,6 +69,10 @@ public class Debate extends BaseTimeEntity {
     @Column(nullable = false)
     private RoomType status;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private SpeakCountType speakCount;
+
     @Column(nullable = false)
     private Long agreeNumber;
 

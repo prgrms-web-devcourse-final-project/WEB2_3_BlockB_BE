@@ -1,6 +1,7 @@
 package com.example.earthtalk.domain.debate.component;
 
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Component;
@@ -14,7 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import com.example.earthtalk.domain.debate.dto.DebateMessage;
 import com.example.earthtalk.domain.debate.dto.ObserverMessage;
 import com.example.earthtalk.domain.debate.dto.SessionInfo;
-import com.example.earthtalk.domain.debate.model.DebateRoom;
+import com.example.earthtalk.domain.debate.entity.Debate;
 import com.example.earthtalk.domain.debate.service.DebateChatManagementService;
 import com.example.earthtalk.domain.debate.service.DebateRoomService;
 import com.example.earthtalk.domain.debate.service.DebateUserService;
@@ -57,9 +58,9 @@ public class WebSocketEventListener {
 	public void handleWebSocketConnectListener(SessionConnectedEvent event) {
 		StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
 		String destination = headerAccessor.getDestination();
-		String roomId = (String)headerAccessor.getSessionAttributes().get("roomId");
-		String userName = (String)headerAccessor.getSessionAttributes().get("userName");
-		if (destination != null) {
+		if (destination != null && !destination.startsWith("/room-list")) {
+			String roomId = (String)headerAccessor.getSessionAttributes().get("roomId");
+			String userName = (String)headerAccessor.getSessionAttributes().get("userName");
 			if (destination.startsWith("/topic/debate/")) {
 				String sessionId = headerAccessor.getSessionId();
 				String position = (String)headerAccessor.getSessionAttributes().get("position");
@@ -67,11 +68,11 @@ public class WebSocketEventListener {
 					SessionInfo sessionInfo = new SessionInfo(roomId, userName, position);
 					sessionInfoMap.put(sessionId, sessionInfo);
 
-					DebateRoom debateRoom = debateRoomService.getDebateRoom(roomId);
-					if (debateRoom == null) {
+					Debate debate = debateRoomService.getDebateRoom(roomId);
+					if (debate == null) {
 						throw new IllegalArgumentException(ErrorCode.CHAT_NOT_FOUND);
 					}
-					debateUserService.addUser(debateRoom, userName, position);
+					debateUserService.addUser(debate, userName, position);
 				}
 			} else if (destination.startsWith("/topic/observer/")) {
 				String sessionId = headerAccessor.getSessionId();
@@ -80,6 +81,7 @@ public class WebSocketEventListener {
 					observerUserService.addUser(roomId, userName);
 				}
 			}
+
 		}
 	}
 
@@ -104,7 +106,7 @@ public class WebSocketEventListener {
 	public void handleWebSocketDisconnectListener(SessionDisconnectEvent event) {
 		StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
 		String sessionId = event.getSessionId();
-		String userNameAttr = (String) headerAccessor.getSessionAttributes().get("userName");
+		String userNameAttr = (String)headerAccessor.getSessionAttributes().get("userName");
 		if (sessionInfoMap.containsKey(sessionId)) {
 			SessionInfo sessionInfo = sessionInfoMap.remove(sessionId);
 			if (sessionInfo != null) {
@@ -112,7 +114,6 @@ public class WebSocketEventListener {
 
 				int currentUserCount = debateUserService.getUserCount(debateRoomId).get("pro") +
 					debateUserService.getUserCount(debateRoomId).get("con");
-
 
 				if (currentUserCount <= 1) {
 					List<DebateMessage> debateMessages = debateMessageStore.removeDebateMessages(debateRoomId);
