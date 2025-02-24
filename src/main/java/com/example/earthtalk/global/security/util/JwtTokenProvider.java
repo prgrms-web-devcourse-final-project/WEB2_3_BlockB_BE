@@ -34,7 +34,7 @@ public class JwtTokenProvider {
 
     private final JwtProperties jwtProperties;
     private static final String AUTHORITIES_KEY = "authority";
-    private final static String TOKEN_PREFIX = "Bearer ";
+    private static final String TOKEN_PREFIX = "Bearer ";
 
     public TokenResponse generateAllTokens(CustomOAuth2User oAuth2User, Date now) {
         String accessToken = generateAccessToken(oAuth2User, now);

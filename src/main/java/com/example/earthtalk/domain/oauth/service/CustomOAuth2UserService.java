@@ -71,10 +71,9 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     }
 
     // AccessToken 만료시, AccessToken, RefreshToken 재발급
-    public TokenResponse getReissue(String bearerToken) {
+    public TokenResponse getReissue(String refreshToken) {
         // TODO: Refresh Token 만료기간 관리 -> Redis 관리
         try {
-            String refreshToken = jwtTokenProvider.parseBearerToken(bearerToken);
             Claims claims = jwtTokenProvider.getClaims(refreshToken);
 
             User user = userRepository.findByEmail(claims.getSubject())
