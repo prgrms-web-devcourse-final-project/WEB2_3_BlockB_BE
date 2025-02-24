@@ -28,15 +28,13 @@ public class User extends BaseTimeEntity {
     private Long id;
 
     @Column(nullable = false)
-    private String email;
+    private String email; // 랜덤으로 형성한 식별값
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String nickname;
 
-    @Column(nullable = false)
     private String introduction; // 한줄 소개
 
-    @Column(nullable = false)
     private String profileUrl; // 프로필 이미지
 
     private Long winNumber; // 승리 횟수
@@ -53,7 +51,7 @@ public class User extends BaseTimeEntity {
     @Column(nullable = false)
     private SocialType socialType;
 
-    private String socialId; // 로그인한 소셜 타입 식별값
+    private String socialId; // 소셜로그인 식별값
 
     private String FCMToken; // 알림을 위한 FCM 토큰
 
