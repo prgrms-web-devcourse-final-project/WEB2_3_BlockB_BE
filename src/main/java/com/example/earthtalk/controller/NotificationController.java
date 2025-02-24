@@ -65,8 +65,8 @@ public class NotificationController {
 
     // 사용자가 알림을 읽었을 때 status 값을 변경하기 위한 API
     @Operation(summary = "전송된 알림의 상태를 변경시키는 API 입니다.", description = "읽지 않은 알림에 대하여 읽음 상태로 변경 시킬 수 있습니다.")
-    @PostMapping("/read")
-    public ResponseEntity<ApiResponse<?>> readNotification(@RequestParam("notificationId") Long notificationId) {
+    @PostMapping("/{notificationId}/read")
+    public ResponseEntity<ApiResponse<?>> readNotification(@PathVariable("notificationId") Long notificationId) {
         notificationService.readNotification(notificationId);
         return ResponseEntity.ok(ApiResponse.createSuccessWithNoData());
     }

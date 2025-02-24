@@ -28,6 +28,10 @@ public class NotificationService {
     private final FirebaseService firebaseService;
     private final ReportRepository reportRepository;
 
+    private static final String FOLLOW_MESSAGE = "%s님이 당신을 팔로우했습니다.";
+    private static final String REPORT_MESSAGE = "%s(으)로 운영자에게 %s을(를) 처분받았습니다.";
+    private static final String DEBATE_MESSAGE = "참가 중인 토론방의 대기가 완료되었습니다.";
+
     // 접속중인 사용자의 id 값을 전달해주면 그와 관련된 알림을 조회하여 반환합니다.
     public List<NotificationListResponse> getNotifications(Long userId) {
         User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
@@ -76,29 +80,21 @@ public class NotificationService {
     }
 
     // notiType 에 따라 content 를 가져오는 메서드.
-    public String getContent(SendNotificationRequest request) {
+    private String getContent(SendNotificationRequest request) {
         NotificationType type = request.notificationType();
         StringBuilder sb = new StringBuilder();
         if (type == NotificationType.FOLLOW) {
             User user = userRepository.findById(request.typeId()).orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
-            sb.append(user.getNickname());
-            sb.append("님이 당신을 팔로우했습니다.");
+            return String.format(FOLLOW_MESSAGE, user.getNickname());
         }
 
         if (type == NotificationType.REPORT) {
             Report report = reportRepository.findById(request.typeId()).orElseThrow(() -> new NotFoundException(ErrorCode.REPORT_NOT_FOUND));
-            sb.append(report.getReportType().getValue());
-            sb.append("(으)로 운영자에게 ");
-            sb.append(report.getResultType().getValue());
-            sb.append("을(를) 처분받았습니다.");
+            return String.format(REPORT_MESSAGE, report.getReportType().getValue(), report.getResultType().getValue());
         }
 
-        if (type == NotificationType.DEBATE) {
+        if (type == NotificationType.DEBATE || type == NotificationType.CHAT) {
             sb.append("참가 중인 토론방의 대기가 완료되었습니다.");
-        }
-
-        if (type == NotificationType.CHAT) {
-            sb.append("참관 중인 토론방이 곧 시작합니다.");
         }
 
         return sb.toString();
