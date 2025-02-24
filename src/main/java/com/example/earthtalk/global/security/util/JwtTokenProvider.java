@@ -36,11 +36,11 @@ public class JwtTokenProvider {
     private static final String AUTHORITIES_KEY = "authority";
     private static final String TOKEN_PREFIX = "Bearer ";
 
-    public TokenResponse generateAllTokens(CustomOAuth2User oAuth2User, Date now) {
+    public TokenResponse.GetToken generateAllTokens(CustomOAuth2User oAuth2User, Date now) {
         String accessToken = generateAccessToken(oAuth2User, now);
         String refreshToken = generateRefreshToken(oAuth2User, now);
 
-        return TokenResponse.from(accessToken, refreshToken);
+        return TokenResponse.GetToken.from(accessToken, refreshToken);
     }
 
     // JWT Access Token 생성 메소드

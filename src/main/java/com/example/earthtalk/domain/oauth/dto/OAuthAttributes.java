@@ -75,13 +75,15 @@ public class OAuthAttributes {
      * @return User
      */
     public User toEntity(SocialType socialType, OAuth2UserResponse oauth2UserResponse) {
+        String id = oauth2UserResponse.getId();
+
         return User.builder()
             .email(UUID.randomUUID() + "@socialUser.com") // 식별을 위한 랜덤한 고유값 부여
             .socialType(socialType)
             .socialId(oauth2UserResponse.getId()) // 소셜로그인 제공받은 ID
-            .nickname(oauth2UserResponse.getNickname()) // 소셜 닉네임
+            .nickname(id + "_" + oauth2UserResponse.getNickname()) // 소셜 닉네임
             .profileUrl(oauth2UserResponse.getImageUrl()) // 프로필 이미지
-            .role(Role.ROLE_MEMBER)
+            .role(Role.ROLE_GUEST)
             .build();
     }
 }
