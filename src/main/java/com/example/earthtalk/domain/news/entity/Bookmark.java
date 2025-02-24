@@ -36,5 +36,4 @@ public class Bookmark extends BaseTimeEntity {
     @JoinColumn(name = "news_id", nullable = false)
     private News news;
 
-    private boolean isBookmarked;
 }
