@@ -55,10 +55,12 @@ public class User extends BaseTimeEntity {
 
     private String socialId; // 로그인한 소셜 타입 식별값
 
+    private String FCMToken; // 알림을 위한 FCM 토큰
+
     @Builder
     public User(String email, String nickname, String introduction, String profileUrl,
         Long winNumber, Long drawNumber, Long defeatNumber, Role role, SocialType socialType,
-        String socialId) {
+        String socialId, String FCMToken) {
         this.email = email;
         this.nickname = nickname;
         this.introduction = introduction;
@@ -69,5 +71,6 @@ public class User extends BaseTimeEntity {
         this.role = role;
         this.socialType = socialType;
         this.socialId = socialId;
+        this.FCMToken = FCMToken;
     }
 }
