@@ -51,7 +51,6 @@ public class AdminController {
     @Operation(summary = "신고 처리 API", description = "reportId 에 해당하는 신고의 처리를 담당합니다.")
     @ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "성공")})
-    @Operation(summary = "신고 처리 API 입니다.", description = "reportId 에 해당하는 신고의 처리를 담당합니다.")
     @PutMapping("/reports/{reportId}")
     public ResponseEntity<ApiResponse<Long>> putReportById(@PathVariable("reportId") Long reportId,
         @RequestBody UpdateReportRequest request) throws Exception {
