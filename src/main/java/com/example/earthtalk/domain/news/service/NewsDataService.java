@@ -1,21 +1,29 @@
 package com.example.earthtalk.domain.news.service;
 
-import com.example.earthtalk.domain.news.dto.NewsDetailDTO;
-import com.example.earthtalk.domain.news.dto.NewsListDTO;
+import com.example.earthtalk.domain.news.dto.response.NewsDetailReponse;
+import com.example.earthtalk.domain.news.dto.response.NewsListResponse;
 import com.example.earthtalk.domain.news.entity.Bookmark;
 import com.example.earthtalk.domain.news.entity.Like;
 import com.example.earthtalk.domain.news.entity.News;
+import com.example.earthtalk.domain.news.entity.QLike;
+import com.example.earthtalk.domain.news.entity.QNews;
 import com.example.earthtalk.domain.news.repository.BookmarkRepository;
 import com.example.earthtalk.domain.news.repository.LikeRepository;
 import com.example.earthtalk.domain.news.repository.NewsFilterRepository;
 import com.example.earthtalk.domain.news.repository.NewsRepository;
 import com.example.earthtalk.domain.user.entity.User;
 import com.example.earthtalk.domain.user.repository.UserRepository;
+import com.example.earthtalk.global.constant.ContinentType;
 import com.example.earthtalk.global.exception.ErrorCode;
 import com.example.earthtalk.global.exception.NotFoundException;
+import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.OrderSpecifier;
+import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.SliceImpl;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -28,12 +36,63 @@ public class NewsDataService {
     private final UserRepository userRepository;
     private final BookmarkRepository bookmarkRepository;
 
-    public Slice<NewsListDTO> getNewsByFilter(String continent, String query, String sort,
+    private static final int PAGE_SIZE = 12;
+
+    public Slice<NewsListResponse> getNewsByFilter(String continent, String query, String sort,
         Long newsId) {
-        return newsFilterRepository.filterNews(continent, query, sort, newsId);
+        QNews news = QNews.news;
+        QLike like = QLike.like;
+
+        BooleanBuilder whereBuilder = new BooleanBuilder();
+        BooleanBuilder havingBuilder = new BooleanBuilder();
+
+        if (continent != null && !continent.isEmpty()) {
+            try {
+                whereBuilder.and(news.continent.eq(ContinentType.valueOf(continent)));
+            } catch (Exception e) {
+                throw new NotFoundException(ErrorCode.CONTINENT_NOT_FOUND);
+            }
+        }
+        if (query != null && !query.isEmpty()) {
+            whereBuilder.and(news.title.containsIgnoreCase(query)
+                .or(news.content.containsIgnoreCase(query)));
+        }
+
+        OrderSpecifier<?> orderSpecifier = news.deliveryTime.desc();
+
+        if (sort == null || sort.equals("latest")) {
+            LocalDateTime deliveryTimeOfLastNews = newsRepository.getNewsDeliveryTime(newsId);
+            orderSpecifier = news.deliveryTime.desc();
+            if (newsId != null) {
+                whereBuilder.and(news.deliveryTime.lt(deliveryTimeOfLastNews)) // 마지막 뉴스보다 더 이전에 작성된
+                    .or(news.deliveryTime.eq(deliveryTimeOfLastNews)
+                        .and(news.id.lt(newsId))); // 작성시간 같을경우 아이디로 비교
+            }
+
+        } else if (sort.equals("popular")) {
+            Long likesOfLastNews = newsRepository.countNewsLike(newsId);
+            orderSpecifier = like.count().desc();
+            if (newsId != null) {
+                havingBuilder.and(like.count().lt(likesOfLastNews)) // 라이크 갯수가 마지막 뉴스보다 적은
+                    .or(like.count().eq(likesOfLastNews)
+                        .and(news.id.lt(newsId))); // 라이크 갯수가 같을 경우 아이디로 비교
+            }
+        }
+
+        List<NewsListResponse> newsList = newsFilterRepository.filterNews(whereBuilder,
+            havingBuilder,
+            orderSpecifier, PAGE_SIZE);
+
+        boolean hasNextPage = false;
+        if (newsList.size() > PAGE_SIZE) {
+            hasNextPage = true;
+            newsList.remove(newsList.size() - 1);
+        }
+
+        return new SliceImpl<>(newsList, PageRequest.of(0, PAGE_SIZE), hasNextPage);
     }
 
-    public NewsDetailDTO getNewsDetail(Long newsId, Long userId) {
+    public NewsDetailReponse getNewsDetail(Long newsId, Long userId) {
         News news = newsRepository.findById(newsId)
             .orElseThrow(() -> new NotFoundException(ErrorCode.NEWS_NOT_FOUND));
         Long like = newsRepository.countNewsLike(newsId);
@@ -44,10 +103,10 @@ public class NewsDataService {
             liked = newsFilterRepository.isLiked(userId, newsId);
             marked = newsFilterRepository.isMarked(userId, newsId);
         }
-        return new NewsDetailDTO(like, mark, news.getLink(), marked, liked);
+        return new NewsDetailReponse(like, mark, news.getLink(), marked, liked);
     }
 
-    public List<NewsListDTO> getNewsRanking() {
+    public List<NewsListResponse> getNewsRanking() {
         return newsFilterRepository.newsRanking();
     }
 

@@ -1,16 +1,13 @@
 package com.example.earthtalk.controller;
 
-import com.example.earthtalk.domain.news.dto.NewsDetailDTO;
-import com.example.earthtalk.domain.news.dto.NewsListDTO;
-import com.example.earthtalk.domain.news.entity.News;
+import com.example.earthtalk.domain.news.dto.response.NewsDetailReponse;
+import com.example.earthtalk.domain.news.dto.response.NewsListResponse;
 import com.example.earthtalk.domain.news.service.NewsDataService;
 import com.example.earthtalk.domain.news.service.NewsService;
 import com.example.earthtalk.global.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -38,7 +35,7 @@ public class NewsController {
         @RequestParam(value = "q", required = false) String query,
         @RequestParam(value = "sort", required = false) String sort,
         @RequestParam(value = "cursor", required = false) Long newsId) {
-        Slice<NewsListDTO> data = newsDataService
+        Slice<NewsListResponse> data = newsDataService
             .getNewsByFilter(continent, query, sort, newsId);
         return ResponseEntity.ok().body(ApiResponse.createSuccess(data));
     }
@@ -49,14 +46,14 @@ public class NewsController {
     public ResponseEntity<ApiResponse<Object>> getNewsById(
         @PathVariable("newsId") Long newsId,
         @RequestParam("userId") Long userId) {
-        NewsDetailDTO data = newsDataService.getNewsDetail(newsId, userId);
+        NewsDetailReponse data = newsDataService.getNewsDetail(newsId, userId);
         return ResponseEntity.ok().body(ApiResponse.createSuccess(data));
     }
 
     @Operation(summary = "뉴스 Top10 API 입니다.", description = "뉴스 조회하기와 같은 형식의 데이터를 반환합니다.")
     @GetMapping("/ranking")
     public ResponseEntity<ApiResponse<Object>> getNewsRanking() {
-        List<NewsListDTO> data = newsDataService.getNewsRanking();
+        List<NewsListResponse> data = newsDataService.getNewsRanking();
         return ResponseEntity.ok().body(ApiResponse.createSuccess(data));
     }
 

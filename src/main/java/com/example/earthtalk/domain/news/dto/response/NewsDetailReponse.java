@@ -1,13 +1,11 @@
-package com.example.earthtalk.domain.news.dto;
+package com.example.earthtalk.domain.news.dto.response;
 
-import com.example.earthtalk.domain.news.entity.Like;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class NewsDetailDTO {
+public class NewsDetailReponse {
     private Long like;
     private Long mark;
     private String link;

@@ -1,4 +1,4 @@
-package com.example.earthtalk.domain.news.dto;
+package com.example.earthtalk.domain.news.dto.response;
 
 import com.example.earthtalk.domain.news.entity.News;
 import com.example.earthtalk.domain.news.entity.NewsType;
@@ -8,7 +8,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class NewsListDTO {
+public class NewsListResponse {
     private Long id;
     private String title;
     private String content;
@@ -18,7 +18,7 @@ public class NewsListDTO {
     private Long like;
     private Long bookmark;
 
-    public NewsListDTO(News news, Long like, Long bookmark) {
+    public NewsListResponse(News news, Long like, Long bookmark) {
         this.id = news.getId();
         this.title = news.getTitle();
         this.content = news.getContent();
