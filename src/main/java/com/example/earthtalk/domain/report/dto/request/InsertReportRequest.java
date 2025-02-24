@@ -9,7 +9,6 @@ public record InsertReportRequest(
         User user,
         User targetUser,
         Long targetRoomId,
-        Long targetId,
         TargetType targetType,
         String content,
         ReportType reportType
@@ -20,17 +19,9 @@ public record InsertReportRequest(
                 .user(user)
                 .targetUser(targetUser)
                 .targetRoomId(targetRoomId)
-                .targetId(getTargetId())
                 .targetType(targetType)
                 .content(content)
                 .reportType(reportType)
                 .build();
-    }
-
-    public Long getTargetId() {
-        if (targetType == TargetType.PROFILE) {
-            return null;
-        }
-        return targetId;
     }
 }

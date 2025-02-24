@@ -10,8 +10,8 @@ public record ReportListResponse(
         Long id,
         String nickname,
         String targetNickname,
-        ReportType reportType,
-        ResultType reportResult,
+        String reportType,
+        String reportResult,
         String status,
         LocalDateTime createdAt)
 {
@@ -19,15 +19,15 @@ public record ReportListResponse(
         return new ReportListResponse(report.getId(),
                 report.getUser().getNickname(),
                 report.getTargetUser().getNickname(),
-                report.getReportType(),
-                report.getResultType(),
+                report.getReportType().getValue(),
+                Report.getStringByResultType(report.getResultType()),
                 ReportListResponse.getStatus(report.getResultType()),
                 report.getCreatedAt());
     }
 
     public static String getStatus(ResultType resultType) {
         if(resultType == ResultType.UNKNOWN) {
-            return "미처리";
+            return resultType.getValue();
         } else {
             return "처리 완료";
         }
