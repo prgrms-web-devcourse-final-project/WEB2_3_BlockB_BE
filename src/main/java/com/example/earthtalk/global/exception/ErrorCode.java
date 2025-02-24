@@ -38,6 +38,7 @@ public enum ErrorCode { // 예외 발생시, body에 실어 날려줄 상태, co
     CHAT_NOT_FOUND(404, -4001, "조회된 채팅이 존재하지 않습니다."),
     //-5000 비즈니스 로직2
     TOO_MANY_PARTICIPANTS(409, -5001, "참가자가 이미 최대 인원 입니다."),
+    DEBATEROOM_NOT_FOUND(404, -5002, "토론방 내역을 찾을 수 없습니다."),
     //-6000: NEWS
     NEWS_NOT_FOUND(404, -6001, "뉴스를 찾을 수 없습니다."),
     CONTINENT_NOT_FOUND(404, -6002, "존재하지 않는 대륙 코드입니다.");

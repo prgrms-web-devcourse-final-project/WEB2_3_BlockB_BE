@@ -4,88 +4,111 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-import java.util.Map;
+import java.util.*;
 
+import com.example.earthtalk.domain.debate.entity.Debate;
 import com.example.earthtalk.domain.debate.entity.FlagType;
+import com.example.earthtalk.domain.user.entity.Role;
+import com.example.earthtalk.domain.user.entity.User;
+import com.example.earthtalk.domain.user.repository.UserRepository;
+import com.example.earthtalk.domain.debate.entity.DebateUser;
 import com.example.earthtalk.domain.debate.model.ChatRoom;
 import com.example.earthtalk.domain.news.entity.MemberNumberType;
 import com.example.earthtalk.domain.news.entity.TimeType;
 import com.example.earthtalk.domain.debate.entity.CategoryType;
 import com.example.earthtalk.global.constant.ContinentType;
-import com.example.earthtalk.domain.user.repository.UserRepository;
+import com.example.earthtalk.domain.debate.repository.DebateUserRepository;
 import com.example.earthtalk.global.exception.ConflictException;
+import com.example.earthtalk.global.exception.ErrorCode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 
+@ExtendWith(MockitoExtension.class)
 public class DebateUserServiceTest {
 
+	@Mock
 	private SimpMessagingTemplate messagingTemplate;
-	private DebateManagementService debateManagementService;
+
+	@Mock
 	private ChatRoomService chatRoomService;
-	private UserRepository userRepository;
+
+	@InjectMocks
 	private DebateUserService debateUserService;
+
+	private ChatRoom chatRoom;
+
+	private DebateUser createTestDebateUser(Debate debate, User user, FlagType position, FlagType afterPosition) {
+		return DebateUser.builder()
+			.debate(debate)
+			.user(user)
+			.position(position != null ? position : FlagType.NO_POSITION)
+			.afterPosition(afterPosition != null ? afterPosition : FlagType.NO_POSITION)
+			.build();
+	}
 
 	@BeforeEach
 	public void setup() {
-		messagingTemplate = mock(SimpMessagingTemplate.class);
-		debateManagementService = mock(DebateManagementService.class);
-		chatRoomService = mock(ChatRoomService.class);
-		userRepository = mock(UserRepository.class);
+		chatRoom = new ChatRoom("room123", MemberNumberType.T2, "Test Room", "Test Subtitle", TimeType.T5, CategoryType.CO, ContinentType.AF);
+		when(chatRoomService.getChatRoom("room123")).thenReturn(chatRoom);
+		Debate debate = mock(Debate.class);
+		// 올바른 `User` 객체를 반환하도록 설정
+		User user = User.builder()
+			.email("test@example.com")
+			.nickname("testUser")
+			.introduction("테스트 유저입니다.")
+			.profileUrl("https://example.com/profile.jpg")
+			.winNumber(0L)
+			.drawNumber(0L)
+			.defeatNumber(0L)
+			.role(Role.ROLE_MEMBER)  // Role Enum 사용
+			.socialType(com.example.earthtalk.domain.user.entity.SocialType.GOOGLE)  // SocialType Enum 사용
+			.socialId("123456789")
+			.build();
 
-		debateUserService = new DebateUserService(messagingTemplate, debateManagementService, chatRoomService, userRepository);
+		DebateUser debateUser = createTestDebateUser(debate, user, FlagType.PRO, null);
+
+		assertNotNull(debateUser);
+		assertEquals(debate, debateUser.getDebate());
+		assertEquals(user, debateUser.getUser());
+		assertEquals(FlagType.PRO, debateUser.getPosition());
+		assertEquals(FlagType.NO_POSITION, debateUser.getAfterPosition()); // 기본값 적용 확인
 	}
 
 	@Test
 	public void testAddUser_pro() {
-		// ChatRoom 생성: roomId "room123", MemberNumberType.T2(최대 인원 3), 기타 메타데이터 설정
-		ChatRoom chatRoom = new ChatRoom("room123", MemberNumberType.T2, "Test Room", "Test Subtitle", TimeType.T5, CategoryType.CO, ContinentType.AF);
-		when(chatRoomService.getChatRoom("room123")).thenReturn(chatRoom);
-
-		// "pro" 사용자를 추가
 		debateUserService.addUser(chatRoom, "proUser", "pro");
 
-		verify(messagingTemplate, atLeastOnce())
-			.convertAndSend(eq("/topic/debate/room123"), (Object) argThat(message -> {
-				if (!(message instanceof Map)) return false;
-				Map<?, ?> map = (Map<?, ?>) message;
-				return "user_joined".equals(map.get("event")) &&
-					"proUser".equals(map.get("userName"));
-			}));
-
+		verify(messagingTemplate, atLeastOnce()).convertAndSend(eq("/topic/debate/room123"), (Object) argThat(message -> {
+			if (!(message instanceof Map)) return false;
+			Map<?, ?> map = (Map<?, ?>) message;
+			return "user_joined".equals(map.get("event")) &&
+				"proUser".equals(map.get("userName"));
+		}));
 	}
 
 	@Test
 	public void testAddUser_con() {
-		// ChatRoom 생성: roomId "room456", MemberNumberType.T2(최대 인원 3)
-		ChatRoom chatRoom = new ChatRoom("room456", MemberNumberType.T2, "Test Room 2", "Test Subtitle 2", TimeType.T5, CategoryType.CO, ContinentType.AF);
-		when(chatRoomService.getChatRoom("room456")).thenReturn(chatRoom);
-
-		// "con" 사용자를 추가
 		debateUserService.addUser(chatRoom, "conUser", "con");
 
-		verify(messagingTemplate, atLeastOnce())
-			.convertAndSend(eq("/topic/debate/room456"), (Object) argThat(message -> {
-				if (!(message instanceof Map)) return false;
-				Map<?, ?> map = (Map<?, ?>) message;
-				return "user_joined".equals(map.get("event")) &&
-					"conUser".equals(map.get("userName"));
-			}));
-
+		verify(messagingTemplate, atLeastOnce()).convertAndSend(eq("/topic/debate/room123"), (Object) argThat(message -> {
+			if (!(message instanceof Map)) return false;
+			Map<?, ?> map = (Map<?, ?>) message;
+			return "user_joined".equals(map.get("event")) &&
+				"conUser".equals(map.get("userName"));
+		}));
 	}
 
 	@Test
 	public void testAddUser_exceedCapacity_pro() {
-		// ChatRoom 생성: roomId "room999", MemberNumberType.T2 (최대 3명)
-		ChatRoom chatRoom = new ChatRoom("room999", MemberNumberType.T2, "Test Room 999", "Test Subtitle 999", TimeType.T5, CategoryType.CO, ContinentType.AF);
-		when(chatRoomService.getChatRoom("room999")).thenReturn(chatRoom);
-
-		// 3명의 pro 사용자를 추가
 		debateUserService.addUser(chatRoom, "user1", "pro");
 		debateUserService.addUser(chatRoom, "user2", "pro");
 		debateUserService.addUser(chatRoom, "user3", "pro");
 
-		// 네 번째 추가 시 ConflictException이 발생해야 함
 		assertThrows(ConflictException.class, () -> {
 			debateUserService.addUser(chatRoom, "user4", "pro");
 		});
@@ -93,28 +116,27 @@ public class DebateUserServiceTest {
 
 	@Test
 	public void testRemoveUser() {
-		// ChatRoom 생성: roomId "room321", 최대 3명
-		ChatRoom chatRoom = new ChatRoom("room321", MemberNumberType.T2, "Test Room 321", "Test Subtitle 321", TimeType.T5, CategoryType.CO, ContinentType.AF);
-		when(chatRoomService.getChatRoom("room321")).thenReturn(chatRoom);
-
-		// pro 사용자와 con 사용자 추가
 		debateUserService.addUser(chatRoom, "proUser1", "pro");
 		debateUserService.addUser(chatRoom, "conUser1", "con");
 
-		// 사용자 수가 각각 1로 설정되었는지 확인
-		Map<String, Integer> initialCount = debateUserService.getUserCount("room321");
+		Map<String, Integer> initialCount = debateUserService.getUserCount("room123");
 		assertEquals(1, initialCount.get("pro").intValue());
 		assertEquals(1, initialCount.get("con").intValue());
 
-		// pro 사용자 제거
-		debateUserService.removeUser("room321", "proUser1");
+		debateUserService.removeUser("room123", "proUser1");
 
-		// 제거 후의 사용자 수 검증 (pro는 0, con은 1)
-		Map<String, Integer> updatedCount = debateUserService.getUserCount("room321");
+		Map<String, Integer> updatedCount = debateUserService.getUserCount("room123");
 		assertEquals(0, updatedCount.get("pro").intValue());
 		assertEquals(1, updatedCount.get("con").intValue());
 
-		// messagingTemplate을 통한 퇴장 메시지 전송이 이루어졌는지 확인 (호출 횟수 검증)
-		verify(messagingTemplate, atLeast(2)).convertAndSend(eq("/topic/debate/room321"), (Object) any());
+		verify(messagingTemplate, atLeast(2)).convertAndSend(eq("/topic/debate/room123"), (Object) any());
+	}
+
+	@Test
+	public void testSendUserCountUpdate() {
+		debateUserService.addUser(chatRoom, "userA", "pro");
+		debateUserService.addUser(chatRoom, "userB", "con");
+
+		verify(messagingTemplate, atLeast(1)).convertAndSend(eq("/topic/debate/room123"), (Object) any());
 	}
 }
