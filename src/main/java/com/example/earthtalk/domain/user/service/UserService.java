@@ -274,4 +274,9 @@ public class UserService {
     }
 
 
+
+    public User getUser(String email) {
+        return userRepository.findByEmail(email)
+            .orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
+    }
 }

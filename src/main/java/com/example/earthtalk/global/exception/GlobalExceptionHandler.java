@@ -52,6 +52,22 @@ public class GlobalExceptionHandler {
             .body(ApiResponse.createErrorWithMsg(e.getMessage()));
     }
 
+    // JwtCustomException
+    @ExceptionHandler(JwtCustomException.class)
+    public ResponseEntity<ApiResponse<Object>> handleNotFoundException(JwtCustomException e) {
+        log.error("[JwtCustomException] message: {}", e.getMessage());
+        return ResponseEntity.status(e.getErrorCode().getStatus())
+            .body(ApiResponse.createError(e.getErrorCode().getMessage()));
+    }
+
+    // OAuth2AuthenticationException
+    @ExceptionHandler(OAuth2AuthenticationException.class)
+    public ResponseEntity<ApiResponse<Object>> handleNotFoundException(OAuth2AuthenticationException e) {
+        log.error("[OAuth2AuthenticationException] message: {}", e.getMessage());
+        return ResponseEntity.status(e.getErrorCode().getStatus())
+            .body(ApiResponse.createError(e.getErrorCode().getMessage()));
+    }
+
     // 각종 400 에러
     @ExceptionHandler(BadRequestException.class)
     public ResponseEntity<ApiResponse<Object>> handleBadRequestException(BadRequestException e) {

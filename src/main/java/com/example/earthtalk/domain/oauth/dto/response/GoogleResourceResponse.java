@@ -5,32 +5,21 @@ import java.util.Map;
 public class GoogleResourceResponse extends OAuth2UserResponse {
 
     public GoogleResourceResponse(Map<String, Object> attributes) {
-        super((Map<String, Object>) attributes.get("response"));
+        super(attributes);
     }
 
     @Override
     public String getId() {
-        if (attributes == null) {
-            return null;
-        }
-        return (String) attributes.get("id");
+        return (String) attributes.get("sub");
     }
 
     @Override
     public String getNickname() {
-        if (attributes == null) {
-            return null;
-        }
-
-        return (String) attributes.get("nickname");
+        return (String) attributes.get("name");
     }
 
     @Override
     public String getImageUrl() {
-        if (attributes == null) {
-            return null;
-        }
-
-        return (String) attributes.get("profile_image");
+        return (String) attributes.get("picture");
     }
 }
