@@ -1,5 +1,7 @@
 package com.example.earthtalk.domain.debate.entity;
 
+import java.time.LocalDateTime;
+
 import com.example.earthtalk.global.baseTime.BaseTimeEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -33,5 +35,11 @@ public class DebateChat extends BaseTimeEntity {
     private DebateUser debateUser;
 
     @Column(nullable = false)
+    private FlagType flagType;
+
+    @Column(nullable = false)
     private String content;
+
+    @Column(nullable = false)
+    private LocalDateTime time;
 }

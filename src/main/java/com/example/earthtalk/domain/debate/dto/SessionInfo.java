@@ -12,6 +12,9 @@ import lombok.ToString;
 @ToString
 public class SessionInfo {
 	private String roomId;
+
 	private String userName;
+
 	private String position;
+
 }
