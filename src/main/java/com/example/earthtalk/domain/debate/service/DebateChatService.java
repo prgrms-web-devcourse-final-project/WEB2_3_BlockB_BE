@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 import com.example.earthtalk.domain.debate.dto.DebateMessage;
 import com.example.earthtalk.domain.debate.entity.Debate;
 import com.example.earthtalk.domain.debate.entity.DebateChat;
-import com.example.earthtalk.domain.debate.entity.DebateUser;
+//import com.example.earthtalk.domain.debate.entity.DebateUser;
 import com.example.earthtalk.domain.debate.entity.FlagType;
 import com.example.earthtalk.domain.debate.repository.DebateChatRepository;
 
@@ -62,16 +62,16 @@ public class DebateChatService {
 		List<DebateChat> chatList = messages.stream()
 			.filter(message -> message.getEvent().equals("chat")) //
 			.map(message -> {
-				DebateUser debateUser = debateUserService.getDebateUserByUserName(message.getUserName());
-				if (debateUser == null) {
-					return Optional.<DebateChat>empty(); // Optional 사용하여 null 방지
-				}
+				//DebateUser debateUser = debateUserService.getDebateUserByUserName(message.getUserName());
+				//if (debateUser == null) {
+				//	return Optional.<DebateChat>empty(); // Optional 사용하여 null 방지
+				//}
 				// FlagType 변환을 Enum 메서드로 추출하여 가독성 향상
-				FlagType flag = FlagType.fromString(message.getPosition());
+				//FlagType flag = FlagType.fromString(message.getPosition());
 				return Optional.of(DebateChat.builder()
 					.debate(debate)
-					.debateUser(debateUser)
-					.flagType(flag)
+					//.debateUser(debateUser)
+					//.flagType(flag)
 					.content(message.getMessage())
 					.time(message.getTime())
 					.build());

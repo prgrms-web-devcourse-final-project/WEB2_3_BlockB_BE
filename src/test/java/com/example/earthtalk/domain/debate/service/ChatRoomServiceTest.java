@@ -6,7 +6,7 @@ import com.example.earthtalk.domain.debate.dto.CreateDebateRoomRequest;
 import com.example.earthtalk.domain.debate.entity.CategoryType;
 import com.example.earthtalk.domain.debate.model.ChatRoom;
 import com.example.earthtalk.domain.debate.repository.DebateRepository;
-import com.example.earthtalk.domain.debate.repository.DebateUserRepository;
+//import com.example.earthtalk.domain.debate.repository.DebateUserRepository;
 import com.example.earthtalk.domain.news.entity.MemberNumberType;
 import com.example.earthtalk.domain.news.entity.TimeType;
 import com.example.earthtalk.domain.user.repository.UserRepository;
@@ -20,17 +20,17 @@ public class ChatRoomServiceTest {
 
 	private ChatRoomService chatRoomService;
 	private DebateRepository debateRepository;
-	private DebateUserRepository debateUserRepository;
+	//private DebateUserRepository debateUserRepository;
 	private UserRepository userRepository;
 
 	@BeforeEach
 	public void setup() {
 		// 목 객체 생성
 		debateRepository = Mockito.mock(DebateRepository.class);
-		debateUserRepository = Mockito.mock(DebateUserRepository.class);
+		//debateUserRepository = Mockito.mock(DebateUserRepository.class);
 		userRepository = Mockito.mock(UserRepository.class);
 
-		chatRoomService = new ChatRoomService(debateRepository, debateUserRepository, userRepository);
+		//chatRoomService = new ChatRoomService(debateRepository, debateUserRepository, userRepository);
 	}
 
 	@Test

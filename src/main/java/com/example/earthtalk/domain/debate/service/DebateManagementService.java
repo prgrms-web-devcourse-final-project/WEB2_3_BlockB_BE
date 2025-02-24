@@ -7,13 +7,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import com.example.earthtalk.domain.debate.entity.Debate;
-import com.example.earthtalk.domain.debate.entity.DebateUser;
+//import com.example.earthtalk.domain.debate.entity.DebateUser;
 import com.example.earthtalk.domain.debate.entity.FlagType;
 import com.example.earthtalk.domain.debate.entity.RoomType;
 import com.example.earthtalk.domain.debate.model.ChatRoom;
 import com.example.earthtalk.domain.debate.repository.DebateChatRepository;
 import com.example.earthtalk.domain.debate.repository.DebateRepository;
-import com.example.earthtalk.domain.debate.repository.DebateUserRepository;
+//import com.example.earthtalk.domain.debate.repository.DebateUserRepository;
 import com.example.earthtalk.domain.user.entity.User;
 import com.example.earthtalk.domain.user.repository.UserRepository;
 import com.example.earthtalk.global.exception.BadRequestException;
@@ -34,7 +34,7 @@ import jakarta.transaction.Transactional;
 @RequiredArgsConstructor
 public class DebateManagementService {
 
-	private final DebateUserRepository debateUserRepository;
+	//private final DebateUserRepository debateUserRepository;
 	private final DebateChatRepository debateChatRepository;
 	private final DebateRepository debateRepository;
 	private final UserRepository userRepository;
@@ -74,23 +74,23 @@ public class DebateManagementService {
 			for (String username : proUserNames) {
 				User user = userRepository.findByNickname(username)
 					.orElseThrow(() -> new BadRequestException(ErrorCode.USER_NOT_FOUND));
-				DebateUser debateUser = DebateUser.builder()
-					.debate(debate)
-					.user(user)
-					.position(FlagType.PRO)
-					.build();
-				debateUserRepository.save(debateUser);
+				//DebateUser debateUser = DebateUser.builder()
+//					.debate(debate)
+//					.user(user)
+//					.position(FlagType.PRO)
+//					.build();
+				//debateUserRepository.save(debateUser);
 			}
 
 			for (String username : conUserNames) {
 				User user = userRepository.findByNickname(username)
 					.orElseThrow(() -> new BadRequestException(ErrorCode.USER_NOT_FOUND));
-				DebateUser debateUser = DebateUser.builder()
-					.debate(debate)
-					.user(user)
-					.position(FlagType.CON)
-					.build();
-				debateUserRepository.save(debateUser);
+//				DebateUser debateUser = DebateUser.builder()
+//					.debate(debate)
+//					.user(user)
+//					.position(FlagType.CON)
+//					.build();
+//				debateUserRepository.save(debateUser);
 			}
 		}
 		chatRoomService.removeChatRoom(roomId);

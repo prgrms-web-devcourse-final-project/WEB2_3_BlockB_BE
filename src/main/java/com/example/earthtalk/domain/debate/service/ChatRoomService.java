@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 import com.example.earthtalk.domain.debate.dto.CreateDebateRoomRequest;
 import com.example.earthtalk.domain.debate.model.ChatRoom;
 import com.example.earthtalk.domain.debate.repository.DebateRepository;
-import com.example.earthtalk.domain.debate.repository.DebateUserRepository;
+//import com.example.earthtalk.domain.debate.repository.DebateUserRepository;
 import com.example.earthtalk.domain.user.repository.UserRepository;
 import com.example.earthtalk.domain.debate.store.ChatRoomStore;
 
@@ -26,7 +26,7 @@ public class ChatRoomService {
 
 	private final ChatRoomStore chatRoomStore;
 	private final DebateRepository debateRepository;
-	private final DebateUserRepository debateUserRepository;
+	//private final DebateUserRepository debateUserRepository;
 	private final UserRepository userRepository;
 
 	/**

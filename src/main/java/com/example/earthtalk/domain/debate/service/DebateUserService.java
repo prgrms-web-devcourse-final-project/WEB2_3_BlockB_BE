@@ -8,9 +8,8 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import com.example.earthtalk.domain.debate.store.DebateUserStore;
-import com.example.earthtalk.domain.debate.entity.DebateUser;
 import com.example.earthtalk.domain.debate.model.ChatRoom;
-import com.example.earthtalk.domain.debate.repository.DebateUserRepository;
+//import com.example.earthtalk.domain.debate.repository.DebateUserRepository;
 import com.example.earthtalk.domain.user.repository.UserRepository;
 import com.example.earthtalk.global.exception.ErrorCode;
 import com.example.earthtalk.global.exception.ConflictException;
@@ -31,7 +30,7 @@ public class DebateUserService {
 	private final DebateManagementService debateManagementService;
 	private final ChatRoomService chatRoomService;
 	private final UserRepository userRepository;
-	private final DebateUserRepository debateUserRepository;
+	//private final DebateUserRepository debateUserRepository;
 
 	// 사용자 상태 관리를 담당하는 별도의 컴포넌트
 	private final DebateUserStore debateUserStore;
@@ -196,8 +195,8 @@ public class DebateUserService {
 	 * @return DebateUser 객체
 	 * @throws IllegalArgumentException DebateUser가 존재하지 않을 경우
 	 */
-	protected DebateUser getDebateUserByUserName(String userName) {
-		return debateUserRepository.findByUser_Nickname(userName)
-			.orElseThrow(() -> new IllegalArgumentException(ErrorCode.USER_NOT_FOUND.getMessage()));
-	}
+//	protected DebateUser getDebateUserByUserName(String userName) {
+//		return debateUserRepository.findByUser_Nickname(userName)
+//			.orElseThrow(() -> new IllegalArgumentException(ErrorCode.USER_NOT_FOUND.getMessage()));
+//	}
 }

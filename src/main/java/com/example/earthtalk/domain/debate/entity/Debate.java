@@ -66,7 +66,7 @@ public class Debate extends BaseTimeEntity {
 
     private LocalDateTime endTime;
 
-    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private RoomType status;
 
     @Column(nullable = false)
