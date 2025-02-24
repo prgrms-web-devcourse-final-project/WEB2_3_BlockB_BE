@@ -79,6 +79,9 @@ public class Debate extends BaseTimeEntity {
     @Column(nullable = false)
     private Long disagreeNumber;
 
+    @Column(nullable = false)
+    private Long neutralNumber;
+
     @PrePersist
     public void setDefaultPosition() {
         if (this.status == null) {
@@ -90,5 +93,15 @@ public class Debate extends BaseTimeEntity {
         if (this.disagreeNumber == null) {
             this.disagreeNumber = 0L;
         }
+
+        if (this.neutralNumber == null) {
+            this.neutralNumber = 0L;
+        }
+    }
+
+    public void updateVoteCounts(Long agree, Long disagree, Long neutral) {
+        this.agreeNumber = agree;
+        this.disagreeNumber = disagree;
+        this.neutralNumber = neutral;
     }
 }

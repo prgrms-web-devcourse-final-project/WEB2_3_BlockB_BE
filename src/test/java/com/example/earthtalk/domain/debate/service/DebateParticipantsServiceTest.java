@@ -46,7 +46,6 @@ public class DebateParticipantsServiceTest {
 			.debate(debate)
 			.user(user)
 			.position(position != null ? position : FlagType.NO_POSITION)
-			.afterPosition(afterPosition != null ? afterPosition : FlagType.NO_POSITION)
 			.build();
 	}
 
@@ -89,7 +88,6 @@ public class DebateParticipantsServiceTest {
 		assertEquals(user, debateParticipants.getUser());
 		assertEquals(FlagType.PRO, debateParticipants.getPosition());
 		// 후처리 기본값: afterPosition이 설정되지 않았다면, @PrePersist에서 NO_POSITION으로 처리됨
-		assertEquals(FlagType.NO_POSITION, debateParticipants.getAfterPosition());
 	}
 
 

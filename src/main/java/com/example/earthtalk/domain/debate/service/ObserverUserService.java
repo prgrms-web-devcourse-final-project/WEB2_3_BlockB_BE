@@ -51,7 +51,6 @@ public class ObserverUserService {
 				.user(user)
 				.role(DebateRole.OBSERVER)
 				.position(FlagType.NO_POSITION)
-				.afterPosition(FlagType.NO_POSITION)
 				.build();
 
 			return debateParticipantsRepository.save(participant);

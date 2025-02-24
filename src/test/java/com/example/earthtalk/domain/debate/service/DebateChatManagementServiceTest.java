@@ -76,7 +76,6 @@ public class DebateChatManagementServiceTest {
 		assertEquals(mockDebate, savedChat.getDebate(), "Debate 객체가 올바르게 설정되어야 합니다.");
 		assertEquals(mockDebateParticipants, savedChat.getDebateParticipants(), "DebateParticipants가 올바르게 설정되어야 합니다.");
 		// 테스트에서는 DebateMessage의 "pro" 값에 따라 후처리 값이 PRO로 업데이트된다고 가정합니다.
-		assertEquals(FlagType.PRO, savedChat.getDebateParticipants().getAfterPosition(), "afterPosition 값이 'PRO'여야 합니다.");
 		assertEquals("Hello", savedChat.getContent(), "메시지 내용이 올바르게 설정되어야 합니다.");
 		assertEquals(now, savedChat.getTime(), "메시지 전송 시간이 올바르게 설정되어야 합니다.");
 	}

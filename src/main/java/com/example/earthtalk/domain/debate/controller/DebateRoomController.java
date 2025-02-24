@@ -7,13 +7,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.earthtalk.domain.debate.dto.DebateRoomResponse;
 import com.example.earthtalk.domain.debate.dto.DebateUserResponse;
+import com.example.earthtalk.domain.debate.dto.VoteRequest;
+import com.example.earthtalk.domain.debate.dto.VoteResponse;
 import com.example.earthtalk.domain.debate.entity.Debate;
 import com.example.earthtalk.domain.debate.repository.DebateParticipantsRepository;
 import com.example.earthtalk.domain.debate.repository.DebateRepository;
@@ -116,6 +118,52 @@ public class DebateRoomController {
 		}
 
 		return ResponseEntity.ok(ApiResponse.createSuccessWithNoData());
+	}
+
+	@Operation(summary = "투표 업데이트 API", description = "토론방의 투표 수(찬성, 반대, 중립)를 업데이트합니다.")
+	@ApiResponses(value = {
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "투표 수가 성공적으로 업데이트되었습니다."),
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청 데이터입니다."),
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 토론방을 찾을 수 없습니다."),
+	})
+	@PutMapping("/vote/{roomId}")
+	public ResponseEntity<ApiResponse<Object>> putVote(
+		@PathVariable("roomId") Long roomId,
+		@RequestBody VoteRequest request) {
+		Debate debate = debateRepository.findById(roomId)
+			.orElseThrow(() -> new IllegalArgumentException(ErrorCode.DEBATEROOM_NOT_FOUND.getMessage()));
+
+		if (request.getNeutralNumber() < 0 || request.getDisagreeNumber() < 0 || request.getAgreeNumber() < 0) {
+			throw new IllegalArgumentException(ErrorCode.INVALID_REQUEST_BODY.getMessage());
+		}
+
+		debate.updateVoteCounts(request.getAgreeNumber(), request.getDisagreeNumber(), request.getNeutralNumber());
+
+		debateRepository.save(debate);
+
+		return ResponseEntity.ok(ApiResponse.createSuccessWithNoData());
+
+	}
+
+	@Operation(summary = "투표 조회 API", description = "토론방의 현재 투표 수(찬성, 반대, 중립)를 조회합니다.")
+	@ApiResponses(value = {
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "투표 수가 성공적으로 조회되었습니다."),
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 토론방을 찾을 수 없습니다."),
+	})
+	@GetMapping("/vote/{roomId}")
+	public ResponseEntity<ApiResponse<Object>> getVote(
+		@PathVariable("roomId") Long roomId
+	) {
+		Debate debate = debateRepository.findById(roomId)
+			.orElseThrow(() -> new IllegalArgumentException(ErrorCode.DEBATEROOM_NOT_FOUND.getMessage()));
+
+		VoteResponse response = VoteResponse.builder()
+			.agreeNumber(debate.getAgreeNumber())
+			.disagreeNumber(debate.getDisagreeNumber())
+			.neutralNumber(debate.getNeutralNumber())
+			.build();
+
+		return ResponseEntity.ok(ApiResponse.createSuccess(response));
 	}
 
 	private DebateRoomResponse buildDebateRoomResponse(Debate debate, UUID roomId, boolean includeParticipants) {
