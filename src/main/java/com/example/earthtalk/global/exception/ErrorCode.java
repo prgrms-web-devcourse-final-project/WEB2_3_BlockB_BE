@@ -44,7 +44,12 @@ public enum ErrorCode { // 예외 발생시, body에 실어 날려줄 상태, co
 
     //-6000 OAUTH
     OAUTH_NOT_FOUND(404, -6000, "소셜로그인 계정 정보가 존재하지 않습니다."),
-    KAKAO_PROFILE_NOT_FOUND(404, -6001, "카카오 프로필 정보가 존재하지 않습니다.");
+    KAKAO_PROFILE_NOT_FOUND(404, -6001, "카카오 프로필 정보가 존재하지 않습니다."),
+
+    //-7000: NEWS
+    NEWS_NOT_FOUND(404, -7001, "뉴스를 찾을 수 없습니다."),
+    CONTINENT_NOT_FOUND(404, -7002, "존재하지 않는 대륙 코드입니다.");
+
 
     // 1. status = 날려줄 상태코드
     // 2. code = 해당 오류가 어느부분과 관련있는지 카테고리화 해주는 코드. 예외 원인 식별하기 편하기에 추가

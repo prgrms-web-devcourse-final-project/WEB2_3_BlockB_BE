@@ -11,6 +11,17 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface NewsRepository extends JpaRepository<News, Long> {
+
     @Query("SELECT MAX(n.deliveryTime) FROM news n WHERE n.newsType=:newsType AND n.continent = :continent ")
-    LocalDateTime latestNews(@Param("newsType") NewsType newsType, @Param("continent") ContinentType continent);
+    LocalDateTime latestNews(@Param("newsType") NewsType newsType,
+        @Param("continent") ContinentType continent);
+
+    @Query("SELECT COUNT(l) FROM likes l WHERE l.news.id=:newsId")
+    Long countNewsLike(Long newsId);
+
+    @Query("SELECT n.deliveryTime FROM news n WHERE n.id=:newsId")
+    LocalDateTime getNewsDeliveryTime(Long newsId);
+
+    @Query("SELECT COUNT(b) FROM bookmarks b WHERE b.news.id=:newsId")
+    Long countNewsBookmark(Long newsId);
 }

@@ -15,6 +15,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+
 @RestController
 @RequestMapping("/api/admin")
 @RequiredArgsConstructor
@@ -33,8 +34,7 @@ public class AdminController {
             @RequestParam(value = "result", required = false) ResultType resultType,
             @RequestParam(value = "p", required = false, defaultValue = "1") int page) {
         page = page <= 1 ? 0 : page - 1;
-        Page<ReportListResponse> reports = reportService.getReports(q, reportType, resultType,
-            page);
+        Page<ReportListResponse> reports = reportService.getReports(q, reportType, resultType, page);
         return ResponseEntity.ok(ApiResponse.createSuccess(reports));
     }
 
@@ -42,29 +42,30 @@ public class AdminController {
     @ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "성공")})
     @GetMapping("/reports/{reportId}")
-    public ResponseEntity<ApiResponse<ReportDetailResponse>> getReportsById(
+    public ResponseEntity<ApiResponse<ReportDetailResponse>> getReportById(
         @PathVariable("reportId") Long reportId) {
         ReportDetailResponse report = reportService.getReportById(reportId);
         return ResponseEntity.ok(ApiResponse.createSuccess(report));
     }
 
-    @Operation(summary = "신고 상세정보 수정 API", description = "신고 상세정보(대상, 내용, 처리상태 등)를 수정합니다.")
+    @Operation(summary = "신고 처리 API", description = "reportId 에 해당하는 신고의 처리를 담당합니다.")
     @ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "성공")})
+    @Operation(summary = "신고 처리 API 입니다.", description = "reportId 에 해당하는 신고의 처리를 담당합니다.")
     @PutMapping("/reports/{reportId}")
-    public ResponseEntity<ApiResponse<?>> putReportsById(@PathVariable("reportId") Long reportId,
-        @RequestBody UpdateReportRequest request) {
+    public ResponseEntity<ApiResponse<Long>> putReportById(@PathVariable("reportId") Long reportId,
+        @RequestBody UpdateReportRequest request) throws Exception {
         Long id = reportService.updateReport(reportId, request);
-        return ResponseEntity.ok(ApiResponse.createSuccessWithNoData());
+        return ResponseEntity.ok(ApiResponse.createSuccess(id));
     }
 
-    @Operation(summary = "신고 복구 API", description = "처리된 신고를 복구합니다.")
+    @Operation(summary = "신고 복구 API", description = "이미 처리된 신고를 미처리 상태로 복구합니다.")
     @ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "성공")})
     @PutMapping("/reports/{reportId}/restore")
-    public ResponseEntity<ApiResponse<?>> putReportRestoreById(
+    public ResponseEntity<ApiResponse<Long>> putReportRestoreById(
         @PathVariable("reportId") Long reportId) {
         Long id = reportService.restoreReport(reportId);
-        return ResponseEntity.ok(ApiResponse.createSuccessWithNoData());
+        return ResponseEntity.ok(ApiResponse.createSuccess(id));
     }
 }
