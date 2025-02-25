@@ -5,7 +5,6 @@ import java.time.LocalDateTime;
 
 public record UserLikesResponse(
     Long newsId,
-    boolean isLike,
     String title,
     ContinentType continent,
     LocalDateTime createdAt

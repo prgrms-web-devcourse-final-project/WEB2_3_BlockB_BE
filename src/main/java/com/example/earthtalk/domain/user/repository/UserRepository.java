@@ -31,6 +31,16 @@ public interface UserRepository extends JpaRepository<User, Long>, UserRepositor
 
     @Modifying
     @Transactional
+    @Query("DELETE FROM likes l WHERE l.news.id = :newsId AND l.user.id = :userId")
+    int deleteLikeByUserId(@Param("newsId") long newsId, @Param("userId") long userId);
+
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM bookmarks b WHERE b.news.id = :newsId AND b.user.id = :userId")
+    int deleteBookmarkByUserId(@Param("newsId") long newsId, @Param("userId") long userId);
+
+    @Modifying
+    @Transactional
     @Query("DELETE FROM follows f WHERE f.followee.id = :followeeId AND f.follower.id = :followerId")
     int deleteByFollows(@Param("followeeId") long followeeId, @Param("followerId") long followerId);
 

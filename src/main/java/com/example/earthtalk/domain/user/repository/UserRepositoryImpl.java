@@ -66,7 +66,6 @@ public class UserRepositoryImpl implements UserRepositoryCustom {
         JPQLQuery<Tuple> jpaQuery = jpaQueryFactory
             .select(like.user.id,
                 news.id.as("newsId"),
-                like.isLike,
                 news.title,
                 news.continent,
                 like.createdAt)
@@ -84,7 +83,6 @@ public class UserRepositoryImpl implements UserRepositoryCustom {
         JPQLQuery<Tuple> jpaQuery = jpaQueryFactory
             .select(bookmark.user.id,
                 news.id.as("newsId"),
-                bookmark.isBookmarked,
                 news.title,
                 news.continent,
                 bookmark.createdAt)

@@ -69,13 +69,12 @@ public class UserService {
 
         for ( Tuple data : userLikesData ) {
             Long newsId = data.get(1, Long.class);
-            boolean isLike = Boolean.TRUE.equals(data.get(2, Boolean.class));
-            String title = data.get(3, String.class);
+            String title = data.get(2, String.class);
             ContinentType continent = ContinentType.valueOf(
-                String.valueOf(data.get(4, ContinentType.class)));
-            LocalDateTime createdAt = data.get(5, LocalDateTime.class);
+                String.valueOf(data.get(3, ContinentType.class)));
+            LocalDateTime createdAt = data.get(4, LocalDateTime.class);
 
-            userLikesDTOList.add(new UserLikesResponse(newsId, isLike, title, continent, createdAt));
+            userLikesDTOList.add(new UserLikesResponse(newsId, title, continent, createdAt));
         }
 
         return userLikesDTOList;
@@ -93,6 +92,18 @@ public class UserService {
         }
     }
 
+    // 유저 좋아요 삭제
+    public int deleteLike(Long newsId, Long userId) {
+
+        int flag = userRepository.deleteLikeByUserId(newsId, userId);
+
+        if ( flag == 0 ) {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
+
     // 유저가 북마크한 뉴스 목록 조회
     public List<UserBookmarksResponse> getUserBookmarks(Long userId) {
         List<Tuple> userBookmarksData = userRepository.findAllWithBookmarks(userId);
@@ -101,13 +112,12 @@ public class UserService {
 
         for ( Tuple data : userBookmarksData ) {
             Long newsId = data.get(1, Long.class);
-            boolean isBookmarked = Boolean.TRUE.equals(data.get(2, Boolean.class));
-            String title = data.get(3, String.class);
+            String title = data.get(2, String.class);
             ContinentType continent = ContinentType.valueOf(
-                String.valueOf(data.get(4, ContinentType.class)));
-            LocalDateTime createdAt = data.get(5, LocalDateTime.class);
+                String.valueOf(data.get(3, ContinentType.class)));
+            LocalDateTime createdAt = data.get(4, LocalDateTime.class);
 
-            userBookmarksDTOList.add(new UserBookmarksResponse(newsId, isBookmarked, title, continent, createdAt));
+            userBookmarksDTOList.add(new UserBookmarksResponse(newsId, title, continent, createdAt));
         }
 
         return userBookmarksDTOList;
@@ -117,6 +127,18 @@ public class UserService {
     public int insertBookmark(Long newsId, Long userId) {
 
         int flag = userRepository.insertBookmark(newsId, userId);
+
+        if ( flag == 0 ) {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
+
+    // 유저 북마크 삭제
+    public int deleteBookmark(Long newsId, Long userId) {
+
+        int flag = userRepository.deleteBookmarkByUserId(newsId, userId);
 
         if ( flag == 0 ) {
             return 1;
@@ -167,7 +189,7 @@ public class UserService {
             String link = data.get(3, String.class);
 
             Debate debate = debateRepository.findById(debatesId)
-                .orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new NotFoundException(ErrorCode.DEBATEROOM_NOT_FOUND));
 
             userDebateDetailsDTOList.add(UserDebateDetailsResponse.from(debate, link));
         }

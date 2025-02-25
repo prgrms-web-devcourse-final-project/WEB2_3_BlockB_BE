@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 
 public record UserBookmarksResponse(
     Long newsId,
-    boolean isBookmarked,
     String title,
     ContinentType continent,
     LocalDateTime createdAt
