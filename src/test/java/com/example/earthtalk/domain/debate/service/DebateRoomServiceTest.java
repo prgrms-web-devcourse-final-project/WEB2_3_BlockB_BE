@@ -2,6 +2,7 @@ package com.example.earthtalk.domain.debate.service;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.example.earthtalk.domain.user.repository.UserRepository;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -23,6 +24,7 @@ public class DebateRoomServiceTest {
 	private DebateRoomStore debateRoomStore;
 	private DebateRepository debateRepository;
 	private NewsRepository newsRepository;
+	private UserRepository userRepository;
 
 	// 간단한 인메모리 구현체
 	static class InMemoryDebateRoomStore extends DebateRoomStore {
@@ -47,7 +49,7 @@ public class DebateRoomServiceTest {
 	@BeforeEach
 	public void setup() {
 		debateRoomStore = new InMemoryDebateRoomStore();
-		debateRoomService = new DebateRoomService(debateRoomStore, debateRepository, newsRepository);
+		debateRoomService = new DebateRoomService(debateRoomStore, debateRepository, newsRepository, userRepository);
 	}
 
 	@Test

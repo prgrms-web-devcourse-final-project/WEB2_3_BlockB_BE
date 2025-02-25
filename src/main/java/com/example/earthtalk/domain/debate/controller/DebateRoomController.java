@@ -109,7 +109,7 @@ public class DebateRoomController {
 			throw new IllegalArgumentException(ErrorCode.INVALID_REQUEST_BODY.getMessage());
 		}
 
-		if (!userRepository.existsById(request.targetId())) {
+		if (!userRepository.existsById(request.targetUser().getId())) {
 			throw new IllegalArgumentException(ErrorCode.USER_NOT_FOUND.getMessage());
 		}
 

@@ -3,6 +3,10 @@ package com.example.earthtalk.domain.oauth.handler;
 import com.example.earthtalk.domain.oauth.dto.CustomOAuth2User;
 import com.example.earthtalk.domain.oauth.entity.RefreshToken;
 import com.example.earthtalk.domain.oauth.repository.RefreshTokenRepository;
+import com.example.earthtalk.domain.user.entity.User;
+import com.example.earthtalk.domain.user.repository.UserRepository;
+import com.example.earthtalk.global.exception.ErrorCode;
+import com.example.earthtalk.global.exception.NotFoundException;
 import com.example.earthtalk.global.response.ApiResponse;
 import com.example.earthtalk.global.security.dto.TokenResponse;
 import com.example.earthtalk.global.security.util.JwtTokenProvider;
@@ -10,7 +14,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.transaction.Transactional;
 import java.util.Date;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +31,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 
     private final JwtTokenProvider jwtTokenProvider;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final UserRepository userRepository;
     private final ObjectMapper objectMapper;
 
     @Override
@@ -36,7 +40,10 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         CustomOAuth2User oAuth2User = (CustomOAuth2User) authentication.getPrincipal();
 
         Date date = new Date();
-        TokenResponse tokenResponse = jwtTokenProvider.generateAllTokens(oAuth2User, date);
+        TokenResponse.GetToken tokenResponse = jwtTokenProvider.generateAllTokens(oAuth2User, date);
+
+        User user = userRepository.findByEmail(oAuth2User.getEmail())
+            .orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
 
         saveRefreshToken(oAuth2User, tokenResponse.refreshToken());
 
@@ -47,7 +54,11 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 
         // 응답 본문에 토큰 정보 작성
         String responseBody = objectMapper.writeValueAsString(
-            ApiResponse.createSuccess(tokenResponse));
+            ApiResponse.createSuccess(
+                TokenResponse.GetOauth.from(
+                tokenResponse.accessToken(),
+                tokenResponse.refreshToken(),
+                user.getNickname())));
         response.getWriter().write(responseBody);
     }
 

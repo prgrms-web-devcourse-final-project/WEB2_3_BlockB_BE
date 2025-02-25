@@ -1,7 +1,9 @@
 package com.example.earthtalk.global.security.util;
 
 import static com.example.earthtalk.global.exception.ErrorCode.EXPIRED_ACCESS_TOKEN;
+import static com.example.earthtalk.global.exception.ErrorCode.EXPIRED_REFRESH_TOKEN;
 import static com.example.earthtalk.global.exception.ErrorCode.INVALID_ACCESS_TOKEN;
+import static com.example.earthtalk.global.exception.ErrorCode.INVALID_REFRESH_TOKEN;
 
 import com.example.earthtalk.domain.oauth.dto.CustomOAuth2User;
 import com.example.earthtalk.domain.user.entity.Role;
@@ -36,11 +38,11 @@ public class JwtTokenProvider {
     private static final String AUTHORITIES_KEY = "authority";
     private static final String TOKEN_PREFIX = "Bearer ";
 
-    public TokenResponse generateAllTokens(CustomOAuth2User oAuth2User, Date now) {
+    public TokenResponse.GetToken generateAllTokens(CustomOAuth2User oAuth2User, Date now) {
         String accessToken = generateAccessToken(oAuth2User, now);
         String refreshToken = generateRefreshToken(oAuth2User, now);
 
-        return TokenResponse.from(accessToken, refreshToken);
+        return TokenResponse.GetToken.from(accessToken, refreshToken);
     }
 
     // JWT Access Token 생성 메소드
@@ -69,9 +71,6 @@ public class JwtTokenProvider {
 
     public Authentication getAuthentication(String token) {
         Claims claims = getClaims(token);
-
-        String email = claims.getSubject();
-        String role = claims.get(AUTHORITIES_KEY).toString();
 
         CustomOAuth2User customOAuth2User = getCustomOAuth2User(claims);
 
@@ -103,6 +102,18 @@ public class JwtTokenProvider {
         } catch (JwtException | IllegalArgumentException e) {
             log.info(INVALID_ACCESS_TOKEN.getMessage());
             throw new JwtCustomException(INVALID_ACCESS_TOKEN);
+        }
+    }
+
+    public Claims validateRefreshToken(String token) {
+        try {
+            return getClaims(token);
+        } catch (ExpiredJwtException e) {
+            log.info(EXPIRED_REFRESH_TOKEN.getMessage());
+            throw new JwtCustomException(EXPIRED_ACCESS_TOKEN);
+        } catch (JwtException | IllegalArgumentException e) {
+            log.info(INVALID_REFRESH_TOKEN.getMessage());
+            throw new JwtCustomException(INVALID_REFRESH_TOKEN);
         }
     }
 
