@@ -48,18 +48,10 @@ public class DebateParticipants extends BaseTimeEntity {
     @Column(nullable = false)
     private FlagType position;// 찬/반 여부
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private FlagType afterPosition;
-
     @PrePersist
     public void setDefaultPosition() {
         if (this.position == null) {
             this.position = FlagType.NO_POSITION;
-        }
-
-        if (this.afterPosition == null) {
-            this.afterPosition = FlagType.NO_POSITION;
         }
     }
 

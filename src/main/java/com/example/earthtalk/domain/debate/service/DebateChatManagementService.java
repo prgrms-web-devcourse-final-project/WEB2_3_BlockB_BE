@@ -1,10 +1,7 @@
 package com.example.earthtalk.domain.debate.service;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -12,7 +9,7 @@ import org.springframework.stereotype.Service;
 import com.example.earthtalk.domain.debate.dto.DebateMessage;
 import com.example.earthtalk.domain.debate.entity.Debate;
 import com.example.earthtalk.domain.debate.entity.DebateChat;
-//import com.example.earthtalk.domain.debate.entity.DebateUser;
+import com.example.earthtalk.domain.debate.entity.DebateParticipants;
 import com.example.earthtalk.domain.debate.entity.FlagType;
 import com.example.earthtalk.domain.debate.repository.DebateChatRepository;
 
@@ -28,7 +25,7 @@ import lombok.RequiredArgsConstructor;
  */
 @Service
 @RequiredArgsConstructor
-public class DebateChatService {
+public class DebateChatManagementService {
 
 	private final DebateChatRepository debateChatRepository;
 	private final DebateUserService debateUserService;
@@ -42,7 +39,7 @@ public class DebateChatService {
 	 *   <li>주어진 uuid를 이용하여 Debate 엔티티를 조회합니다.</li>
 	 *   <li>DebateMessage 리스트를 스트림으로 순회하면서, 이벤트가 "chat"인 메시지에 대해 다음 작업을 수행합니다:
 	 *     <ul>
-	 *       <li>DebateUserService를 이용하여 해당 메시지의 userName에 해당하는 DebateUser 객체를 조회합니다.</li>
+	 *       <li>DebateUserService를 이용하여 해당 메시지의 userName에 해당하는 DebateParticipants 객체를 조회합니다.</li>
 	 *       <li>메시지의 position 값에 따라 FlagType을 결정합니다. ("pro" → {@link FlagType#PRO}, "con" → {@link FlagType#CON}, 그 외 → {@link FlagType#NO_POSITION})</li>
 	 *       <li>만약 DebateUser가 존재하지 않으면, 해당 메시지는 무시됩니다.</li>
 	 *       <li>DebateChat 엔티티를 Builder 패턴을 이용해 생성합니다.</li>
@@ -62,18 +59,16 @@ public class DebateChatService {
 		List<DebateChat> chatList = messages.stream()
 			.filter(message -> message.getEvent().equals("chat")) //
 			.map(message -> {
-				//DebateUser debateUser = debateUserService.getDebateUserByUserName(message.getUserName());
-				//if (debateUser == null) {
-				//	return Optional.<DebateChat>empty(); // Optional 사용하여 null 방지
-				//}
+				DebateParticipants debateParticipants = debateUserService.getDebateUserByUserName(message.getUserName());
+				if (debateParticipants == null) {
+					return Optional.<DebateChat>empty(); // Optional 사용하여 null 방지
+				}
 				// FlagType 변환을 Enum 메서드로 추출하여 가독성 향상
-				//FlagType flag = FlagType.fromString(message.getPosition());
 				return Optional.of(DebateChat.builder()
 					.debate(debate)
-					//.debateUser(debateUser)
-					//.flagType(flag)
+					.debateParticipants(debateParticipants)
 					.content(message.getMessage())
-					.time(message.getTime())
+					.time(message.getTimestamp())
 					.build());
 			})
 			.flatMap(Optional::stream) // Optional을 활용하여 null 제거

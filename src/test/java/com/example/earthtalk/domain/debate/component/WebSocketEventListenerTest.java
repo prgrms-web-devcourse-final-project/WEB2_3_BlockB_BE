@@ -1,5 +1,6 @@
 package com.example.earthtalk.domain.debate.component;
 
+import static com.example.earthtalk.domain.debate.entity.QDebate.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
@@ -9,11 +10,11 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 import com.example.earthtalk.domain.debate.dto.DebateMessage;
-import com.example.earthtalk.domain.debate.model.ChatRoom;
-import com.example.earthtalk.domain.debate.service.ChatRoomService;
-import com.example.earthtalk.domain.debate.service.DebateChatService;
+import com.example.earthtalk.domain.debate.entity.Debate;
+import com.example.earthtalk.domain.debate.service.DebateRoomService;
+import com.example.earthtalk.domain.debate.service.DebateChatManagementService;
 import com.example.earthtalk.domain.debate.service.DebateUserService;
-import com.example.earthtalk.domain.debate.store.ChatMessageStore;
+import com.example.earthtalk.domain.debate.store.DebateMessageStore;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -40,14 +41,14 @@ public class WebSocketEventListenerTest {
 	private DebateUserService debateUserService;
 
 	@Mock
-	private ChatRoomService chatRoomService;
+	private DebateRoomService debateRoomService;
 
 	@Mock
-	private DebateChatService debateChatService;
+	private DebateChatManagementService debateChatManagementService;
 
 	// 실제 구현을 사용하는 Spy 객체
 	@Spy
-	private ChatMessageStore chatMessageStore = new ChatMessageStore();
+	private DebateMessageStore debateMessageStore = new DebateMessageStore();
 
 	@InjectMocks
 	private WebSocketEventListener eventListener;
@@ -62,9 +63,10 @@ public class WebSocketEventListenerTest {
 	 * @param position  사용자 포지션 ("pro" 또는 "con")
 	 */
 	private void simulateConnection(String sessionId, String roomId, String userName, String position) {
-		// roomId에 대해 ChatRoom 객체를 반환하도록 stubbing
-		ChatRoom chatRoom = new ChatRoom(roomId, null, "Test Room", "Test Subtitle", null, null, null);
-		when(chatRoomService.getChatRoom(roomId)).thenReturn(chatRoom);
+		// roomId에 대해 DebateRoom 객체를 반환하도록 stubbing
+		Debate debate = Debate.builder()
+			.build();
+		when(debateRoomService.getDebateRoom(roomId)).thenReturn(debate);
 
 		Map<String, Object> sessionAttributes = new HashMap<>();
 		sessionAttributes.put("roomId", roomId);
@@ -92,9 +94,9 @@ public class WebSocketEventListenerTest {
 		sessionAttributes.put("userName", "testUser");
 		sessionAttributes.put("position", "pro");
 
-		// ChatRoom stub 설정
-		ChatRoom chatRoom = new ChatRoom("room123", null, "Test Room", "Test Subtitle", null, null, null);
-		when(chatRoomService.getChatRoom("room123")).thenReturn(chatRoom);
+		// DebateRoom stub 설정
+		Debate debate = Debate.builder().build();
+		when(debateRoomService.getDebateRoom("room123")).thenReturn(debate);
 
 		StompHeaderAccessor accessor = StompHeaderAccessor.create(StompCommand.CONNECTED);
 		accessor.setSessionAttributes(sessionAttributes);
@@ -105,7 +107,7 @@ public class WebSocketEventListenerTest {
 
 		eventListener.handleWebSocketConnectListener(connectEvent);
 
-		verify(debateUserService, times(1)).addUser(chatRoom, "testUser", "pro");
+		verify(debateUserService, times(1)).addUser(debate, "testUser", "pro");
 	}
 
 	@Test
@@ -122,7 +124,7 @@ public class WebSocketEventListenerTest {
 			accessor.getMessageHeaders());
 		SessionConnectedEvent connectEvent = new SessionConnectedEvent(this, message);
 
-		when(chatRoomService.getChatRoom("invalidRoom")).thenReturn(null);
+		when(debateRoomService.getDebateRoom("invalidRoom")).thenReturn(null);
 
 		assertThrows(RuntimeException.class, () -> eventListener.handleWebSocketConnectListener(connectEvent));
 	}
@@ -133,7 +135,7 @@ public class WebSocketEventListenerTest {
 		simulateConnection("session123", "room123", "testUser", "pro");
 
 		// stubbing: 빈 리스트 반환
-		doReturn(Collections.emptyList()).when(chatMessageStore).removeChatMessages("room123");
+		doReturn(Collections.emptyList()).when(debateMessageStore).removeDebateMessages("room123");
 
 		StompHeaderAccessor disconnectAccessor = StompHeaderAccessor.create(StompCommand.DISCONNECT);
 		disconnectAccessor.setSessionId("session123");
@@ -145,7 +147,7 @@ public class WebSocketEventListenerTest {
 		eventListener.handleWebSocketDisconnectListener(disconnectEvent);
 
 		// saveChatHistory가 호출되지 않아야 함
-		verify(debateChatService, times(0)).saveChatHistory(anyString(), anyList());
+		verify(debateChatManagementService, times(0)).saveChatHistory(anyString(), anyList());
 	}
 
 	@Test
@@ -156,7 +158,7 @@ public class WebSocketEventListenerTest {
 		// stubbing: room123에 대해 mockMessages 반환
 		List<DebateMessage> mockMessages = new ArrayList<>();
 		mockMessages.add(new DebateMessage("chat", "testUser", "pro", "Hello!", LocalDateTime.now()));
-		doReturn(mockMessages).when(chatMessageStore).removeChatMessages("room123");
+		doReturn(mockMessages).when(debateMessageStore).removeDebateMessages("room123");
 
 		StompHeaderAccessor disconnectAccessor = StompHeaderAccessor.create(StompCommand.DISCONNECT);
 		disconnectAccessor.setSessionId("session123");
@@ -168,7 +170,7 @@ public class WebSocketEventListenerTest {
 		eventListener.handleWebSocketDisconnectListener(disconnectEvent);
 
 		// verify: debateChatService.saveChatHistory가 "room123"과 mockMessages로 호출되었는지
-		verify(debateChatService, times(1)).saveChatHistory(eq("room123"), eq(mockMessages));
+		verify(debateChatManagementService, times(1)).saveChatHistory(eq("room123"), eq(mockMessages));
 	}
 
 	@Test
@@ -177,8 +179,8 @@ public class WebSocketEventListenerTest {
 		String roomId = "room123";
 		DebateMessage message = new DebateMessage("chat", "testUser", "pro", "Hello!", LocalDateTime.now());
 
-		chatMessageStore.addChatMessage(roomId, message);
-		List<DebateMessage> messages = chatMessageStore.removeChatMessages(roomId);
+		debateMessageStore.addDebateMessage(roomId, message);
+		List<DebateMessage> messages = debateMessageStore.removeDebateMessages(roomId);
 
 		assertEquals(1, messages.size());
 		assertEquals("Hello!", messages.get(0).getMessage());

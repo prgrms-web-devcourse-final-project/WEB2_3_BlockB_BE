@@ -8,19 +8,19 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum DebateRole {
-    PARTICIPANT("participant"),
-    OBSERVER("observer");
+	PARTICIPANT("participant"),
+	OBSERVER("observer");
 
-    private final String role;
+	private final String role;
 
-    public static DebateRole fromString(String role) {
-        if (role == null) {
-            return null;
-        }
+	public static DebateRole fromString(String role) {
+		if (role == null) {
+			return null;
+		}
 
-        return Arrays.stream(DebateRole.values())
-            .filter(flag -> flag.role.equalsIgnoreCase(role))
-            .findFirst()
-            .orElse(OBSERVER);
-    }
+		return Arrays.stream(DebateRole.values())
+			.filter(flag -> flag.role.equalsIgnoreCase(role))
+			.findFirst()
+			.orElse(OBSERVER);
+	}
 }
