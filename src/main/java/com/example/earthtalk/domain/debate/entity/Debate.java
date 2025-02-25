@@ -5,6 +5,8 @@ import com.example.earthtalk.domain.news.entity.MemberNumberType;
 import com.example.earthtalk.domain.news.entity.TimeType;
 import com.example.earthtalk.global.baseTime.BaseTimeEntity;
 import com.example.earthtalk.global.constant.ContinentType;
+
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
@@ -17,8 +19,11 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -82,6 +87,12 @@ public class Debate extends BaseTimeEntity {
     @Column(nullable = false)
     private Long neutralNumber;
 
+    @Column(nullable = false)
+    private boolean resultEnabled;
+
+    @OneToMany(mappedBy = "debate", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<DebateParticipants> participants = new ArrayList<>();
+
     @PrePersist
     public void setDefaultPosition() {
         if (this.status == null) {
@@ -97,6 +108,8 @@ public class Debate extends BaseTimeEntity {
         if (this.neutralNumber == null) {
             this.neutralNumber = 0L;
         }
+
+        this.resultEnabled = false;
     }
 
     public void updateVoteCounts(Long agree, Long disagree, Long neutral) {

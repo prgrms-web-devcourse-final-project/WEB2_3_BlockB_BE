@@ -17,10 +17,14 @@ import com.example.earthtalk.domain.debate.dto.DebateUserResponse;
 import com.example.earthtalk.domain.debate.dto.VoteRequest;
 import com.example.earthtalk.domain.debate.dto.VoteResponse;
 import com.example.earthtalk.domain.debate.entity.Debate;
+import com.example.earthtalk.domain.debate.entity.DebateParticipants;
+import com.example.earthtalk.domain.debate.entity.FlagType;
 import com.example.earthtalk.domain.debate.repository.DebateParticipantsRepository;
 import com.example.earthtalk.domain.debate.repository.DebateRepository;
+import com.example.earthtalk.domain.debate.service.DebateRoomService;
 import com.example.earthtalk.domain.report.dto.request.InsertReportRequest;
 import com.example.earthtalk.domain.report.service.ReportService;
+import com.example.earthtalk.domain.user.entity.User;
 import com.example.earthtalk.domain.user.repository.UserRepository;
 import com.example.earthtalk.global.exception.ErrorCode;
 import com.example.earthtalk.global.response.ApiResponse;
@@ -40,6 +44,7 @@ public class DebateRoomController {
 	private final DebateParticipantsRepository debateParticipantsRepository;
 	private final UserRepository userRepository;
 	private final ReportService reportService;
+	private final DebateRoomService debateRoomService;
 
 	@Operation(summary = "토론방 상세 조회 API", description = "토론방의 UUID로 상세 정보를 조회합니다.")
 	@ApiResponses(value = {
@@ -120,7 +125,7 @@ public class DebateRoomController {
 		return ResponseEntity.ok(ApiResponse.createSuccessWithNoData());
 	}
 
-	@Operation(summary = "투표 업데이트 API", description = "토론방의 투표 수(찬성, 반대, 중립)를 업데이트합니다.")
+	@Operation(summary = "투표 업데이트 API", description = "토론방의 투표 수(찬성, 반대, 중립)를 업데이트하고 업데이트 된 결과에 따라 유저의 승/패를 추가적으로 업데이트합니다.")
 	@ApiResponses(value = {
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "투표 수가 성공적으로 업데이트되었습니다."),
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청 데이터입니다."),
@@ -137,7 +142,11 @@ public class DebateRoomController {
 			throw new IllegalArgumentException(ErrorCode.INVALID_REQUEST_BODY.getMessage());
 		}
 
-		debate.updateVoteCounts(request.getAgreeNumber(), request.getDisagreeNumber(), request.getNeutralNumber());
+		if (debate.getParticipants() == null || debate.getParticipants().isEmpty()) {
+			throw new IllegalArgumentException(ErrorCode.INVALID_REQUEST_BODY.getMessage());
+		}
+
+		debateRoomService.processDebateResult(debate, request);
 
 		debateRepository.save(debate);
 

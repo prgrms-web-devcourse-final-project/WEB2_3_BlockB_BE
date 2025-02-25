@@ -34,5 +34,7 @@ public class CreateDebateRoomRequest {
 
 	private SpeakCountType speakCount;
 
+	private boolean resultEnabled;
+
 	private LocalDateTime endTime;
 }

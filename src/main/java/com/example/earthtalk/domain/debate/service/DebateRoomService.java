@@ -1,16 +1,24 @@
 package com.example.earthtalk.domain.debate.service;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import com.example.earthtalk.domain.debate.dto.CreateDebateRoomRequest;
+import com.example.earthtalk.domain.debate.dto.VoteRequest;
 import com.example.earthtalk.domain.debate.entity.Debate;
+import com.example.earthtalk.domain.debate.entity.DebateParticipants;
+import com.example.earthtalk.domain.debate.entity.FlagType;
 import com.example.earthtalk.domain.debate.repository.DebateRepository;
 import com.example.earthtalk.domain.debate.store.DebateRoomStore;
 import com.example.earthtalk.domain.news.entity.News;
 import com.example.earthtalk.domain.news.repository.NewsRepository;
+import com.example.earthtalk.domain.user.entity.User;
+import com.example.earthtalk.domain.user.repository.UserRepository;
 import com.example.earthtalk.global.exception.ErrorCode;
 
 /**
@@ -28,6 +36,7 @@ public class DebateRoomService {
 	private final DebateRoomStore debateRoomStore;
 	private final DebateRepository debateRepository;
 	private final NewsRepository newsRepository;
+	private final UserRepository userRepository;
 
 	/**
 	 * 새로운 채팅방을 생성하고 저장소에 등록합니다.
@@ -52,6 +61,7 @@ public class DebateRoomService {
 				.continent(request.getContinent())
 				.category(request.getCategory())
 				.speakCount(request.getSpeakCount())
+				.resultEnabled(request.isResultEnabled())
 				.time(request.getTime())
 				.build();
 			debateRoomStore.put(debate);
@@ -83,5 +93,33 @@ public class DebateRoomService {
 	 */
 	public void removeDebateRoom(String roomId) {
 		debateRoomStore.remove(roomId);
+	}
+
+	@Transactional
+	public void processDebateResult(Debate debate, VoteRequest request) {
+		Set<User> modifiedUsers = new HashSet<>();
+		if (debate.isResultEnabled()) {
+			boolean proWins = request.getAgreeNumber() > request.getDisagreeNumber();
+			boolean draw = request.getAgreeNumber().equals(request.getDisagreeNumber());
+
+			for (DebateParticipants participants : debate.getParticipants()) {
+				User user = participants.getUser();
+
+				if (draw) {
+					user.incrementDrawNumber();
+				} else if ((participants.getPosition() == FlagType.PRO && proWins) ||
+					(participants.getPosition() != FlagType.PRO && !proWins)) {
+					user.incrementWinNumber();
+				} else {
+					user.incrementDefeatNumber();
+				}
+
+				modifiedUsers.add(user);
+			}
+		}
+		userRepository.saveAll(modifiedUsers);
+
+		debate.updateVoteCounts(request.getAgreeNumber(), request.getDisagreeNumber(), request.getNeutralNumber());
+		debateRepository.save(debate);
 	}
 }
