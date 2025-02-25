@@ -20,13 +20,13 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-@Entity(name = "debate_users")
+@Entity(name = "debate_participants")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 @Builder
 @Getter
 @EntityListeners(AuditingEntityListener.class)
-public class DebateUser extends BaseTimeEntity {
+public class DebateParticipants extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -42,20 +42,16 @@ public class DebateUser extends BaseTimeEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private FlagType position;// 찬/반 여부
+    private DebateRole role;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private FlagType afterPosition;
+    private FlagType position;// 찬/반 여부
 
     @PrePersist
     public void setDefaultPosition() {
         if (this.position == null) {
             this.position = FlagType.NO_POSITION;
-        }
-
-        if (this.afterPosition == null) {
-            this.afterPosition = FlagType.NO_POSITION;
         }
     }
 
