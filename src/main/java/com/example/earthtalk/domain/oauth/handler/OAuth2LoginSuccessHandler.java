@@ -58,7 +58,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
                 TokenResponse.GetOauth.from(
                 tokenResponse.accessToken(),
                 tokenResponse.refreshToken(),
-                user.getNickname().split("_")[1])));
+                user.getNickname())));
         response.getWriter().write(responseBody);
     }
 
