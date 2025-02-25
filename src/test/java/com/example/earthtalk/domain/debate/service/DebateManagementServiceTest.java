@@ -98,7 +98,7 @@ public class DebateManagementServiceTest {
 		assertEquals("Test Subtitle", savedDebate.getDescription());
 		assertEquals(MemberNumberType.T2, savedDebate.getMember());
 		// 예시: ContinentType.AS가 "아시아"로 매핑, CategoryType.CO가 "칼럼", TimeType.T5가 5로 매핑된다고 가정
-		assertEquals("아시아", savedDebate.getContinent().getValue());
+		assertEquals("아시아/호주", savedDebate.getContinent().getValue());
 		assertEquals("칼럼", savedDebate.getCategory().getValue());
 		assertEquals(5, savedDebate.getTime().getValue());
 		assertEquals(RoomType.DEBATE, savedDebate.getStatus());

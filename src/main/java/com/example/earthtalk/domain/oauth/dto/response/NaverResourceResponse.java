@@ -1,5 +1,7 @@
 package com.example.earthtalk.domain.oauth.dto.response;
 
+import com.example.earthtalk.global.exception.ErrorCode;
+import com.example.earthtalk.global.exception.OAuth2AuthenticationException;
 import java.util.Map;
 
 public class NaverResourceResponse extends OAuth2UserResponse {
@@ -11,7 +13,7 @@ public class NaverResourceResponse extends OAuth2UserResponse {
     @Override
     public String getId() {
         if (attributes == null) {
-            return null;
+            throw new OAuth2AuthenticationException(ErrorCode.OAUTH_NOT_FOUND);
         }
         return (String) attributes.get("id");
     }
@@ -19,18 +21,16 @@ public class NaverResourceResponse extends OAuth2UserResponse {
     @Override
     public String getNickname() {
         if (attributes == null) {
-            return null;
+            throw new OAuth2AuthenticationException(ErrorCode.OAUTH_NOT_FOUND);
         }
-
         return (String) attributes.get("nickname");
     }
 
     @Override
     public String getImageUrl() {
         if (attributes == null) {
-            return null;
+            throw new OAuth2AuthenticationException(ErrorCode.OAUTH_NOT_FOUND);
         }
-
         return (String) attributes.get("profile_image");
     }
 }

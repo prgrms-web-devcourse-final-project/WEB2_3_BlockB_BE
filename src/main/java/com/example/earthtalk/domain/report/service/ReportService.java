@@ -4,6 +4,9 @@ import com.example.earthtalk.domain.chat.ObserverChat;
 import com.example.earthtalk.domain.chat.repository.ObserverChatRepository;
 import com.example.earthtalk.domain.debate.entity.DebateChat;
 import com.example.earthtalk.domain.debate.repository.DebateChatRepository;
+import com.example.earthtalk.domain.notification.dto.request.SendNotificationRequest;
+import com.example.earthtalk.domain.notification.entity.NotificationType;
+import com.example.earthtalk.domain.notification.service.NotificationService;
 import com.example.earthtalk.domain.report.dto.request.InsertReportRequest;
 import com.example.earthtalk.domain.report.dto.request.UpdateReportRequest;
 import com.example.earthtalk.domain.report.dto.response.ReportDetailResponse;
@@ -31,8 +34,7 @@ import java.util.List;
 public class ReportService {
 
     private final ReportRepository reportRepository;
-    private final ObserverChatRepository observerChatRepository;
-    private final DebateChatRepository debateChatRepository;
+    private final NotificationService notificationService;
 
     // 신고하는 로직 간단하게 구현해놨습니다. 예외처리 따로 안되어있어요.
     // 각 위치에서 신고에 대한 기능 만들 때 예외 처리 해야합니다.
@@ -61,14 +63,15 @@ public class ReportService {
     // 하나의 신고에 대한 상세 조회하는 메서드
     public ReportDetailResponse getReportById(Long id) {
         Report report = reportRepository.findById(id).orElseThrow(() -> new NotFoundException(ErrorCode.REPORT_NOT_FOUND));
-        String reportContent = getTargetContent(report);
-        return ReportDetailResponse.from(report, reportContent);
+        return ReportDetailResponse.from(report);
     }
 
-    // 신고를 처리하는 메서드
-    public Long updateReport(Long id, UpdateReportRequest request) {
+    // 신고를 처리하는 메서드 - 알림 추가
+    public Long updateReport(Long id, UpdateReportRequest request) throws Exception {
         Report report = reportRepository.findById(id).orElseThrow(() -> new NotFoundException(ErrorCode.REPORT_NOT_FOUND));
         report.updateReport(request);
+        SendNotificationRequest sendNotificationRequest = new SendNotificationRequest(report.getTargetUser().getId(), NotificationType.REPORT, report.getTargetRoomId());
+        // notificationService.sendNotification(sendNotificationRequest);
         return reportRepository.save(report).getId();
     }
 
@@ -77,21 +80,5 @@ public class ReportService {
         Report report = reportRepository.findById(id).orElseThrow(() -> new NotFoundException(ErrorCode.REPORT_NOT_FOUND));
         report.updateReport(null);
         return reportRepository.save(report).getId();
-    }
-
-
-    // 신고된 타입 유형에따라 신고된 내용을 조회하는 메서드
-    String getTargetContent(Report report) {
-        if(report.getTargetType() == TargetType.CHAT) {
-            ObserverChat observerChat = observerChatRepository.findById(report.getId()).orElseThrow(() -> new NotFoundException(ErrorCode.CHAT_NOT_FOUND));
-            return observerChat.getContent();
-        }
-
-        if(report.getTargetType() == TargetType.DEBATE) {
-            DebateChat debateChat = debateChatRepository.findById(report.getId()).orElseThrow(() -> new NotFoundException(ErrorCode.CHAT_NOT_FOUND));
-            return debateChat.getContent();
-        }
-
-        return null;
     }
 }
