@@ -7,9 +7,13 @@ import lombok.Getter;
  */
 @Getter
 public enum TimeType {
-    T5(5),
-    T10(10),
-    T15(15);
+    T3(30),
+    T4(40),
+    T5(50),
+    T6(60),
+    T9(90),
+    T12(120),
+    T15(150);
 
     private final Integer value;
 

@@ -32,10 +32,7 @@ public class DebateChat extends BaseTimeEntity {
 
     @ManyToOne
     @JoinColumn(name = "debate_user_id", nullable = false)
-    private DebateUser debateUser;
-
-    @Column(nullable = false)
-    private FlagType flagType;
+    private DebateParticipants debateParticipants;
 
     @Column(nullable = false)
     private String content;

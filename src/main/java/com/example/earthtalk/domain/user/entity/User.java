@@ -37,11 +37,11 @@ public class User extends BaseTimeEntity {
 
     private String profileUrl; // 프로필 이미지
 
-    private Long winNumber; // 승리 횟수
+    private Long winNumber = 0L; // 승리 횟수
 
-    private Long drawNumber; // 무승부 횟수
+    private Long drawNumber = 0L; // 무승부 횟수
 
-    private Long defeatNumber; // 패배 횟수
+    private Long defeatNumber = 0L; // 패배 횟수
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -78,5 +78,17 @@ public class User extends BaseTimeEntity {
 
     public void updateRole(Role newRole) {
         this.role = newRole;
+    }
+
+    public void incrementWinNumber() {
+        this.winNumber++;
+    }
+
+    public void incrementDrawNumber() {
+        this.drawNumber++;
+    }
+
+    public void incrementDefeatNumber() {
+        this.defeatNumber++;
     }
 }

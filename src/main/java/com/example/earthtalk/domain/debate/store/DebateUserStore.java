@@ -1,6 +1,8 @@
 package com.example.earthtalk.domain.debate.store;
 
 import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.stereotype.Component;
 
@@ -55,5 +57,31 @@ public class DebateUserStore {
 	 */
 	public void removeConUsers(String roomId) {
 		conUsers.remove(roomId);
+	}
+
+	/**
+	 * 각 채팅방별 찬성 사용자 수를 집계하여 반환합니다.
+	 *
+	 * @return 방 ID와 찬성 사용자 수의 매핑 정보
+	 */
+	public Map<String, Integer> getProUserCounts() {
+		Map<String, Integer> proCounts = new HashMap<>();
+		for (String roomId : proUsers.keySet()) {
+			proCounts.put(roomId, getProUsers(roomId).size());
+		}
+		return proCounts;
+	}
+
+	/**
+	 * 각 채팅방별 반대 사용자 수를 집계하여 반환합니다.
+	 *
+	 * @return 방 ID와 반대 사용자 수의 매핑 정보
+	 */
+	public Map<String, Integer> getConUserCounts() {
+		Map<String, Integer> conCounts = new HashMap<>();
+		for (String roomId : conUsers.keySet()) {
+			conCounts.put(roomId, getConUsers(roomId).size());
+		}
+		return conCounts;
 	}
 }

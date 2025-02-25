@@ -1,7 +1,5 @@
 package com.example.earthtalk.domain.debate.controller;
 
-import java.time.Instant;
-
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -9,9 +7,10 @@ import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.stereotype.Controller;
 
-import com.example.earthtalk.domain.debate.store.ChatMessageStore;
+import com.example.earthtalk.domain.debate.store.DebateMessageStore;
 import com.example.earthtalk.domain.debate.dto.DebateMessage;
 import com.example.earthtalk.domain.debate.dto.ObserverMessage;
+import com.example.earthtalk.domain.debate.store.ObserverMessageStore;
 import com.example.earthtalk.global.exception.ErrorCode;
 
 /**
@@ -24,10 +23,12 @@ import com.example.earthtalk.global.exception.ErrorCode;
 @Controller
 public class ChatController {
 
-	private final ChatMessageStore chatMessageStore;
+	private final DebateMessageStore debateMessageStore;
+	private final ObserverMessageStore observerMessageStore;
 
-	public ChatController(ChatMessageStore chatMessageStore) {
-		this.chatMessageStore = chatMessageStore;
+	public ChatController(DebateMessageStore debateMessageStore, ObserverMessageStore observerMessageStore) {
+		this.debateMessageStore = debateMessageStore;
+		this.observerMessageStore = observerMessageStore;
 	}
 
 	/**
@@ -57,7 +58,7 @@ public class ChatController {
 			throw new IllegalArgumentException(ErrorCode.INVALID_REQUEST_BODY.getMessage());
 		}
 
-		chatMessageStore.addChatMessage(roomId, message);
+		debateMessageStore.addDebateMessage(roomId, message);
 
 		return message;
 	}
@@ -79,11 +80,13 @@ public class ChatController {
 	@MessageMapping("/observer/{roomId}")
 	@SendTo("/topic/observer/{roomId}")
 	public ObserverMessage sendObserverMessage(@DestinationVariable String roomId, @Payload ObserverMessage message) {
-		message.setUuid(roomId);
-
-		if (message.getTimestamp() == null || message.getTimestamp().isEmpty()) {
-			message.setTimestamp(Instant.now().toString());
+		if (message.getEvent() == null || message.getEvent().trim().isEmpty() ||
+		message.getUserName() == null || message.getUserName().trim().isEmpty() ||
+		message.getMessage() == null || message.getMessage().trim().isEmpty()) {
+			throw new IllegalArgumentException(ErrorCode.INVALID_REQUEST_BODY.getMessage());
 		}
+
+		observerMessageStore.addObserverMessage(roomId, message);
 
 		return message;
 	}
