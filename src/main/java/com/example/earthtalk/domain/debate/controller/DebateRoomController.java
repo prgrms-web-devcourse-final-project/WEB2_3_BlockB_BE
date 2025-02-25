@@ -143,7 +143,7 @@ public class DebateRoomController {
 		}
 
 		if (debate.getParticipants() == null || debate.getParticipants().isEmpty()) {
-			throw new IllegalArgumentException(ErrorCode.INVALID_REQUEST_BODY.getMessage());
+			throw new IllegalArgumentException(ErrorCode.DEBATE_NO_PARTICIPANTS.getMessage());
 		}
 
 		debateRoomService.processDebateResult(debate, request);
