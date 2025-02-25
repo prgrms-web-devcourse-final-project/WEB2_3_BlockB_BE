@@ -52,12 +52,20 @@ public class UserController {
         return ResponseEntity.ok().body(ApiResponse.createSuccess(response));
     }
 
+
+    @Operation(summary = "사용자 좋아요 목록 조회 API", description = "사용자 좋아요 목록을 조회합니다.")
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "성공")})
     @GetMapping("/mypage/{userId}/likes")
     public ResponseEntity<ApiResponse<List<UserLikesResponse>>> getUserLikes(@PathVariable("userId") Long userId) {
         List<UserLikesResponse> response = userService.getUserLikes( userId );
         return ResponseEntity.ok().body(ApiResponse.createSuccess(response));
     }
 
+
+    @Operation(summary = "사용자 좋아요 추가 API", description = "뉴스 기사에 대한 좋아요를 추가합니다.")
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "성공")})
     @PostMapping("/mypage/{userId}/{newsId}/insertlike")
     public ResponseEntity<ApiResponse<Object>> insertlike(@PathVariable("newsId") Long newsId, @PathVariable("userId") Long userId) {
 
@@ -74,6 +82,9 @@ public class UserController {
         }
     }
 
+    @Operation(summary = "사용자 좋아요 삭제 API", description = "뉴스 기사에 대한 좋아요를 삭제합니다.")
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "성공")})
     @DeleteMapping("/mypage/{userId}/{newsId}/deletelike")
     public ResponseEntity<ApiResponse<Object>> deletelike(@PathVariable("newsId") Long newsId, @PathVariable("userId") Long userId) {
 
@@ -90,12 +101,18 @@ public class UserController {
         }
     }
 
+    @Operation(summary = "사용자 북마크 목록 조회 API", description = "사용자 북마크 목록을 조회합니다.")
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "성공")})
     @GetMapping("/mypage/{userId}/bookmarks")
     public ResponseEntity<ApiResponse<List<UserBookmarksResponse>>> getUserBookmarks(@PathVariable("userId") Long userId) {
         List<UserBookmarksResponse> response = userService.getUserBookmarks( userId );
         return ResponseEntity.ok().body(ApiResponse.createSuccess(response));
     }
 
+    @Operation(summary = "사용자 북마크 추가 API", description = "뉴스 기사에 대한 북마크를 추가합니다.")
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "성공")})
     @PostMapping("/mypage/{userId}/{newsId}/insertBookmark")
     public ResponseEntity<ApiResponse<Object>> insertBookemark(@PathVariable("newsId") Long newsId, @PathVariable("userId") Long userId) {
 
@@ -112,6 +129,9 @@ public class UserController {
         }
     }
 
+    @Operation(summary = "사용자 북마크 삭제 API", description = "뉴스 기사에 대한 북마크를 삭제합니다.")
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "성공")})
     @DeleteMapping("/mypage/{userId}/{newsId}/deleteBookmark")
     public ResponseEntity<ApiResponse<Object>> deleteBookmark(@PathVariable("newsId") Long newsId, @PathVariable("userId") Long userId) {
 
@@ -128,6 +148,9 @@ public class UserController {
         }
     }
 
+    @Operation(summary = "사용자 참여/참관 토론방 목록 조회 API", description = "사용자가 참여하거나 참관한 토론방 목록을 조회합니다.")
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "성공")})
     @GetMapping("/mypage/{userId}/debates")
     public ResponseEntity<ApiResponse<List<UserDebatesResponse>>> getUserDebates(@PathVariable("userId") Long userId) {
         List<UserDebatesResponse> response = userService.getUserDebates( userId );
@@ -135,6 +158,9 @@ public class UserController {
     }
 
 
+    @Operation(summary = "토론방 상세 정보 조회 API", description = "토론방 채팅 기록을 비롯한 상세 정보를 조회합니다.")
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "성공")})
     @GetMapping("/mypage/{debatesId}/debateChats")
     public ResponseEntity<ApiResponse<List<UserDebateChatsResponse>>> getUserDebateChats(
         @PathVariable("debatesId") Long debatesId) throws JsonProcessingException {
@@ -149,12 +175,18 @@ public class UserController {
     }
 
 
+    @Operation(summary = "사용자 팔로잉 목록 API", description = "사용자가 팔로우하고 있는 사용자 목록을 조회합니다.")
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "성공")})
     @GetMapping("/mypage/{userId}/followees")
     public ResponseEntity<ApiResponse<List<UserFolloweesResponse>>> getUserFollowersFollowees(@PathVariable("userId") Long userId) {
         List<UserFolloweesResponse> response = userService.getUserFollowees( userId );
         return ResponseEntity.ok().body(ApiResponse.createSuccess(response));
     }
 
+    @Operation(summary = "사용자 팔로워 목록 조회 API", description = "사용자의 팔로워 목록을 조회합니다.")
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "성공")})
     @GetMapping("/mypage/{userId}/followers")
     public ResponseEntity<ApiResponse<List<UserFollowersResponse>>> getUserFollowersFollowers(@PathVariable("userId") Long userId) {
         List<UserFollowersResponse> response = userService.getUserFollowers( userId );
@@ -162,6 +194,9 @@ public class UserController {
     }
 
     // 팔로워 추가
+    @Operation(summary = "사용자 팔로워 추가 API", description = "사용자의 팔로워를 추가합니다.")
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "성공")})
     @PostMapping("/mypage/{userId}/{followerId}/insertfollowers")
     public ResponseEntity<ApiResponse<Object>> insertUserFollowers(@PathVariable("userId") Long followeeId, @PathVariable("followerId") Long followerId) {
 
@@ -179,6 +214,9 @@ public class UserController {
     }
 
     // followee 추가
+    @Operation(summary = "사용자 팔로잉 추가 API", description = "팔로우하는 사용자를 추가합니다.")
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "성공")})
     @PostMapping("/mypage/{userId}/{followeeId}/insertfollowees")
     public ResponseEntity<ApiResponse<Object>> insertUserFollowees(@PathVariable("userId") Long followerId, @PathVariable("followeeId") Long followeeId) {
 
@@ -195,6 +233,9 @@ public class UserController {
         }
     }
 
+    @Operation(summary = "사용자 팔로워 삭제 API", description = "사용자의 팔로워를 삭제합니다.")
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "성공")})
     @DeleteMapping("/mypage/{userId}/{followerId}/deletefollowers")
     public ResponseEntity<ApiResponse<Object>> deleteUserFollowers(@PathVariable("userId") Long followeeId, @PathVariable("followerId") Long followerId) {
 
@@ -212,6 +253,9 @@ public class UserController {
     }
 
 
+    @Operation(summary = "사용자 팔로잉 삭제 API", description = "팔로우하는 사용자를 삭제합니다.")
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "성공")})
     @DeleteMapping("/mypage/{userId}/{followeeId}/deletefollowees")
     public ResponseEntity<ApiResponse<Object>> deleteUserFollowees(@PathVariable("userId") Long followerId, @PathVariable("followeeId") Long followeeId) {
 
@@ -228,6 +272,9 @@ public class UserController {
         }
     }
 
+    @Operation(summary = "사용자 정보 수정", description = "사용자 프로필을 업데이트합니다.")
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "성공")})
     @PutMapping("/mypage/{userId}")
     public ResponseEntity<ApiResponse<Object>> updateUserInfos(
         @RequestParam(required = false) String nickname,

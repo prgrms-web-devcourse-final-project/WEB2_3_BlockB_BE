@@ -59,9 +59,10 @@ public class UserRepositoryImpl implements UserRepositoryCustom {
         return jpaQuery.fetch();
     }
 
+
     public List<Tuple> findAllWithLikes(Long userId) {
         QLike like = QLike.like;
-        QNews news = QNews.news;  // QNews 객체 추가
+        QNews news = QNews.news;
 
         JPQLQuery<Tuple> jpaQuery = jpaQueryFactory
             .select(like.user.id,
@@ -75,6 +76,7 @@ public class UserRepositoryImpl implements UserRepositoryCustom {
 
         return jpaQuery.fetch();
     }
+
 
     public List<Tuple> findAllWithBookmarks(Long userId) {
         QBookmark bookmark = QBookmark.bookmark;
@@ -93,6 +95,7 @@ public class UserRepositoryImpl implements UserRepositoryCustom {
 
         return jpaQuery.fetch();
     }
+
 
     // 유저가 참관/참여한 토론방 조회
     public List<Tuple> findAllWithDebates(Long userId) {
@@ -115,6 +118,7 @@ public class UserRepositoryImpl implements UserRepositoryCustom {
         return result.fetch();
     }
 
+
     // 유저가 참관/참여한 토론방 상세 조회 - header
     public List<Tuple> findAllWithDebateDetails(Long debatesId) {
         QDebate d = QDebate.debate;
@@ -134,14 +138,15 @@ public class UserRepositoryImpl implements UserRepositoryCustom {
                 d.disagreeNumber
             )
             .from(d)
-            .join(n).on(n.id.eq(d.news.id))  // JOIN condition
-            .where(d.id.eq(debatesId))  // WHERE condition
+            .join(n).on(n.id.eq(d.news.id))
+            .where(d.id.eq(debatesId))
             .fetch();
 
         return result;
     }
 
-    // 유저가 참관/참여한 토론방 상세 조회 - debate_chats
+
+    // 유저가 참관/참여한 토론방 상세 조회
     public List<Tuple> findAllWithDebateChats(Long debatesId) {
         QDebateChat dc = QDebateChat.debateChat;
         QDebateParticipants dp = QDebateParticipants.debateParticipants;
@@ -177,6 +182,7 @@ public class UserRepositoryImpl implements UserRepositoryCustom {
 
         return jpaQuery.fetch();
     }
+
 
     // 유저 팔로워 목록
     public List<Tuple> findAllWithFollowers(Long userId) {

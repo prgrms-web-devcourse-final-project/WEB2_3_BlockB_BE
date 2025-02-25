@@ -43,7 +43,6 @@ public class UserService {
     // 모든 유저 정보 조회(인기순) / 유저 검색
     public List<UserInfoResponse> getPopularUsersInfo(String query) {
         List<Tuple> userFollowFollowerData = userRepository.findAllWithFollowCountOrderBy(query);
-        System.out.println(userFollowFollowerData);
 
         List<UserInfoResponse> userInfoDTOList = new ArrayList<>();
 
@@ -149,10 +148,9 @@ public class UserService {
 
     // 유저가 참여/참관한 토론방 목록 조회
     public List<UserDebatesResponse> getUserDebates(Long userId) {
-        System.out.println("service");
+
         List<Tuple> userDebatesData = userRepository.findAllWithDebates(userId);
-        System.out.println("returnservice");
-        System.out.println(userDebatesData);
+
         List<UserDebatesResponse> userDebatesDTOList = new ArrayList<>();
 
         for ( Tuple data : userDebatesData ) {
@@ -168,20 +166,12 @@ public class UserService {
             userDebatesDTOList.add(new UserDebatesResponse(debateId, category, title, time, member, status, isParticipant));
         }
 
-        for (Tuple data : userDebatesData) {
-            System.out.println("Tuple size: " + data.size());
-            System.out.println("Debate ID: " + data.get(0, Long.class));
-            System.out.println("Category: " + data.get(1, CategoryType.class));
-            // 다른 필드도 출력
-        }
-
         return userDebatesDTOList;
     }
 
     // 유저가 참여/참관한 토론방 상세 조회 - header
     public List<UserDebateDetailsResponse> getDebateDetails(Long debatesId) {
         List<Tuple> debateDetailsData = userRepository.findAllWithDebateDetails(debatesId);
-        System.out.println(debateDetailsData);
 
         List<UserDebateDetailsResponse> userDebateDetailsDTOList = new ArrayList<>();
 
