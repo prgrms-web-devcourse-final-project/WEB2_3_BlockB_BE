@@ -118,19 +118,6 @@ public class UserService {
         likeRepository.save(like);
     }
 
-    // 유저 좋아요 삭제
-    public void deleteLike(Long newsId, Long userId) {
-
-        User user = userRepository.findById(userId)
-            .orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
-
-        News news = newsRepository.findById(newsId)
-            .orElseThrow(() -> new NotFoundException(ErrorCode.NEWS_NOT_FOUND));
-
-        likeRepository.deleteByUserIdAndNewsId(userId, newsId);
-
-    }
-
     // 유저가 북마크한 뉴스 목록 조회
     public List<UserBookmarksResponse> getUserBookmarks(Long userId) {
         List<Tuple> userBookmarksData = userRepository.findAllWithBookmarks(userId);
@@ -169,18 +156,6 @@ public class UserService {
         Bookmark bookmark = Bookmark.builder().user(user).news(news).build();
 
         bookmarkRepository.save(bookmark);
-    }
-
-    // 유저 북마크 삭제
-    public void deleteBookmark(Long newsId, Long userId) {
-
-        User user = userRepository.findById(userId)
-            .orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
-
-        News news = newsRepository.findById(newsId)
-            .orElseThrow(() -> new NotFoundException(ErrorCode.NEWS_NOT_FOUND));
-
-        bookmarkRepository.deleteByUserIdAndNewsId(userId, newsId);
     }
 
     // 유저가 참여/참관한 토론방 목록 조회

@@ -1,5 +1,6 @@
 package com.example.earthtalk.controller;
 
+import com.example.earthtalk.domain.news.service.NewsDataService;
 import com.example.earthtalk.domain.oauth.dto.CustomOAuth2User;
 import com.example.earthtalk.domain.user.dto.response.UserBookmarksResponse;
 import com.example.earthtalk.domain.user.dto.response.UserDebateChatsResponse;
@@ -39,6 +40,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController {
 
     private final UserService userService;
+    private final NewsDataService newsDataService;
 
     @Operation(summary = "사용자 정보 조회 API", description = "사용자 정보를 조회합니다.")
     @ApiResponses(value = {
@@ -86,7 +88,7 @@ public class UserController {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "성공")})
     @DeleteMapping("/mypage/{userId}/{newsId}/deletelike")
     public ResponseEntity<ApiResponse<Object>> deletelike(@PathVariable("newsId") Long newsId, @PathVariable("userId") Long userId) {
-        userService.deleteLike(newsId, userId);
+        newsDataService.removeLike(newsId, userId);
         return ResponseEntity.ok(ApiResponse.createSuccessWithNoData());
 
     }
@@ -114,7 +116,7 @@ public class UserController {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "성공")})
     @DeleteMapping("/mypage/{userId}/{newsId}/deleteBookmark")
     public ResponseEntity<ApiResponse<Object>> deleteBookmark(@PathVariable("newsId") Long newsId, @PathVariable("userId") Long userId) {
-        userService.deleteBookmark(newsId, userId);
+        newsDataService.removeBookmark(newsId, userId);
         return ResponseEntity.ok(ApiResponse.createSuccessWithNoData());
     }
 
