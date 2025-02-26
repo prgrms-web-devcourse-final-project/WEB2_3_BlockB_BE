@@ -96,35 +96,6 @@ public class DebateRoomController {
 		return ResponseEntity.ok().body(ApiResponse.createSuccess(response));
 	}
 
-	@Operation(summary = "신고 생성 API", description = "토론방 또는 관련 엔티티에 대한 신고를 생성합니다.")
-	@ApiResponses(value = {
-		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "신고가 성공적으로 생성되었습니다."),
-		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청 데이터입니다."),
-		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 사용자 또는 토론방을 찾을 수 없습니다."),
-		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "내부 서버 오류가 발생했습니다.")
-	})
-	@PostMapping("/report")
-	public ResponseEntity<ApiResponse<Object>> saveReport(@RequestBody InsertReportRequest request) {
-		if (request == null) {
-			throw new IllegalArgumentException(ErrorCode.INVALID_REQUEST_BODY.getMessage());
-		}
-
-		if (!userRepository.existsById(request.targetUser().getId())) {
-			throw new IllegalArgumentException(ErrorCode.USER_NOT_FOUND.getMessage());
-		}
-
-		if (!debateRepository.existsById(request.targetRoomId())) {
-			throw new IllegalArgumentException(ErrorCode.CHAT_NOT_FOUND.getMessage());
-		}
-
-		Long reportId = reportService.saveReport(request);
-		if (reportId == null) {
-			throw new IllegalArgumentException(ErrorCode.INTERNAL_SERVER_ERROR.getMessage());
-		}
-
-		return ResponseEntity.ok(ApiResponse.createSuccessWithNoData());
-	}
-
 	@Operation(summary = "투표 업데이트 API", description = "토론방의 투표 수(찬성, 반대, 중립)를 업데이트하고 업데이트 된 결과에 따라 유저의 승/패를 추가적으로 업데이트합니다.")
 	@ApiResponses(value = {
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "투표 수가 성공적으로 업데이트되었습니다."),
