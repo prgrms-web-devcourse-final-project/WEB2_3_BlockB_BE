@@ -89,15 +89,3 @@ jwt:
   secret-key: ${SECRET_KEY}
   access-expire-time: ${ACCESS_EXPIRE_TIME}
   refresh-expire-time: ${REFRESH_EXPIRE_TIME}
-
-google:
-  client:
-    id: ${GOOGLE_CLIENT_ID}
-    secret: ${GOOGLE_CLIENT_SECRET}
-    redirect-url: ${GOOGLE_CLIENT_REDIRECT_URL}
-  oauth:
-    api:
-      url: ${GOOGLE_OAUTH_API_URL}
-  resource:
-    api:
-      url: ${GOOGLE_RESOURCE_API_URL}
