@@ -14,10 +14,11 @@ public record TokenResponse() {
     public record GetOauth(
         String accessToken,
         String refreshToken,
-        String nickname
+        String nickname,
+        String imgUrl
     ) {
-        public static GetOauth from(final String accessToken, final String refreshToken, final String nickname) {
-            return new GetOauth(accessToken, refreshToken, nickname);
+        public static GetOauth from(final String accessToken, final String refreshToken, final String nickname, final String imgUrl) {
+            return new GetOauth(accessToken, refreshToken, nickname, imgUrl);
         }
     }
 }
