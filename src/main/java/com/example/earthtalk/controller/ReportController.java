@@ -27,7 +27,7 @@ public class ReportController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 사용자 또는 토론방을 찾을 수 없습니다."),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "내부 서버 오류가 발생했습니다.")
     })
-    @PostMapping("")
+    @PostMapping
     public ResponseEntity<ApiResponse<Void>> postReport(@RequestBody InsertReportRequest request) {
         Long reportId = reportService.saveReport(request);
         if (reportId == null) {
