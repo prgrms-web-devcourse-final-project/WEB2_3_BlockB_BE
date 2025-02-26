@@ -4,7 +4,6 @@ import com.example.earthtalk.domain.news.dto.response.NewsListResponse;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.OrderSpecifier;
 import java.util.List;
-import org.springframework.data.domain.Slice;
 
 public interface NewsFilterRepository {
 

@@ -51,7 +51,10 @@ public enum ErrorCode { // 예외 발생시, body에 실어 날려줄 상태, co
 
     //-7000: NEWS
     NEWS_NOT_FOUND(404, -7001, "뉴스를 찾을 수 없습니다."),
-    CONTINENT_NOT_FOUND(404, -7002, "존재하지 않는 대륙 코드입니다.");
+    CONTINENT_NOT_FOUND(404, -7002, "존재하지 않는 대륙 코드입니다."),
+    ALREADY_LIKED(409, -7003, "이미 좋아요를 누른 기사입니다."),
+    ALREADY_BOOKMARKED(409, -7004, "이미 북마크한 기사입니다.");
+
 
     // 1. status = 날려줄 상태코드
     // 2. code = 해당 오류가 어느부분과 관련있는지 카테고리화 해주는 코드. 예외 원인 식별하기 편하기에 추가
