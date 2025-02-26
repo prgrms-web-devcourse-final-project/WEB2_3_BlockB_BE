@@ -49,7 +49,10 @@ public class SecurityConfig {
         /* Auth */
         "/api-docs/**",
         "/swagger-ui/**",
-        "/api/auth/reissue"
+        "/api/auth/reissue",
+        "/login/**",
+        "/oauth2/**",
+        "/api/oauth2/**"
     };
 
     @Bean
@@ -101,7 +104,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:3000")); // frontend url
+        config.setAllowedOrigins(List.of("http://localhost:5173")); // frontend url
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);

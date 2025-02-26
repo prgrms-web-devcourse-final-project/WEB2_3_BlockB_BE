@@ -35,6 +35,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             "/api-docs/**",
             "/swagger-ui/**",
             "/api/auth/reissue",
+            "/login/**",
+            "/oauth2/**",
+            "/api/oauth2/**",
+            "/earth_talk/**"
         };
 
         AntPathMatcher pathMatcher = new AntPathMatcher();

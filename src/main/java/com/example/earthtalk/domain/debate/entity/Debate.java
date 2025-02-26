@@ -91,6 +91,7 @@ public class Debate extends BaseTimeEntity {
     private boolean resultEnabled;
 
     @OneToMany(mappedBy = "debate", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @Builder.Default
     private List<DebateParticipants> participants = new ArrayList<>();
 
     @PrePersist
