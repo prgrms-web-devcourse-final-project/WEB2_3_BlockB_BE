@@ -1,5 +1,7 @@
 package com.example.earthtalk.domain.notification.service;
 
+import com.example.earthtalk.domain.debate.entity.Debate;
+import com.example.earthtalk.domain.debate.repository.DebateRepository;
 import com.example.earthtalk.domain.notification.dto.request.SaveNotificationRequest;
 import com.example.earthtalk.domain.notification.dto.request.SaveTokenRequest;
 import com.example.earthtalk.domain.notification.dto.request.SendNotificationRequest;
@@ -27,6 +29,7 @@ public class NotificationService {
     private final UserRepository userRepository;
     private final FirebaseService firebaseService;
     private final ReportRepository reportRepository;
+    private final DebateRepository debateRepository;
 
     private static final String FOLLOW_MESSAGE = "%s님이 당신을 팔로우했습니다.";
     private static final String REPORT_MESSAGE = "%s(으)로 운영자에게 %s을(를) 처분받았습니다.";
@@ -64,25 +67,33 @@ public class NotificationService {
      * 7. token 값과 Notification 객체를 통해 Message 객체를 생성합니다.
      * 8. 0번에서 초기화되었던 firebase 를 통해 알림을 전송하고 response 를 반환합니다.
      */
-    public String sendNotification(SendNotificationRequest request) throws Exception {
+    public void sendNotification(SendNotificationRequest request) throws Exception {
         User user = userRepository.findById(request.userId()).orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
-        String token = user.getFCMToken();
-        String content = getContent(request);
-        SaveNotificationRequest saveNotificationRequest = new SaveNotificationRequest(user, request.notificationType(), request.typeId(), content);
-        notificationRepository.save(saveNotificationRequest.toEntity());
-        return firebaseService.pushNotification(token, content);
+
+        String fcmToken = user.getFCMToken();
+        if (fcmToken == null) {
+            return;
+        }
+
+        String content = request.content();
+        if (content == null) {
+            content = getContent(request);
+        }
+
+        SaveNotificationRequest saveNotificationRequest = request.toSave(content);
+        notificationRepository.save(saveNotificationRequest.toEntity(user));
+        firebaseService.pushNotification(fcmToken, content);
     }
 
     // 사용자가 알림을 확인했을 때 status 를 read 로 변경시키는 메서드.
     public void readNotification(Long notificationId) {
-        Notification notification = notificationRepository.findById(notificationId).orElseThrow(() -> new NotFoundException(ErrorCode.NOT_FOUND));
+        Notification notification = notificationRepository.findById(notificationId).orElseThrow(() -> new NotFoundException(ErrorCode.NOTIFICATION_NOT_FOUND));
         notification.read();
     }
 
     // notiType 에 따라 content 를 가져오는 메서드.
     private String getContent(SendNotificationRequest request) {
         NotificationType type = request.notificationType();
-        StringBuilder sb = new StringBuilder();
         if (type == NotificationType.FOLLOW) {
             User user = userRepository.findById(request.typeId()).orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
             return String.format(FOLLOW_MESSAGE, user.getNickname());
@@ -94,9 +105,10 @@ public class NotificationService {
         }
 
         if (type == NotificationType.DEBATE || type == NotificationType.CHAT) {
-            sb.append("참가 중인 토론방의 대기가 완료되었습니다.");
+            debateRepository.findById(request.typeId()).orElseThrow(() -> new NotFoundException(ErrorCode.DEBATEROOM_NOT_FOUND));
+            return String.format(DEBATE_MESSAGE);
         }
 
-        return sb.toString();
+        return null;
     }
 }

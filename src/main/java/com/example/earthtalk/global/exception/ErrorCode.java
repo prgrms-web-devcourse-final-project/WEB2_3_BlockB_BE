@@ -34,14 +34,14 @@ public enum ErrorCode { // 예외 발생시, body에 실어 날려줄 상태, co
     FORBIDDEN(403, -3006, "접근 권한이 없습니다."),
     INVALID_SORT_TYPE(400, -3007, "올바르지 않은 정렬 타입입니다."),
 
-    //-4000 CHAT
+    //-4000 REPORT
     REPORT_NOT_FOUND(404, -4000, "조회된 신고가 존재하지 않습니다."),
-    CHAT_NOT_FOUND(404, -4001, "조회된 채팅이 존재하지 않습니다."),
 
     //-5000 DEBATE
     TOO_MANY_PARTICIPANTS(409, -5001, "참가자가 이미 최대 인원 입니다."),
     DEBATEROOM_NOT_FOUND(404, -5002, "토론방 내역을 찾을 수 없습니다."),
     DEBATE_NO_PARTICIPANTS(400, -5003, "토론방에 인원이 없습니다."),
+    CHAT_NOT_FOUND(404, -5004, "조회된 채팅이 존재하지 않습니다."),
 
     //-6000 OAUTH
     OAUTH_NOT_FOUND(404, -6000, "소셜로그인 계정 정보가 존재하지 않습니다."),
@@ -53,8 +53,10 @@ public enum ErrorCode { // 예외 발생시, body에 실어 날려줄 상태, co
     NEWS_NOT_FOUND(404, -7001, "뉴스를 찾을 수 없습니다."),
     CONTINENT_NOT_FOUND(404, -7002, "존재하지 않는 대륙 코드입니다."),
     ALREADY_LIKED(409, -7003, "이미 좋아요를 누른 기사입니다."),
-    ALREADY_BOOKMARKED(409, -7004, "이미 북마크한 기사입니다.");
+    ALREADY_BOOKMARKED(409, -7004, "이미 북마크한 기사입니다."),
 
+    //-8000: NOTIFICATIONS
+    NOTIFICATION_NOT_FOUND(404, -8001, "조회된 알림이 존재하지 않습니다.");
 
     // 1. status = 날려줄 상태코드
     // 2. code = 해당 오류가 어느부분과 관련있는지 카테고리화 해주는 코드. 예외 원인 식별하기 편하기에 추가

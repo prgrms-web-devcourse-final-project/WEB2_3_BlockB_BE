@@ -1,9 +1,6 @@
 package com.example.earthtalk.domain.report.service;
 
-import com.example.earthtalk.domain.chat.ObserverChat;
-import com.example.earthtalk.domain.chat.repository.ObserverChatRepository;
-import com.example.earthtalk.domain.debate.entity.DebateChat;
-import com.example.earthtalk.domain.debate.repository.DebateChatRepository;
+import com.example.earthtalk.domain.debate.repository.DebateRepository;
 import com.example.earthtalk.domain.notification.dto.request.SendNotificationRequest;
 import com.example.earthtalk.domain.notification.entity.NotificationType;
 import com.example.earthtalk.domain.notification.service.NotificationService;
@@ -16,10 +13,11 @@ import com.example.earthtalk.domain.report.entity.ReportType;
 import com.example.earthtalk.domain.report.entity.ResultType;
 import com.example.earthtalk.domain.report.entity.TargetType;
 import com.example.earthtalk.domain.report.repository.ReportRepository;
+import com.example.earthtalk.domain.user.entity.User;
+import com.example.earthtalk.domain.user.repository.UserRepository;
 import com.example.earthtalk.global.exception.ErrorCode;
 import com.example.earthtalk.global.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -35,11 +33,27 @@ public class ReportService {
 
     private final ReportRepository reportRepository;
     private final NotificationService notificationService;
+    private final DebateRepository debateRepository;
+    private final UserRepository userRepository;
 
     // 신고하는 로직 간단하게 구현해놨습니다. 예외처리 따로 안되어있어요.
     // 각 위치에서 신고에 대한 기능 만들 때 예외 처리 해야합니다.
     public Long saveReport(InsertReportRequest request) {
-        Report report = request.toEntity();
+        if (request == null) {
+            throw new IllegalArgumentException(ErrorCode.INVALID_REQUEST_BODY.getMessage());
+        }
+
+        User user = userRepository.findById(request.userId())
+                .orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
+        User targetUser = userRepository.findById(request.targetUserId())
+                .orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
+
+        if (request.targetType() == TargetType.CHAT && !debateRepository.existsById(request.targetRoomId())) {
+            throw new IllegalArgumentException(ErrorCode.DEBATEROOM_NOT_FOUND.getMessage());
+        }
+
+
+        Report report = request.toEntity(user, targetUser);
         return reportRepository.save(report).getId();
     }
 
@@ -52,7 +66,7 @@ public class ReportService {
         List<ReportListResponse> responses = new ArrayList<>();
         for(Report report : reports.getContent()) {
             if (report == null) {
-                return null;
+                throw new NotFoundException(ErrorCode.REPORT_NOT_FOUND);
             }
             responses.add(ReportListResponse.from(report));
         }
@@ -70,8 +84,8 @@ public class ReportService {
     public Long updateReport(Long id, UpdateReportRequest request) throws Exception {
         Report report = reportRepository.findById(id).orElseThrow(() -> new NotFoundException(ErrorCode.REPORT_NOT_FOUND));
         report.updateReport(request);
-        SendNotificationRequest sendNotificationRequest = new SendNotificationRequest(report.getTargetUser().getId(), NotificationType.REPORT, report.getTargetRoomId());
-        // notificationService.sendNotification(sendNotificationRequest);
+        SendNotificationRequest sendNotificationRequest = new SendNotificationRequest(report.getTargetUser().getId(), NotificationType.REPORT, report.getTargetRoomId(), null);
+        notificationService.sendNotification(sendNotificationRequest);
         return reportRepository.save(report).getId();
     }
 
