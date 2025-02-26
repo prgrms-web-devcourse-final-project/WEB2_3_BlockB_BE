@@ -41,11 +41,11 @@ public class Report extends BaseTimeEntity {
     @JoinColumn(name = "target_user_id", nullable = false)
     private User targetUser; // 신고된 회원
 
-    private Long targetRoomId; // 신고된 방 id
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private TargetType targetType; // 신고 대상 유형
+
+    private Long targetRoomId; // 신고 대상 유형 id
 
     @Column(nullable = false)
     private String content; // 신고 내용
