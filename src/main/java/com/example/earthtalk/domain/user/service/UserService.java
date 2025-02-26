@@ -5,10 +5,14 @@ import com.example.earthtalk.domain.debate.entity.Debate;
 import com.example.earthtalk.domain.debate.entity.DebateRole;
 import com.example.earthtalk.domain.debate.entity.FlagType;
 import com.example.earthtalk.domain.debate.entity.RoomType;
-import com.example.earthtalk.domain.debate.repository.DebateChatRepository;
 import com.example.earthtalk.domain.debate.repository.DebateRepository;
+import com.example.earthtalk.domain.news.entity.Bookmark;
+import com.example.earthtalk.domain.news.entity.Like;
 import com.example.earthtalk.domain.news.entity.MemberNumberType;
+import com.example.earthtalk.domain.news.entity.News;
 import com.example.earthtalk.domain.news.entity.TimeType;
+import com.example.earthtalk.domain.news.repository.BookmarkRepository;
+import com.example.earthtalk.domain.news.repository.LikeRepository;
 import com.example.earthtalk.domain.news.repository.NewsRepository;
 import com.example.earthtalk.domain.user.dto.response.UserBookmarksResponse;
 import com.example.earthtalk.domain.user.dto.response.UserDebateChatsResponse;
@@ -17,20 +21,20 @@ import com.example.earthtalk.domain.user.dto.response.UserDebatesResponse;
 import com.example.earthtalk.domain.user.dto.response.UserFolloweesResponse;
 import com.example.earthtalk.domain.user.dto.response.UserFollowersResponse;
 import com.example.earthtalk.domain.user.dto.response.UserLikesResponse;
-import com.example.earthtalk.domain.user.dto.response.UserObserverChatsResponse;
+import com.example.earthtalk.domain.user.entity.Follow;
 import com.example.earthtalk.domain.user.entity.User;
+import com.example.earthtalk.domain.user.repository.FollowRepository;
 import com.example.earthtalk.domain.user.repository.UserRepository;
 import com.example.earthtalk.domain.user.dto.response.UserInfoResponse;
 import com.example.earthtalk.global.constant.ContinentType;
+import com.example.earthtalk.global.exception.ConflictException;
 import com.example.earthtalk.global.exception.ErrorCode;
 import com.example.earthtalk.global.exception.NotFoundException;
 import com.querydsl.core.Tuple;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -39,6 +43,16 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final DebateRepository debateRepository;
+    private final NewsRepository newsRepository;
+    private final LikeRepository likeRepository;
+    private final BookmarkRepository bookmarkRepository;
+    private final FollowRepository followRepository;
+
+    //유저 조회
+    public User getUSerInfo(Long userId) {
+        return userRepository.findById(userId)
+            .orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
+    }
 
     // 모든 유저 정보 조회(인기순) / 유저 검색
     public List<UserInfoResponse> getPopularUsersInfo(String query) {
@@ -62,6 +76,10 @@ public class UserService {
 
     // 유저가 좋아요한 뉴스 목록 조회
     public List<UserLikesResponse> getUserLikes(Long userId) {
+
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
+
         List<Tuple> userLikesData = userRepository.findAllWithLikes(userId);
 
         List<UserLikesResponse> userLikesDTOList = new ArrayList<>();
@@ -80,27 +98,37 @@ public class UserService {
     }
 
     // 유저 좋아요 추가
-    public int insertLike(Long newsId, Long userId) {
+    public void insertLike(Long newsId, Long userId) {
 
-        int flag = userRepository.insertLike(newsId, userId);
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
 
-        if ( flag == 0 ) {
-            return 1;
-        } else {
-            return 0;
+        News news = newsRepository.findById(newsId)
+            .orElseThrow(() -> new NotFoundException(ErrorCode.NEWS_NOT_FOUND));
+
+        // 좋아요 중복 방지
+        boolean alreadyLiked = likeRepository.existsByUserIdAndNewsId(userId, newsId);
+
+        if (alreadyLiked) {
+            throw new ConflictException(ErrorCode.ALREADY_LIKED);
         }
+
+        Like like = Like.builder().user(user).news(news).build();
+
+        likeRepository.save(like);
     }
 
     // 유저 좋아요 삭제
-    public int deleteLike(Long newsId, Long userId) {
+    public void deleteLike(Long newsId, Long userId) {
 
-        int flag = userRepository.deleteLikeByUserId(newsId, userId);
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
 
-        if ( flag == 0 ) {
-            return 1;
-        } else {
-            return 0;
-        }
+        News news = newsRepository.findById(newsId)
+            .orElseThrow(() -> new NotFoundException(ErrorCode.NEWS_NOT_FOUND));
+
+        likeRepository.deleteByUserIdAndNewsId(userId, newsId);
+
     }
 
     // 유저가 북마크한 뉴스 목록 조회
@@ -123,27 +151,36 @@ public class UserService {
     }
 
     // 유저 북마크 추가
-    public int insertBookmark(Long newsId, Long userId) {
+    public void insertBookmark(Long newsId, Long userId) {
 
-        int flag = userRepository.insertBookmark(newsId, userId);
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
 
-        if ( flag == 0 ) {
-            return 1;
-        } else {
-            return 0;
+        News news = newsRepository.findById(newsId)
+            .orElseThrow(() -> new NotFoundException(ErrorCode.NEWS_NOT_FOUND));
+
+        // 북마크 중복 방지
+        boolean alreadyBookmarked = bookmarkRepository.existsByUserIdAndNewsId(userId, newsId);
+
+        if (alreadyBookmarked) {
+            throw new ConflictException(ErrorCode.ALREADY_BOOKMARKED);
         }
+
+        Bookmark bookmark = Bookmark.builder().user(user).news(news).build();
+
+        bookmarkRepository.save(bookmark);
     }
 
     // 유저 북마크 삭제
-    public int deleteBookmark(Long newsId, Long userId) {
+    public void deleteBookmark(Long newsId, Long userId) {
 
-        int flag = userRepository.deleteBookmarkByUserId(newsId, userId);
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
 
-        if ( flag == 0 ) {
-            return 1;
-        } else {
-            return 0;
-        }
+        News news = newsRepository.findById(newsId)
+            .orElseThrow(() -> new NotFoundException(ErrorCode.NEWS_NOT_FOUND));
+
+        bookmarkRepository.deleteByUserIdAndNewsId(userId, newsId);
     }
 
     // 유저가 참여/참관한 토론방 목록 조회
@@ -250,39 +287,35 @@ public class UserService {
 
 
     //유저 팔로워/팔로잉 추가
-    public int insertUserFollows(Long followeeId, Long followerId) {
+    public void insertUserFollows(Long followeeId, Long followerId) {
 
-        int flag = userRepository.insertFollows(followeeId, followerId);
+        User followee = userRepository.findById(followeeId)
+            .orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
 
-        if ( flag == 0 ) {
-            return 1;
-        } else {
-            return 0;
-        }
+        User follower = userRepository.findById(followerId)
+            .orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
+
+        Follow follow = Follow.builder().followee(followee).follower(follower).build();
+
+        followRepository.save(follow);
     }
 
     //유저 팔로워/팔로잉 삭제
-    public int deleteUserFollows(Long followeeId, Long followerId) {
+    public void deleteUserFollows(Long followeeId, Long followerId) {
 
-        int flag = userRepository.deleteByFollows(followeeId, followerId);
+        User followee = userRepository.findById(followeeId)
+            .orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
 
-        if ( flag == 0 ) {
-            return 1;
-        } else {
-            return 0;
-        }
+        User follower = userRepository.findById(followerId)
+            .orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
+
+        followRepository.deleteByFollows(followeeId, followerId);
     }
 
     //유저 프로필 수정
-    public int updateUsers(String nickname, String introduction, String profile, Long userId) {
+    public void updateUsers(String nickname, String introduction, String profile, Long userId) {
 
-        int flag = userRepository.updateUserById(nickname, introduction, profile, userId);
-
-        if ( flag == 0 ) {
-            return 1;
-        } else {
-            return 0;
-        }
+        userRepository.updateUserById(nickname, introduction, profile, userId);
     }
 
 
