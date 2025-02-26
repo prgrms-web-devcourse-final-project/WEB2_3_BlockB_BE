@@ -6,7 +6,6 @@ import com.example.earthtalk.domain.debate.entity.SpeakCountType;
 import com.example.earthtalk.domain.news.entity.MemberNumberType;
 import com.example.earthtalk.domain.news.entity.TimeType;
 import com.example.earthtalk.global.constant.ContinentType;
-import java.util.Optional;
 
 public record UserDebateDetailsResponse(
     Long debateId,

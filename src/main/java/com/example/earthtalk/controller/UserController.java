@@ -11,8 +11,6 @@ import com.example.earthtalk.domain.user.dto.response.UserLikesResponse;
 import com.example.earthtalk.domain.user.entity.User;
 import com.example.earthtalk.domain.user.service.UserService;
 import com.example.earthtalk.domain.user.dto.response.UserInfoResponse;
-import com.example.earthtalk.global.exception.ErrorCode;
-import com.example.earthtalk.global.exception.JwtCustomException;
 import com.example.earthtalk.global.response.ApiResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -42,13 +40,23 @@ public class UserController {
 
     private final UserService userService;
 
-    @Operation(summary = "사용자 목록 인기순 조회 API", description = "사용자 목록을 팔로워 많은 순으로 정렬하여 조회합니다.")
+    @Operation(summary = "사용자 정보 조회 API", description = "사용자 정보를 조회합니다.")
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "성공")})
+    @GetMapping("/{userId}")
+    public ResponseEntity<ApiResponse<User>> getUserInfo(@PathVariable("userId") Long userId) {
+
+        User response = userService.getUSerInfo( userId );
+        return ResponseEntity.ok().body(ApiResponse.createSuccess(response));
+    }
+
+    @Operation(summary = "사용자 목록 인기순 조회&검색 API", description = "사용자 목록을 팔로워 많은 순으로 정렬하여 조회하고 검색합니다.")
     @ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "성공")})
     @GetMapping("/followers")
-    public ResponseEntity<ApiResponse<List<UserInfoResponse>>> getUserInfo(@RequestParam(required = false) String q) {
+    public ResponseEntity<ApiResponse<List<UserInfoResponse>>> searchUser(@RequestParam(required = false) String query) {
 
-        List<UserInfoResponse> response = userService.getPopularUsersInfo( q );
+        List<UserInfoResponse> response = userService.getPopularUsersInfo( query );
         return ResponseEntity.ok().body(ApiResponse.createSuccess(response));
     }
 
@@ -68,37 +76,19 @@ public class UserController {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "성공")})
     @PostMapping("/mypage/{userId}/{newsId}/insertlike")
     public ResponseEntity<ApiResponse<Object>> insertlike(@PathVariable("newsId") Long newsId, @PathVariable("userId") Long userId) {
-
-        int result = userService.insertLike(newsId, userId);
-
-        if (result == 1) {
-
-            return ResponseEntity.badRequest()
-                .body(ApiResponse.createErrorWithMsg("좋아요 삽입 실패"));
-        } else {
-
-            return ResponseEntity.ok()
-                .body(ApiResponse.createSuccess("좋아요 삽입 성공"));
-        }
+        userService.insertLike(newsId, userId);
+        return ResponseEntity.ok(ApiResponse.createSuccessWithNoData());
     }
+
 
     @Operation(summary = "사용자 좋아요 삭제 API", description = "뉴스 기사에 대한 좋아요를 삭제합니다.")
     @ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "성공")})
     @DeleteMapping("/mypage/{userId}/{newsId}/deletelike")
     public ResponseEntity<ApiResponse<Object>> deletelike(@PathVariable("newsId") Long newsId, @PathVariable("userId") Long userId) {
+        userService.deleteLike(newsId, userId);
+        return ResponseEntity.ok(ApiResponse.createSuccessWithNoData());
 
-        int result = userService.deleteLike(newsId, userId);
-
-        if (result == 1) {
-
-            return ResponseEntity.badRequest()
-                .body(ApiResponse.createErrorWithMsg("좋아요 삭제 실패"));
-        } else {
-
-            return ResponseEntity.ok()
-                .body(ApiResponse.createSuccess("좋아요 삭제 성공"));
-        }
     }
 
     @Operation(summary = "사용자 북마크 목록 조회 API", description = "사용자 북마크 목록을 조회합니다.")
@@ -115,18 +105,8 @@ public class UserController {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "성공")})
     @PostMapping("/mypage/{userId}/{newsId}/insertBookmark")
     public ResponseEntity<ApiResponse<Object>> insertBookemark(@PathVariable("newsId") Long newsId, @PathVariable("userId") Long userId) {
-
-        int result = userService.insertBookmark(newsId, userId);
-
-        if (result == 1) {
-
-            return ResponseEntity.badRequest()
-                .body(ApiResponse.createErrorWithMsg("북마크 삽입 실패"));
-        } else {
-
-            return ResponseEntity.ok()
-                .body(ApiResponse.createSuccess("북마크 삽입 성공"));
-        }
+        userService.insertBookmark(newsId, userId);
+        return ResponseEntity.ok(ApiResponse.createSuccessWithNoData());
     }
 
     @Operation(summary = "사용자 북마크 삭제 API", description = "뉴스 기사에 대한 북마크를 삭제합니다.")
@@ -134,18 +114,8 @@ public class UserController {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "성공")})
     @DeleteMapping("/mypage/{userId}/{newsId}/deleteBookmark")
     public ResponseEntity<ApiResponse<Object>> deleteBookmark(@PathVariable("newsId") Long newsId, @PathVariable("userId") Long userId) {
-
-        int result = userService.deleteBookmark(newsId, userId);
-
-        if (result == 1) {
-
-            return ResponseEntity.badRequest()
-                .body(ApiResponse.createErrorWithMsg("북마크 삭제 실패"));
-        } else {
-
-            return ResponseEntity.ok()
-                .body(ApiResponse.createSuccess("북마크 삭제 성공"));
-        }
+        userService.deleteBookmark(newsId, userId);
+        return ResponseEntity.ok(ApiResponse.createSuccessWithNoData());
     }
 
     @Operation(summary = "사용자 참여/참관 토론방 목록 조회 API", description = "사용자가 참여하거나 참관한 토론방 목록을 조회합니다.")
@@ -165,7 +135,7 @@ public class UserController {
     public ResponseEntity<ApiResponse<List<UserDebateChatsResponse>>> getUserDebateChats(
         @PathVariable("debatesId") Long debatesId) throws JsonProcessingException {
         List<UserDebateDetailsResponse> responseHeader = userService.getDebateDetails( debatesId );
-        System.out.println("responseHeader: " + responseHeader);
+
         String headerData = new ObjectMapper().writeValueAsString(responseHeader);
 
         List<UserDebateChatsResponse> response = userService.getUserDebateChats( debatesId );
@@ -199,18 +169,8 @@ public class UserController {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "성공")})
     @PostMapping("/mypage/{userId}/{followerId}/insertfollowers")
     public ResponseEntity<ApiResponse<Object>> insertUserFollowers(@PathVariable("userId") Long followeeId, @PathVariable("followerId") Long followerId) {
-
-        int result = userService.insertUserFollows(followeeId, followerId);
-
-        if (result == 1) {
-
-            return ResponseEntity.badRequest()
-                .body(ApiResponse.createErrorWithMsg("팔로워 삽입 실패"));
-        } else {
-
-            return ResponseEntity.ok()
-                .body(ApiResponse.createSuccess("팔로워 삽입 성공"));
-        }
+        userService.insertUserFollows(followeeId, followerId);
+        return ResponseEntity.ok(ApiResponse.createSuccessWithNoData());
     }
 
     // followee 추가
@@ -219,19 +179,10 @@ public class UserController {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "성공")})
     @PostMapping("/mypage/{userId}/{followeeId}/insertfollowees")
     public ResponseEntity<ApiResponse<Object>> insertUserFollowees(@PathVariable("userId") Long followerId, @PathVariable("followeeId") Long followeeId) {
-
-        int result = userService.insertUserFollows(followeeId, followerId);
-
-        if (result == 1) {
-
-            return ResponseEntity.badRequest()
-                .body(ApiResponse.createErrorWithMsg("followee 삽입 실패"));
-        } else {
-
-            return ResponseEntity.ok()
-                .body(ApiResponse.createSuccess("followee 삽입 성공"));
-        }
+        userService.insertUserFollows(followeeId, followerId);
+        return ResponseEntity.ok(ApiResponse.createSuccessWithNoData());
     }
+
 
     @Operation(summary = "사용자 팔로워 삭제 API", description = "사용자의 팔로워를 삭제합니다.")
     @ApiResponses(value = {
@@ -239,17 +190,8 @@ public class UserController {
     @DeleteMapping("/mypage/{userId}/{followerId}/deletefollowers")
     public ResponseEntity<ApiResponse<Object>> deleteUserFollowers(@PathVariable("userId") Long followeeId, @PathVariable("followerId") Long followerId) {
 
-        int result = userService.deleteUserFollows(followeeId, followerId);
-
-        if (result == 1) {
-
-            return ResponseEntity.badRequest()
-                .body(ApiResponse.createErrorWithMsg("팔로워 삭제 실패"));
-        } else {
-
-            return ResponseEntity.ok()
-                .body(ApiResponse.createSuccess("팔로워 삭제 성공"));
-        }
+        userService.deleteUserFollows(followeeId, followerId);
+        return ResponseEntity.ok(ApiResponse.createSuccessWithNoData());
     }
 
 
@@ -259,17 +201,8 @@ public class UserController {
     @DeleteMapping("/mypage/{userId}/{followeeId}/deletefollowees")
     public ResponseEntity<ApiResponse<Object>> deleteUserFollowees(@PathVariable("userId") Long followerId, @PathVariable("followeeId") Long followeeId) {
 
-        int result = userService.deleteUserFollows(followeeId, followerId);
-
-        if (result == 1) {
-
-            return ResponseEntity.badRequest()
-                .body(ApiResponse.createErrorWithMsg("followee 삭제 실패"));
-        } else {
-
-            return ResponseEntity.ok()
-                .body(ApiResponse.createSuccess("followee 삭제 성공"));
-        }
+        userService.deleteUserFollows(followeeId, followerId);
+        return ResponseEntity.ok(ApiResponse.createSuccessWithNoData());
     }
 
     @Operation(summary = "사용자 정보 수정", description = "사용자 프로필을 업데이트합니다.")
@@ -282,17 +215,8 @@ public class UserController {
         @RequestParam(required = false) String profileUrl,
         @PathVariable("userId") Long userId) {
 
-        int result = userService.updateUsers(nickname, introduction, profileUrl, userId);
-
-        if (result == 1) {
-            // 업데이트 실패 시 400 BAD REQUEST 반환
-            return ResponseEntity.badRequest()
-                .body(ApiResponse.createErrorWithMsg("프로필 업데이트 실패"));
-        } else {
-
-            return ResponseEntity.ok()
-                .body(ApiResponse.createSuccess("프로필이 성공적으로 변경되었습니다."));
-        }
+        userService.updateUsers(nickname, introduction, profileUrl, userId);
+        return ResponseEntity.ok(ApiResponse.createSuccessWithNoData());
     }
 
     /**

@@ -1,28 +1,20 @@
 package com.example.earthtalk.domain.user.repository;
 
-//import com.example.earthtalk.domain.chat.QObserverChat;
 import static com.example.earthtalk.domain.debate.entity.DebateRole.OBSERVER;
 import static com.example.earthtalk.domain.debate.entity.DebateRole.PARTICIPANT;
 
-import com.example.earthtalk.domain.debate.entity.CategoryType;
 import com.example.earthtalk.domain.debate.entity.QDebate;
-//import com.example.earthtalk.domain.debate.entity.QDebateChat;
-//import com.example.earthtalk.domain.debate.entity.QDebateUser;
 import com.example.earthtalk.domain.debate.entity.QDebateChat;
 import com.example.earthtalk.domain.debate.entity.QDebateParticipants;
-import com.example.earthtalk.domain.debate.entity.RoomType;
-import com.example.earthtalk.domain.news.entity.MemberNumberType;
 import com.example.earthtalk.domain.news.entity.QBookmark;
 import com.example.earthtalk.domain.news.entity.QLike;
 import com.example.earthtalk.domain.news.entity.QNews;
-import com.example.earthtalk.domain.news.entity.TimeType;
 import com.example.earthtalk.domain.user.entity.QFollow;
 import com.example.earthtalk.domain.user.entity.QUser;
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.querydsl.jpa.JPQLQuery;
-import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 

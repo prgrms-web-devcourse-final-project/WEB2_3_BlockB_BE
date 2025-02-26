@@ -16,38 +16,8 @@ public interface UserRepository extends JpaRepository<User, Long>, UserRepositor
 
     @Modifying
     @Transactional
-    @Query(value = "INSERT INTO likes (created_at, updated_at, is_like, news_id, user_id) VALUES (NOW(), NOW(), 1, :newsId, :userId);", nativeQuery = true)
-    int insertLike(@Param("newsId") Long newsId, @Param("userId") Long userId);
-
-    @Modifying
-    @Transactional
-    @Query(value = "INSERT INTO bookmarks (created_at, updated_at, is_bookmarked, news_id, user_id) VALUES (NOW(), NOW(), 1, :newsId, :userId);", nativeQuery = true)
-    int insertBookmark(@Param("newsId") Long newsId, @Param("userId") Long userId);
-
-    @Modifying
-    @Transactional
-    @Query(value = "INSERT INTO follows (followee_id, follower_id) VALUES (:followeeId, :followerId)", nativeQuery = true)
-    int insertFollows(@Param("followeeId") Long followeeId, @Param("followerId") Long followerId);
-
-    @Modifying
-    @Transactional
-    @Query("DELETE FROM likes l WHERE l.news.id = :newsId AND l.user.id = :userId")
-    int deleteLikeByUserId(@Param("newsId") long newsId, @Param("userId") long userId);
-
-    @Modifying
-    @Transactional
-    @Query("DELETE FROM bookmarks b WHERE b.news.id = :newsId AND b.user.id = :userId")
-    int deleteBookmarkByUserId(@Param("newsId") long newsId, @Param("userId") long userId);
-
-    @Modifying
-    @Transactional
-    @Query("DELETE FROM follows f WHERE f.followee.id = :followeeId AND f.follower.id = :followerId")
-    int deleteByFollows(@Param("followeeId") long followeeId, @Param("followerId") long followerId);
-
-    @Modifying
-    @Transactional
     @Query("UPDATE users u SET u.nickname = :nickname, u.introduction = :introduction, u.profileUrl = :profile WHERE u.id = :userId")
-    int updateUserById(@Param("nickname") String nickname,
+    void updateUserById(@Param("nickname") String nickname,
         @Param("introduction") String introduction,
         @Param("profile") String profile,
         @Param("userId") Long userId);
