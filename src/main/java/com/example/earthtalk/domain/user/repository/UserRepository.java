@@ -12,6 +12,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, Long>, UserRepositoryCustom {
+
     Optional<User> findByNickname(String nickname);
 
     @Modifying
@@ -22,8 +23,9 @@ public interface UserRepository extends JpaRepository<User, Long>, UserRepositor
         @Param("profile") String profile,
         @Param("userId") Long userId);
 
-
     Optional<User> findBySocialTypeAndSocialId(SocialType socialType, String socialId);
 
     Optional<User> findByEmail(String email);
+
+    boolean existsByNickname(String nickname);
 }

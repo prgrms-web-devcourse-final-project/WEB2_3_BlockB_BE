@@ -8,6 +8,7 @@ import com.example.earthtalk.domain.news.repository.NewsRepository;
 import com.example.earthtalk.global.constant.ContinentType;
 import io.github.bonigarcia.wdm.WebDriverManager;
 import jakarta.validation.constraints.NotNull;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
@@ -40,7 +41,7 @@ public class NewsService {
     }
 
     @Transactional
-    @Scheduled(cron = "0 0 * * * *")
+    @Scheduled(cron = "0 */30 * * * *")
     public void crawlAllNews() {
         List<News> newsList = new ArrayList<>();
         // 모든 사이트 크롤링
@@ -68,6 +69,7 @@ public class NewsService {
         options.addArguments("--window-size=1920,1080");
         options.addArguments("--no-sandbox");
         options.addArguments("--disable-dev-shm-usage");
+        options.setPageLoadTimeout(Duration.ofSeconds(10));
         // 웹 드라이버 실행
         WebDriver driver = new ChromeDriver(options);
 
@@ -93,6 +95,8 @@ public class NewsService {
                     log.error("웹 페이지를 탐색할 수 없습니다.");
                     break;
                 }
+                int errorCount = 0;
+                if (errorCount > 25) break;
                 // 기사 정보 출력
                 for (WebElement article : articles) {
                     try {
@@ -122,10 +126,12 @@ public class NewsService {
                         LocalDateTime deliveryTime = LocalDateTime.parse(date, formatter);
 
                         // 이미 크롤링 한 뉴스 중복 방지
-                        if (deliveryTime.isBefore(latestArticleTime) || deliveryTime.equals(
-                            latestArticleTime)) {
-                            stopFlag = true;
-                            break;
+                        if(latestArticleTime != null) {
+                            if (deliveryTime.isBefore(latestArticleTime) || deliveryTime.equals(
+                                latestArticleTime)) {
+                                stopFlag = true;
+                                break;
+                            }
                         }
 
                         News news = News.builder()
@@ -152,6 +158,7 @@ public class NewsService {
                         // 예외발생은 이미지가 없는 기사의 경우가 대부분입니다.
                         // 그 외에 하나라도 빠지는 요소가 있을 경우 배제
                         log.error("크롤링 에러 : 일부 요소를 찾을 수 없습니다.");
+                        errorCount++;
                     }
                 }
 

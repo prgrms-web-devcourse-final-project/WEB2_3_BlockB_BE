@@ -46,6 +46,8 @@ public enum ErrorCode { // 예외 발생시, body에 실어 날려줄 상태, co
     //-6000 OAUTH
     OAUTH_NOT_FOUND(404, -6000, "소셜로그인 계정 정보가 존재하지 않습니다."),
     KAKAO_PROFILE_NOT_FOUND(404, -6001, "카카오 프로필 정보가 존재하지 않습니다."),
+    DUPLICATE_NICKNAME(400, -6002, "이미 사용 중인 닉네임입니다."),
+    EXIST_USER(400, -6003, "이미 회원가입이 완료된 사용자입니다."),
 
     //-7000: NEWS
     NEWS_NOT_FOUND(404, -7001, "뉴스를 찾을 수 없습니다."),

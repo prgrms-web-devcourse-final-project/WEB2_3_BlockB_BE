@@ -2,18 +2,17 @@ package com.example.earthtalk.domain.oauth.service;
 
 import com.example.earthtalk.domain.oauth.dto.CustomOAuth2User;
 import com.example.earthtalk.domain.oauth.dto.OAuthAttributes;
+import com.example.earthtalk.domain.user.dto.request.UserInfoRequest;
+import com.example.earthtalk.domain.user.entity.Role;
 import com.example.earthtalk.domain.user.entity.SocialType;
 import com.example.earthtalk.domain.user.entity.User;
 import com.example.earthtalk.domain.user.repository.UserRepository;
 import com.example.earthtalk.global.exception.ErrorCode;
-import com.example.earthtalk.global.exception.JwtCustomException;
 import com.example.earthtalk.global.exception.NotFoundException;
+import com.example.earthtalk.global.exception.IllegalArgumentException;
 import com.example.earthtalk.global.security.dto.TokenResponse;
 import com.example.earthtalk.global.security.util.JwtTokenProvider;
 import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.MalformedJwtException;
-import io.jsonwebtoken.UnsupportedJwtException;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Map;
@@ -71,28 +70,35 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     }
 
     // AccessToken 만료시, AccessToken, RefreshToken 재발급
-    public TokenResponse getReissue(String bearerToken) {
+    public TokenResponse.GetToken getReissue(String bearerToken) {
         // TODO: Refresh Token 만료기간 관리 -> Redis 관리
-        try {
-            String refreshToken = jwtTokenProvider.parseBearerToken(bearerToken);
-            Claims claims = jwtTokenProvider.getClaims(refreshToken);
+        String refreshToken = jwtTokenProvider.parseBearerToken(bearerToken);
+        Claims claims = jwtTokenProvider.validateRefreshToken(refreshToken);
 
-            User user = userRepository.findByEmail(claims.getSubject())
-                .orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
+        userRepository.findByEmail(claims.getSubject())
+            .orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
 
-            CustomOAuth2User customOAuth2User = jwtTokenProvider.getCustomOAuth2User(claims);
+        CustomOAuth2User customOAuth2User = jwtTokenProvider.getCustomOAuth2User(claims);
 
-            return jwtTokenProvider.generateAllTokens(customOAuth2User, new Date());
+        return jwtTokenProvider.generateAllTokens(customOAuth2User, new Date());
+    }
 
-        } catch (ExpiredJwtException e) {
-            log.info("refresh token 만료");
-            throw new JwtCustomException(ErrorCode.EXPIRED_REFRESH_TOKEN);
+    // oauth 회원가입 완료후, 역할 변경
+    public void completeSignup(UserInfoRequest userInfoRequest, String userEmail) {
+        User user = userRepository.findByEmail(userEmail)
+            .orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
 
-        } catch (UnsupportedJwtException | MalformedJwtException |
-                IllegalArgumentException e) {
-            log.info("유효하지 않은 refresh token");
-            throw new JwtCustomException(ErrorCode.INVALID_REFRESH_TOKEN);
+        if (!user.getRole().equals(Role.ROLE_GUEST)) {
+            throw new IllegalArgumentException(ErrorCode.EXIST_USER);
         }
+
+        if (userRepository.existsByNickname(userInfoRequest.nickname())) {
+            throw new IllegalArgumentException(ErrorCode.DUPLICATE_NICKNAME);
+        }
+
+        user.updateNickname(userInfoRequest.nickname());
+        user.updateRole(Role.ROLE_MEMBER);
+        userRepository.save(user);
     }
 
     // 소셜로그인 타입 반환
@@ -120,7 +126,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         return findUser;
     }
 
-    // OAuthAttributes의 toEntity() 메소드를 통해 빌더로 User 객체 생성 후 반환
+    // 닉네임 입력을 안 받았기 때문에 임시 닉네임 설정 후, GUEST User 객체 생성 후 반환
     private User saveUser(OAuthAttributes attributes, SocialType socialType) {
         User createdUser = attributes.toEntity(socialType, attributes.getOauth2UserResponse());
         return userRepository.save(createdUser);
