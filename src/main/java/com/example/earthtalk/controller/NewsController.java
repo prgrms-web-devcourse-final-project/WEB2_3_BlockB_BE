@@ -1,9 +1,11 @@
 package com.example.earthtalk.controller;
 
-import com.example.earthtalk.domain.news.dto.response.NewsDetailReponse;
+import com.example.earthtalk.domain.news.dto.response.NewsDetailResponse;
 import com.example.earthtalk.domain.news.dto.response.NewsListResponse;
+import com.example.earthtalk.domain.news.entity.SortType;
 import com.example.earthtalk.domain.news.service.NewsDataService;
 import com.example.earthtalk.domain.news.service.NewsService;
+import com.example.earthtalk.global.constant.ContinentType;
 import com.example.earthtalk.global.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -35,9 +37,9 @@ public class NewsController {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "성공")})
     @GetMapping
     public ResponseEntity<ApiResponse<Object>> getNewsList(
-        @RequestParam(value = "continent", required = false) String continent,
+        @RequestParam(value = "continent", required = false) ContinentType continent,
         @RequestParam(value = "q", required = false) String query,
-        @RequestParam(value = "sort", required = false) String sort,
+        @RequestParam(value = "sort", required = false) SortType sort,
         @RequestParam(value = "cursor", required = false) Long newsId) {
         Slice<NewsListResponse> data = newsDataService
             .getNewsByFilter(continent, query, sort, newsId);
@@ -51,7 +53,7 @@ public class NewsController {
     public ResponseEntity<ApiResponse<Object>> getNewsById(
         @PathVariable("newsId") Long newsId,
         @RequestParam("userId") Long userId) {
-        NewsDetailReponse data = newsDataService.getNewsDetail(newsId, userId);
+        NewsDetailResponse data = newsDataService.getNewsDetail(newsId, userId);
         return ResponseEntity.ok().body(ApiResponse.createSuccess(data));
     }
 
