@@ -39,7 +39,8 @@ public class NewsDataService {
 
     private static final int PAGE_SIZE = 12;
 
-    public Slice<NewsListResponse> getNewsByFilter(ContinentType continent, String query, SortType sort,
+    public Slice<NewsListResponse> getNewsByFilter(ContinentType continent, String query,
+        SortType sort,
         Long newsId) {
         QNews news = QNews.news;
         QLike like = QLike.like;
@@ -111,12 +112,6 @@ public class NewsDataService {
         return newsFilterRepository.newsRanking();
     }
 
-    public void toggleLike(Long newsId, Long userId) {
-        if(likeRepository.existsByUserIdAndNewsId(userId, newsId)) {
-            removeLike(newsId, userId);
-        }else addLike(newsId, userId);
-    }
-
     public void addLike(Long newsId, Long userId) {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
@@ -127,8 +122,13 @@ public class NewsDataService {
         likeRepository.save(like);
     }
 
-    public void removeLike(Long userId, Long newsId) {
-        likeRepository.deleteByUserIdAndNewsId(userId, newsId);
+    public void removeLike(Long newsId, Long userId) {
+        if (likeRepository.existsByUserIdAndNewsId(userId, newsId)) {
+            likeRepository.deleteByNewsIdAndUserId(newsId, userId);
+
+        } else {
+            throw new NotFoundException(ErrorCode.LIKE_NOT_FOUND);
+        }
     }
 
     public void addBookmark(Long newsId, Long userId) {
@@ -141,8 +141,13 @@ public class NewsDataService {
         bookmarkRepository.save(mark);
     }
 
-    public void removeBookmark(Long userId, Long newsId) {
-        bookmarkRepository.deleteByUserIdAndNewsId(userId, newsId);
+    public void removeBookmark(Long newsId, Long userId) {
+        if (bookmarkRepository.existsByUserIdAndNewsId(userId, newsId)) {
+            bookmarkRepository.deleteByNewsIdAndUserId(newsId, userId);
+
+        } else {
+            throw new NotFoundException(ErrorCode.BOOKMARK_NOT_FOUND);
+        }
     }
 
 }
