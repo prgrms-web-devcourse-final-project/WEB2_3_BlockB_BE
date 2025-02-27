@@ -60,19 +60,23 @@ public class DebateUserService {
 		}
 		if ("pro".equalsIgnoreCase(position)) {
 			Set<String> proSet = debateUserStore.getProUsers(roomId);
-			if (proSet.size() < maxMembers) {
-				proSet.add(userName);
-				sendUserJoinMessage(roomId, userName);
-			} else {
-				throw new ConflictException(ErrorCode.TOO_MANY_PARTICIPANTS);
+			synchronized (proSet) {
+				if (proSet.size() < maxMembers) {
+					proSet.add(userName);
+					sendUserJoinMessage(roomId, userName);
+				} else {
+					throw new ConflictException(ErrorCode.TOO_MANY_PARTICIPANTS);
+				}
 			}
 		} else if ("con".equalsIgnoreCase(position)) {
 			Set<String> conSet = debateUserStore.getConUsers(roomId);
-			if (conSet.size() < maxMembers) {
-				conSet.add(userName);
-				sendUserJoinMessage(roomId, userName);
-			} else {
-				throw new ConflictException(ErrorCode.TOO_MANY_PARTICIPANTS);
+			synchronized (conSet) {
+				if (conSet.size() < maxMembers) {
+					conSet.add(userName);
+					sendUserJoinMessage(roomId, userName);
+				} else {
+					throw new ConflictException(ErrorCode.TOO_MANY_PARTICIPANTS);
+				}
 			}
 		} else {
 			throw new IllegalArgumentException("Invalid position: " + position);

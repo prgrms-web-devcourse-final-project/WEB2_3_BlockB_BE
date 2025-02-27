@@ -20,4 +20,11 @@ public class DebateMessage {
 	private String message;
 
 	private LocalDateTime timestamp;
+
+	public boolean isValidMessage() {
+		return (event != null && !event.trim().isEmpty())
+			&& (userName != null && !userName.trim().isEmpty())
+			&& (position != null && !position.trim().isEmpty())
+			&& (message != null && !message.trim().isEmpty());
+	}
 }

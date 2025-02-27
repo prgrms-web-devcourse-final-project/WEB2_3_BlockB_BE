@@ -25,6 +25,7 @@ import com.example.earthtalk.domain.debate.store.DebateMessageStore;
 import com.example.earthtalk.domain.debate.store.ObserverMessageStore;
 import com.example.earthtalk.global.exception.ErrorCode;
 import com.example.earthtalk.global.exception.IllegalArgumentException;
+import com.example.earthtalk.global.exception.SaveFailedException;
 
 /**
  * WebSocketEventListener는 WebSocket 연결 및 연결 해제 이벤트를 처리하여
@@ -65,14 +66,19 @@ public class WebSocketEventListener {
 				String sessionId = headerAccessor.getSessionId();
 				String position = (String)headerAccessor.getSessionAttributes().get("position");
 				if (roomId != null && userName != null && position != null) {
-					SessionInfo sessionInfo = new SessionInfo(roomId, userName, position);
-					sessionInfoMap.put(sessionId, sessionInfo);
-
 					Debate debate = debateRoomService.getDebateRoom(roomId);
 					if (debate == null) {
 						throw new IllegalArgumentException(ErrorCode.CHAT_NOT_FOUND);
 					}
-					debateUserService.addUser(debate, userName, position);
+
+					SessionInfo sessionInfo = new SessionInfo(roomId, userName, position);
+					sessionInfoMap.put(sessionId, sessionInfo);
+					try {
+						debateUserService.addUser(debate, userName, position);
+					} catch(Exception e) {
+						sessionInfoMap.remove(sessionId);
+						throw new IllegalArgumentException(ErrorCode.CHAT_NOT_FOUND);
+					}
 				}
 			} else if (destination.startsWith("/topic/observer/")) {
 				String sessionId = headerAccessor.getSessionId();
@@ -120,8 +126,12 @@ public class WebSocketEventListener {
 
 					List<ObserverMessage> observerMessages = observerMessageStore.removeObserverMessages(debateRoomId);
 					if (debateMessages != null && !debateMessages.isEmpty()) {
-						debateChatManagementService.saveChatHistory(debateRoomId, debateMessages);
-						observerChatManagementService.saveChatHistory(debateRoomId, observerMessages);
+						try {
+							debateChatManagementService.saveChatHistory(debateRoomId, debateMessages);
+							observerChatManagementService.saveChatHistory(debateRoomId, observerMessages);
+						} catch(Exception e) {
+							throw new SaveFailedException(ErrorCode.SAVE_FAILED);
+						}
 					}
 				}
 				debateUserService.removeUser(debateRoomId, sessionInfo.getUserName());
