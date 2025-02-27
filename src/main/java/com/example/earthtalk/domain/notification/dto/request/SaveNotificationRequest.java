@@ -5,9 +5,9 @@ import com.example.earthtalk.domain.notification.entity.NotificationType;
 import com.example.earthtalk.domain.notification.entity.StatusType;
 import com.example.earthtalk.domain.user.entity.User;
 
-public record SaveNotificationRequest (User user, NotificationType notificationType, Long typeId, String content){
+public record SaveNotificationRequest (Long userId, NotificationType notificationType, Long typeId, String content){
 
-    public Notification toEntity() {
+    public Notification toEntity(User user) {
         return Notification.builder()
                 .user(user)
                 .notificationType(notificationType)
