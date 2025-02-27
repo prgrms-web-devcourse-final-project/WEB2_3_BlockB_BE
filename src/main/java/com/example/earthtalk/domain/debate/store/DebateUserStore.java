@@ -1,10 +1,18 @@
 package com.example.earthtalk.domain.debate.store;
 
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
+
+import com.example.earthtalk.global.exception.ErrorCode;
+
+import lombok.RequiredArgsConstructor;
 
 /**
  * ChatUserStore는 각 채팅방(roomId)별로 찬성(pro) 및 반대(con) 사용자 목록을 관리하는 컴포넌트입니다.
@@ -14,10 +22,13 @@ import org.springframework.stereotype.Component;
  * </p>
  */
 @Component
+@RequiredArgsConstructor
 public class DebateUserStore {
 
-	private final ConcurrentHashMap<String, Set<String>> proUsers = new ConcurrentHashMap<>();
-	private final ConcurrentHashMap<String, Set<String>> conUsers = new ConcurrentHashMap<>();
+	private static final String PRO_KEY_PREFIX = "debate:pro:";
+	private static final String CON_KEY_PREFIX = "debate:con:";
+
+	private final StringRedisTemplate redisTemplate;
 
 	/**
 	 * 주어진 채팅방 ID에 대한 찬성 사용자 집합을 반환합니다.
@@ -27,8 +38,15 @@ public class DebateUserStore {
 	 * @return 찬성 사용자 집합
 	 */
 	public Set<String> getProUsers(String roomId) {
-		return proUsers.computeIfAbsent(roomId, k -> ConcurrentHashMap.newKeySet());
+		Set<String> members = redisTemplate.opsForSet().members(PRO_KEY_PREFIX + roomId);
+		return (members != null) ? members : Collections.emptySet();
 	}
+
+	public void addProUser(String roomId, String userId) {
+		validateRoomIdAndUserId(roomId, userId);
+		redisTemplate.opsForSet().add(PRO_KEY_PREFIX + roomId, userId);
+	}
+
 
 	/**
 	 * 주어진 채팅방 ID에 대한 반대 사용자 집합을 반환합니다.
@@ -38,8 +56,15 @@ public class DebateUserStore {
 	 * @return 반대 사용자 집합
 	 */
 	public Set<String> getConUsers(String roomId) {
-		return conUsers.computeIfAbsent(roomId, k -> ConcurrentHashMap.newKeySet());
+		Set<String> members = redisTemplate.opsForSet().members(CON_KEY_PREFIX + roomId);
+		return (members != null) ? members : Collections.emptySet();
 	}
+
+	public void addConUser(String roomId, String userId) {
+		validateRoomIdAndUserId(roomId, userId);
+		redisTemplate.opsForSet().add(CON_KEY_PREFIX + roomId, userId);
+	}
+
 
 	/**
 	 * 주어진 채팅방 ID의 찬성 사용자 집합을 제거합니다.
@@ -47,7 +72,7 @@ public class DebateUserStore {
 	 * @param roomId 채팅방 식별자
 	 */
 	public void removeProUsers(String roomId) {
-		proUsers.remove(roomId);
+		redisTemplate.delete(PRO_KEY_PREFIX + roomId);
 	}
 
 	/**
@@ -56,7 +81,7 @@ public class DebateUserStore {
 	 * @param roomId 채팅방 식별자
 	 */
 	public void removeConUsers(String roomId) {
-		conUsers.remove(roomId);
+		redisTemplate.delete(CON_KEY_PREFIX + roomId);
 	}
 
 	/**
@@ -65,11 +90,17 @@ public class DebateUserStore {
 	 * @return 방 ID와 찬성 사용자 수의 매핑 정보
 	 */
 	public Map<String, Integer> getProUserCounts() {
-		Map<String, Integer> proCounts = new HashMap<>();
-		for (String roomId : proUsers.keySet()) {
-			proCounts.put(roomId, getProUsers(roomId).size());
+		Map<String, Integer> counts = new HashMap<>();
+		Set<String> keys = redisTemplate.keys(PRO_KEY_PREFIX + "*");
+		if (keys != null) {
+			for (String key : keys) {
+				Long size = redisTemplate.opsForSet().size(PRO_KEY_PREFIX + key);
+
+				String roomId = key.substring(PRO_KEY_PREFIX.length());
+				counts.put(roomId, size != null ? size.intValue() : 0);
+			}
 		}
-		return proCounts;
+		return counts;
 	}
 
 	/**
@@ -78,10 +109,25 @@ public class DebateUserStore {
 	 * @return 방 ID와 반대 사용자 수의 매핑 정보
 	 */
 	public Map<String, Integer> getConUserCounts() {
-		Map<String, Integer> conCounts = new HashMap<>();
-		for (String roomId : conUsers.keySet()) {
-			conCounts.put(roomId, getConUsers(roomId).size());
+		Map<String, Integer> counts = new HashMap<>();
+		Set<String> keys = redisTemplate.keys(CON_KEY_PREFIX + "*");
+		if (keys != null) {
+			for (String key : keys) {
+				Long size = redisTemplate.opsForSet().size(key);
+				String roomId = key.substring(CON_KEY_PREFIX.length());
+				counts.put(roomId, size != null ? size.intValue() : 0);
+			}
 		}
-		return conCounts;
+		return counts;
 	}
+
+	private void validateRoomIdAndUserId(String roomId, String userId) {
+		if (roomId == null || roomId.trim().isEmpty()) {
+			throw new IllegalArgumentException(ErrorCode.DEBATEROOM_NOT_FOUND.getMessage());
+		}
+		if (userId == null || userId.trim().isEmpty()) {
+			throw new IllegalArgumentException(ErrorCode.USER_NOT_FOUND.getMessage());
+		}
+	}
+
 }

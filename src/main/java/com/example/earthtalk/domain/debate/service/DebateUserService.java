@@ -4,6 +4,9 @@ import java.util.Map;
 import java.util.Set;
 
 import lombok.RequiredArgsConstructor;
+
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
@@ -38,6 +41,10 @@ public class DebateUserService {
 	private final DebateUserStore debateUserStore;
 	private final DebateRepository debateRepository;
 
+	private final RedissonClient redissonClient;
+
+
+
 	/**
 	 * 토론방에 사용자를 추가합니다.
 	 * <p>
@@ -58,41 +65,32 @@ public class DebateUserService {
 		if (maxMembers != 1 && maxMembers != 3) {
 			throw new IllegalArgumentException(ErrorCode.METHOD_NOT_ALLOWED.getMessage());
 		}
-		if ("pro".equalsIgnoreCase(position)) {
-			Set<String> proSet = debateUserStore.getProUsers(roomId);
-			synchronized (proSet) {
-				if (proSet.size() < maxMembers) {
-					proSet.add(userName);
-					sendUserJoinMessage(roomId, userName);
-				} else {
-					throw new ConflictException(ErrorCode.TOO_MANY_PARTICIPANTS);
-				}
-			}
-		} else if ("con".equalsIgnoreCase(position)) {
-			Set<String> conSet = debateUserStore.getConUsers(roomId);
-			synchronized (conSet) {
-				if (conSet.size() < maxMembers) {
-					conSet.add(userName);
-					sendUserJoinMessage(roomId, userName);
-				} else {
-					throw new ConflictException(ErrorCode.TOO_MANY_PARTICIPANTS);
-				}
-			}
-		} else {
-			throw new IllegalArgumentException("Invalid position: " + position);
-		}
+		RLock lock = redissonClient.getLock("debate:lock:" + roomId);
 
-		sendUserCountUpdate(roomId);
+		lock.lock();
+		try {
+			if ("pro".equalsIgnoreCase(position)) {
+				debateUserStore.addProUser(roomId, userName);
+			} else if ("con".equalsIgnoreCase(position)) {
+				debateUserStore.addConUser(roomId, userName);
+			} else {
+				throw new IllegalArgumentException("Invalid position: " + position);
+			}
 
-		if (debateUserStore.getProUsers(roomId).size() == maxMembers &&
-			debateUserStore.getConUsers(roomId).size() == maxMembers) {
-			debateManagementService.persistChatRoomIfFull(
-				debate,
-				debateUserStore.getProUsers(roomId),
-				debateUserStore.getConUsers(roomId)
-			);
-			debateUserStore.removeProUsers(roomId);
-			debateUserStore.removeConUsers(roomId);
+			sendUserCountUpdate(roomId);
+
+			if (debateUserStore.getProUsers(roomId).size() == maxMembers &&
+				debateUserStore.getConUsers(roomId).size() == maxMembers) {
+				debateManagementService.persistChatRoomIfFull(
+					debate,
+					debateUserStore.getProUsers(roomId),
+					debateUserStore.getConUsers(roomId)
+				);
+				debateUserStore.removeProUsers(roomId);
+				debateUserStore.removeConUsers(roomId);
+			}
+		} finally {
+			lock.unlock();
 		}
 	}
 
