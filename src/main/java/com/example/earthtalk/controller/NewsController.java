@@ -2,6 +2,7 @@ package com.example.earthtalk.controller;
 
 import com.example.earthtalk.domain.news.dto.response.NewsDetailResponse;
 import com.example.earthtalk.domain.news.dto.response.NewsListResponse;
+import com.example.earthtalk.domain.news.dto.response.SliceResponse;
 import com.example.earthtalk.domain.news.entity.SortType;
 import com.example.earthtalk.domain.news.service.NewsDataService;
 import com.example.earthtalk.domain.news.service.NewsService;
@@ -43,7 +44,7 @@ public class NewsController {
         @RequestParam(value = "cursor", required = false) Long newsId) {
         Slice<NewsListResponse> data = newsDataService
             .getNewsByFilter(continent, query, sort, newsId);
-        return ResponseEntity.ok().body(ApiResponse.createSuccess(data));
+        return ResponseEntity.ok().body(ApiResponse.createSuccess(new SliceResponse<>(data)));
     }
 
     @Operation(summary = "뉴스 상세보기 API입니다.", description = "사용자 id를 요청에 포함시키면 사용자가 해당 뉴스에 좋아요,북마크를 이미 눌렀는지에 대한 정보를 추가로 반환합니다.")
