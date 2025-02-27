@@ -1,10 +1,8 @@
 package com.example.earthtalk.domain.report.dto.response;
 
 import com.example.earthtalk.domain.report.entity.Report;
-import com.example.earthtalk.domain.report.entity.ReportType;
 import com.example.earthtalk.domain.report.entity.ResultType;
-
-import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 public record ReportListResponse(
         Long id,
@@ -13,23 +11,34 @@ public record ReportListResponse(
         String reportType,
         String reportResult,
         String status,
-        LocalDateTime createdAt)
+        String createdAt,
+        String reportedAt)
 {
-    public static ReportListResponse from(Report report) {
+    public static ReportListResponse from(Report report, DateTimeFormatter formatter) {
         return new ReportListResponse(report.getId(),
                 report.getUser().getNickname(),
                 report.getTargetUser().getNickname(),
                 report.getReportType().getValue(),
                 Report.getStringByResultType(report.getResultType()),
                 ReportListResponse.getStatus(report.getResultType()),
-                report.getCreatedAt());
+                report.getCreatedAt().format(formatter),
+                getReportedAt(report, formatter));
     }
 
-    public static String getStatus(ResultType resultType) {
+    private static String getStatus(ResultType resultType) {
         if(resultType == ResultType.UNKNOWN) {
             return resultType.getValue();
         } else {
             return "처리 완료";
+        }
+    }
+
+
+    private static String getReportedAt(Report report, DateTimeFormatter formatter) {
+        if (report.getResultType() == ResultType.UNKNOWN) {
+            return null;
+        } else {
+            return report.getUpdatedAt().format(formatter);
         }
     }
 }

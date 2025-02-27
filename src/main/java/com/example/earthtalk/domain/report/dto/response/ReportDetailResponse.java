@@ -1,16 +1,11 @@
 package com.example.earthtalk.domain.report.dto.response;
 
-import com.example.earthtalk.domain.chat.ObserverChat;
-import com.example.earthtalk.domain.chat.repository.ObserverChatRepository;
-import com.example.earthtalk.domain.debate.entity.DebateChat;
-import com.example.earthtalk.domain.debate.repository.DebateChatRepository;
 import com.example.earthtalk.domain.report.entity.Report;
-import com.example.earthtalk.domain.report.entity.ReportType;
 import com.example.earthtalk.domain.report.entity.ResultType;
 import com.example.earthtalk.domain.report.entity.TargetType;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 public record ReportDetailResponse(
         Long id,
@@ -23,10 +18,11 @@ public record ReportDetailResponse(
         String reportType,
         String reportResult,
         String reportContent,
-        LocalDateTime createdAt
+        String createdAt,
+        String reportedAt
 ) {
 
-    public static ReportDetailResponse from(Report report) {
+    public static ReportDetailResponse from(Report report, DateTimeFormatter formatter) {
         return new ReportDetailResponse(
                 report.getId(),
                 report.getUser().getNickname(),
@@ -38,7 +34,16 @@ public record ReportDetailResponse(
                 report.getReportType().getValue(),
                 Report.getStringByResultType(report.getResultType()),
                 report.getReportContent(),
-                report.getCreatedAt()
+                report.getCreatedAt().format(formatter),
+                getReportedAt(report, formatter)
         );
+    }
+
+    private static String getReportedAt(Report report, DateTimeFormatter formatter) {
+        if (report.getResultType() == ResultType.UNKNOWN) {
+            return null;
+        } else {
+            return report.getUpdatedAt().format(formatter);
+        }
     }
 }

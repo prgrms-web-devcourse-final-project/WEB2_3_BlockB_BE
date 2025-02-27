@@ -13,7 +13,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -54,25 +53,26 @@ public class Report extends BaseTimeEntity {
     @Column(nullable = false)
     private ReportType reportType; // 신고 사유
 
+    @ManyToOne
+    @JoinColumn(name = "assigned_user_id", nullable = false)
+    private User assignedUser; // 신고 처리 담당자
+
     private String reportContent; // 신고 처리한 내용
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private ResultType resultType; // 신고 처리 유형
 
-    private LocalDateTime reportedAt; // 신고 처리 날짜
 
-    public void updateReport(UpdateReportRequest request) {
+    public void updateReport(UpdateReportRequest request, User user) {
         if(request == null) {
-            this.reportContent = null;
+            this.assignedUser = null;
             this.resultType = ResultType.UNKNOWN;
-            this.reportedAt = null;
-
+            this.reportContent = null;
         } else {
-            Report updateReport = request.toEntity();
-            this.reportContent = updateReport.getReportContent();
-            this.resultType = updateReport.getResultType();
-            this.reportedAt = LocalDateTime.now();
+            this.assignedUser = user;
+            this.resultType = request.result();
+            this.reportContent = request.reportContent();
         }
     }
 

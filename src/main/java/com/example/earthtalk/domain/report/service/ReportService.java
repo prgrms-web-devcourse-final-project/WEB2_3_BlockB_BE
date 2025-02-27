@@ -23,7 +23,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,6 +35,7 @@ public class ReportService {
     private final NotificationService notificationService;
     private final DebateRepository debateRepository;
     private final UserRepository userRepository;
+    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
     // 신고하는 로직 간단하게 구현해놨습니다. 예외처리 따로 안되어있어요.
     // 각 위치에서 신고에 대한 기능 만들 때 예외 처리 해야합니다.
@@ -68,7 +69,7 @@ public class ReportService {
             if (report == null) {
                 throw new NotFoundException(ErrorCode.REPORT_NOT_FOUND);
             }
-            responses.add(ReportListResponse.from(report));
+            responses.add(ReportListResponse.from(report, formatter));
         }
 
         return new PageImpl<>(responses, pageable, reports.getTotalElements());
@@ -77,13 +78,14 @@ public class ReportService {
     // 하나의 신고에 대한 상세 조회하는 메서드
     public ReportDetailResponse getReportById(Long id) {
         Report report = reportRepository.findById(id).orElseThrow(() -> new NotFoundException(ErrorCode.REPORT_NOT_FOUND));
-        return ReportDetailResponse.from(report);
+        return ReportDetailResponse.from(report, formatter);
     }
 
     // 신고를 처리하는 메서드 - 알림 추가
     public Long updateReport(Long id, UpdateReportRequest request) throws Exception {
         Report report = reportRepository.findById(id).orElseThrow(() -> new NotFoundException(ErrorCode.REPORT_NOT_FOUND));
-        report.updateReport(request);
+        User assignedUser = userRepository.findById(request.assignedUserId()).orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
+        report.updateReport(request, assignedUser);
         SendNotificationRequest sendNotificationRequest = new SendNotificationRequest(report.getTargetUser().getId(), NotificationType.REPORT, report.getTargetRoomId(), null);
         notificationService.sendNotification(sendNotificationRequest);
         return reportRepository.save(report).getId();
@@ -92,7 +94,7 @@ public class ReportService {
     // 이미 처리된 신고를 복구하는 메서드
     public Long restoreReport(Long id) {
         Report report = reportRepository.findById(id).orElseThrow(() -> new NotFoundException(ErrorCode.REPORT_NOT_FOUND));
-        report.updateReport(null);
+        report.updateReport(null, null);
         return reportRepository.save(report).getId();
     }
 }

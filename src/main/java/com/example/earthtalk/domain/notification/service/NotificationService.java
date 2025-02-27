@@ -1,6 +1,5 @@
 package com.example.earthtalk.domain.notification.service;
 
-import com.example.earthtalk.domain.debate.entity.Debate;
 import com.example.earthtalk.domain.debate.repository.DebateRepository;
 import com.example.earthtalk.domain.notification.dto.request.SaveNotificationRequest;
 import com.example.earthtalk.domain.notification.dto.request.SaveTokenRequest;

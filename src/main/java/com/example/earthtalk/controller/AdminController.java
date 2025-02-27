@@ -52,8 +52,9 @@ public class AdminController {
     @ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "성공")})
     @PutMapping("/reports/{reportId}")
-    public ResponseEntity<ApiResponse<Long>> putReportById(@PathVariable("reportId") Long reportId,
-        @RequestBody UpdateReportRequest request) throws Exception {
+    public ResponseEntity<ApiResponse<Long>> putReportById(
+            @PathVariable("reportId") Long reportId,
+            @RequestBody UpdateReportRequest request ) throws Exception {
         Long id = reportService.updateReport(reportId, request);
         return ResponseEntity.ok(ApiResponse.createSuccess(id));
     }
