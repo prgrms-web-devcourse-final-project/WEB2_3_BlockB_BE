@@ -64,6 +64,10 @@ dependencies {
 
     // notifications - firebase
     implementation 'com.google.firebase:firebase-admin:9.4.3'
+
+    // redis
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis:3.4.3'
+
 }
 
 tasks.named('test') {
