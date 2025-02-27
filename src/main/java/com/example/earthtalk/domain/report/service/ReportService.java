@@ -94,7 +94,7 @@ public class ReportService {
     // 이미 처리된 신고를 복구하는 메서드
     public Long restoreReport(Long id) {
         Report report = reportRepository.findById(id).orElseThrow(() -> new NotFoundException(ErrorCode.REPORT_NOT_FOUND));
-        report.updateReport(null, null);
+        report.resetReport();
         return reportRepository.save(report).getId();
     }
 }
