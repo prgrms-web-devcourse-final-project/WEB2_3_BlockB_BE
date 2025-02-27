@@ -65,15 +65,15 @@ public class Report extends BaseTimeEntity {
 
 
     public void updateReport(UpdateReportRequest request, User user) {
-        if(request == null) {
-            this.assignedUser = null;
-            this.resultType = ResultType.UNKNOWN;
-            this.reportContent = null;
-        } else {
-            this.assignedUser = user;
-            this.resultType = request.result();
-            this.reportContent = request.reportContent();
-        }
+        this.assignedUser = user;
+        this.resultType = request.result();
+        this.reportContent = request.reportContent();
+    }
+
+    public void resetReport() {
+        this.assignedUser = null;
+        this.resultType = ResultType.UNKNOWN;
+        this.reportContent = null;
     }
 
     public static String getStringByResultType(ResultType resultType) {
