@@ -13,7 +13,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -41,11 +40,11 @@ public class Report extends BaseTimeEntity {
     @JoinColumn(name = "target_user_id", nullable = false)
     private User targetUser; // 신고된 회원
 
-    private Long targetRoomId; // 신고된 방 id
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private TargetType targetType; // 신고 대상 유형
+
+    private Long targetRoomId; // 신고 대상 유형 id
 
     @Column(nullable = false)
     private String content; // 신고 내용
@@ -54,26 +53,27 @@ public class Report extends BaseTimeEntity {
     @Column(nullable = false)
     private ReportType reportType; // 신고 사유
 
+    @ManyToOne
+    @JoinColumn(name = "assigned_user_id", nullable = false)
+    private User assignedUser; // 신고 처리 담당자
+
     private String reportContent; // 신고 처리한 내용
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private ResultType resultType; // 신고 처리 유형
 
-    private LocalDateTime reportedAt; // 신고 처리 날짜
 
-    public void updateReport(UpdateReportRequest request) {
-        if(request == null) {
-            this.reportContent = null;
-            this.resultType = ResultType.UNKNOWN;
-            this.reportedAt = null;
+    public void updateReport(UpdateReportRequest request, User user) {
+        this.assignedUser = user;
+        this.resultType = request.result();
+        this.reportContent = request.reportContent();
+    }
 
-        } else {
-            Report updateReport = request.toEntity();
-            this.reportContent = updateReport.getReportContent();
-            this.resultType = updateReport.getResultType();
-            this.reportedAt = LocalDateTime.now();
-        }
+    public void resetReport() {
+        this.assignedUser = null;
+        this.resultType = ResultType.UNKNOWN;
+        this.reportContent = null;
     }
 
     public static String getStringByResultType(ResultType resultType) {

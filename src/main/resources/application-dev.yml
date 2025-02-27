@@ -89,3 +89,6 @@ jwt:
   secret-key: ${SECRET_KEY}
   access-expire-time: ${ACCESS_EXPIRE_TIME}
   refresh-expire-time: ${REFRESH_EXPIRE_TIME}
+
+firebase:
+  dir: ${FIREBASE_DIR}
