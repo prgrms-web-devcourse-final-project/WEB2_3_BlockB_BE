@@ -1,5 +1,6 @@
 package com.example.earthtalk.domain.user.service;
 
+import com.example.earthtalk.config.S3Config;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -15,28 +16,27 @@ import java.util.UUID;
 public class S3StorageService {
 
     private final S3Client s3Client;
+    private final S3Config s3Config;
 
-    @Value("${aws.s3.bucket-name}")
-    private String bucketName;
-
-    @Value("${aws.s3.url}")
-    private String s3Url;
-
-    public S3StorageService(
-        @Value("${aws.credentials.access-key}") String accessKey,
-        @Value("${aws.credentials.secret-key}") String secretKey,
-        @Value("${aws.s3.region}") String region) {
+    public S3StorageService(S3Config s3Config) {
+        this.s3Config = s3Config;
         this.s3Client = S3Client.builder()
-            .region(Region.of(region))
-            .credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create(accessKey, secretKey)))
+            .region(Region.of(s3Config.getS3().getRegion()))
+            .credentialsProvider(StaticCredentialsProvider.create(
+                AwsBasicCredentials.create(
+                    s3Config.getCredentials().getAccessKey(),
+                    s3Config.getCredentials().getSecretKey()
+                )
+            ))
             .build();
     }
+
 
     public String uploadImage(MultipartFile file) throws IOException {
         String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
 
         PutObjectRequest putObjectRequest = PutObjectRequest.builder()
-            .bucket(bucketName)
+            .bucket(s3Config.getS3().getBucketName())
             .key(fileName)
             .contentType(file.getContentType())
             .acl("public-read")
@@ -44,6 +44,6 @@ public class S3StorageService {
 
         s3Client.putObject(putObjectRequest, software.amazon.awssdk.core.sync.RequestBody.fromBytes(file.getBytes()));
 
-        return s3Url + fileName;
+        return s3Config.getS3().getUrl() + fileName;
     }
 }
