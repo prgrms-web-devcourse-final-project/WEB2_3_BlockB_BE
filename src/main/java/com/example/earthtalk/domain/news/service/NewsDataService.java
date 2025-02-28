@@ -1,12 +1,13 @@
 package com.example.earthtalk.domain.news.service;
 
-import com.example.earthtalk.domain.news.dto.response.NewsDetailReponse;
+import com.example.earthtalk.domain.news.dto.response.NewsDetailResponse;
 import com.example.earthtalk.domain.news.dto.response.NewsListResponse;
 import com.example.earthtalk.domain.news.entity.Bookmark;
 import com.example.earthtalk.domain.news.entity.Like;
 import com.example.earthtalk.domain.news.entity.News;
 import com.example.earthtalk.domain.news.entity.QLike;
 import com.example.earthtalk.domain.news.entity.QNews;
+import com.example.earthtalk.domain.news.entity.SortType;
 import com.example.earthtalk.domain.news.repository.BookmarkRepository;
 import com.example.earthtalk.domain.news.repository.LikeRepository;
 import com.example.earthtalk.domain.news.repository.NewsFilterRepository;
@@ -38,7 +39,8 @@ public class NewsDataService {
 
     private static final int PAGE_SIZE = 12;
 
-    public Slice<NewsListResponse> getNewsByFilter(String continent, String query, String sort,
+    public Slice<NewsListResponse> getNewsByFilter(ContinentType continent, String query,
+        SortType sort,
         Long newsId) {
         QNews news = QNews.news;
         QLike like = QLike.like;
@@ -46,9 +48,9 @@ public class NewsDataService {
         BooleanBuilder whereBuilder = new BooleanBuilder();
         BooleanBuilder havingBuilder = new BooleanBuilder();
 
-        if (continent != null && !continent.isEmpty()) {
+        if (continent != null) {
             try {
-                whereBuilder.and(news.continent.eq(ContinentType.valueOf(continent)));
+                whereBuilder.and(news.continent.eq(continent));
             } catch (Exception e) {
                 throw new NotFoundException(ErrorCode.CONTINENT_NOT_FOUND);
             }
@@ -60,7 +62,7 @@ public class NewsDataService {
 
         OrderSpecifier<?> orderSpecifier = news.deliveryTime.desc();
 
-        if (sort == null || sort.equals("latest")) {
+        if (sort == null || sort.equals(SortType.LATEST)) {
             LocalDateTime deliveryTimeOfLastNews = newsRepository.getNewsDeliveryTime(newsId);
             orderSpecifier = news.deliveryTime.desc();
             if (newsId != null) {
@@ -69,7 +71,7 @@ public class NewsDataService {
                         .and(news.id.lt(newsId))); // 작성시간 같을경우 아이디로 비교
             }
 
-        } else if (sort.equals("popular")) {
+        } else if (sort.equals(SortType.POPULAR)) {
             Long likesOfLastNews = newsRepository.countNewsLike(newsId);
             orderSpecifier = like.count().desc();
             if (newsId != null) {
@@ -92,7 +94,7 @@ public class NewsDataService {
         return new SliceImpl<>(newsList, PageRequest.of(0, PAGE_SIZE), hasNextPage);
     }
 
-    public NewsDetailReponse getNewsDetail(Long newsId, Long userId) {
+    public NewsDetailResponse getNewsDetail(Long newsId, Long userId) {
         News news = newsRepository.findById(newsId)
             .orElseThrow(() -> new NotFoundException(ErrorCode.NEWS_NOT_FOUND));
         Long like = newsRepository.countNewsLike(newsId);
@@ -103,7 +105,7 @@ public class NewsDataService {
             liked = newsFilterRepository.isLiked(userId, newsId);
             marked = newsFilterRepository.isMarked(userId, newsId);
         }
-        return new NewsDetailReponse(like, mark, news.getLink(), marked, liked);
+        return new NewsDetailResponse(like, mark, news.getLink(), liked, marked);
     }
 
     public List<NewsListResponse> getNewsRanking() {
@@ -120,8 +122,13 @@ public class NewsDataService {
         likeRepository.save(like);
     }
 
-    public void removeLike(Long userId, Long newsId) {
-        likeRepository.deleteByUserIdAndNewsId(userId, newsId);
+    public void removeLike(Long newsId, Long userId) {
+        if (likeRepository.existsByUserIdAndNewsId(userId, newsId)) {
+            likeRepository.deleteByNewsIdAndUserId(newsId, userId);
+
+        } else {
+            throw new NotFoundException(ErrorCode.LIKE_NOT_FOUND);
+        }
     }
 
     public void addBookmark(Long newsId, Long userId) {
@@ -134,8 +141,13 @@ public class NewsDataService {
         bookmarkRepository.save(mark);
     }
 
-    public void removeBookmark(Long userId, Long newsId) {
-        bookmarkRepository.deleteByUserIdAndNewsId(userId, newsId);
+    public void removeBookmark(Long newsId, Long userId) {
+        if (bookmarkRepository.existsByUserIdAndNewsId(userId, newsId)) {
+            bookmarkRepository.deleteByNewsIdAndUserId(newsId, userId);
+
+        } else {
+            throw new NotFoundException(ErrorCode.BOOKMARK_NOT_FOUND);
+        }
     }
 
 }
