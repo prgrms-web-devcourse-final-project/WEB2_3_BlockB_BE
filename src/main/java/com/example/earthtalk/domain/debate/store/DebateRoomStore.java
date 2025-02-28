@@ -1,10 +1,15 @@
 package com.example.earthtalk.domain.debate.store;
 
+import java.time.ZoneOffset;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Component;
 
 import com.example.earthtalk.domain.debate.entity.Debate;
@@ -24,17 +29,25 @@ import lombok.RequiredArgsConstructor;
 public class DebateRoomStore {
 
 	private static final String KEY = "debateRoomStore";
+	private static final String KEY_ZSET = "debateRoomStoreZSet";
 
 	private final RedisTemplate<String, Object> redisTemplate;
 	private HashOperations<String, String, Debate> hashOps;
+	private ZSetOperations<String, Object> zSetOps;
 
 	@PostConstruct
 	public void init() {
 		hashOps = redisTemplate.opsForHash();
+		zSetOps = redisTemplate.opsForZSet();
 	}
 
 	public void put(Debate debate) {
-		hashOps.put(KEY, debate.getUuid().toString(), debate);
+		String debateKey = debate.getUuid().toString();
+		hashOps.put(KEY, debateKey, debate);
+
+		double score = debate.getCreatedAt().toEpochSecond(ZoneOffset.UTC);
+
+		zSetOps.add(KEY_ZSET, debateKey, score);
 	}
 
 	/**
@@ -44,7 +57,7 @@ public class DebateRoomStore {
 	 * @return 해당 roomId에 해당하는 {@link Debate} 객체, 존재하지 않으면 null
 	 */
 	public Debate get(String roomId) {
-		return hashOps.get(KEY, String.valueOf(roomId));
+		return hashOps.get(KEY, roomId);
 	}
 
 	/**
@@ -53,9 +66,24 @@ public class DebateRoomStore {
 	 * @param roomId 채팅방의 고유 식별자
 	 */
 	public void remove(String roomId) {
-		hashOps.delete(KEY, String.valueOf(roomId));
+		hashOps.delete(KEY, roomId);
+		zSetOps.remove(KEY_ZSET, roomId);
 	}
 
+	public List<Debate> getAllSortedByCreatedAt()
+	{
+		Set<Object> debateKeys = zSetOps.range(KEY_ZSET, 0, -1);
+		List<Debate> debates = new ArrayList<>();
+		if (debateKeys != null) {
+			for (Object debateKey : debateKeys) {
+				Debate debate = hashOps.get(KEY, debateKey.toString());
+				if (debate != null) {
+					debates.add(debate);
+				}
+			}
+		}
+		return debates;
+	}
 	/**
 	 * 현재 캐시에 저장된 모든 채팅방 정보를 반환합니다.
 	 *

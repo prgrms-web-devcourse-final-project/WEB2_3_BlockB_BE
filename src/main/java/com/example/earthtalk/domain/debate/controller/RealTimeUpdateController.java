@@ -24,9 +24,12 @@ public class RealTimeUpdateController {
 	public RoomStatusUpdate sendRoomStatusUpdate() {
 		return RoomStatusUpdate.builder()
 			.roomCount(debateRoomStore.getAll().size())
+			.roomSortedByCreatedAt(debateRoomStore.getAllSortedByCreatedAt())
+			.roomSortedByUserCount(debateUserStore.getDebatedSortedByScoreDesc())
 			.proUserCounts(debateUserStore.getProUserCounts())
 			.conUserCounts(debateUserStore.getConUserCounts())
-			.observerUserCounts(observerRoomStore.getObserverCounts())
+			.observerCurrent(observerRoomStore.getAllDebateObserverResponsesSortedByCurrentDesc())
+			.observerMax(observerRoomStore.getAllDebateObserverResponsesSortedByMaxDesc())
 			.build();
 	}
 }

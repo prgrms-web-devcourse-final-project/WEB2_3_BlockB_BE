@@ -118,4 +118,8 @@ public class Debate extends BaseTimeEntity {
         this.disagreeNumber = disagree;
         this.neutralNumber = neutral;
     }
+
+    public void updateRoomType(RoomType roomType) {
+        this.status = roomType;
+    }
 }

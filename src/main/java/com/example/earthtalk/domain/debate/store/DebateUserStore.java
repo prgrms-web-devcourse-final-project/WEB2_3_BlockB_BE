@@ -1,7 +1,9 @@
 package com.example.earthtalk.domain.debate.store;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.HashMap;
 import java.util.Map;
@@ -10,6 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
+import com.example.earthtalk.domain.debate.entity.Debate;
 import com.example.earthtalk.global.exception.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
@@ -27,8 +30,10 @@ public class DebateUserStore {
 
 	private static final String PRO_KEY_PREFIX = "debate:pro:";
 	private static final String CON_KEY_PREFIX = "debate:con:";
+	private static final String SCORE_ZSET_KEY = "debate:score:";
 
 	private final StringRedisTemplate redisTemplate;
+	private final DebateRoomStore debateRoomStore;
 
 	/**
 	 * 주어진 채팅방 ID에 대한 찬성 사용자 집합을 반환합니다.
@@ -45,6 +50,7 @@ public class DebateUserStore {
 	public void addProUser(String roomId, String userId) {
 		validateRoomIdAndUserId(roomId, userId);
 		redisTemplate.opsForSet().add(PRO_KEY_PREFIX + roomId, userId);
+		updateDebateScore(roomId);
 	}
 
 
@@ -63,6 +69,7 @@ public class DebateUserStore {
 	public void addConUser(String roomId, String userId) {
 		validateRoomIdAndUserId(roomId, userId);
 		redisTemplate.opsForSet().add(CON_KEY_PREFIX + roomId, userId);
+		updateDebateScore(roomId);
 	}
 
 
@@ -73,6 +80,7 @@ public class DebateUserStore {
 	 */
 	public void removeProUsers(String roomId) {
 		redisTemplate.delete(PRO_KEY_PREFIX + roomId);
+		updateDebateScore(roomId);
 	}
 
 	/**
@@ -82,6 +90,7 @@ public class DebateUserStore {
 	 */
 	public void removeConUsers(String roomId) {
 		redisTemplate.delete(CON_KEY_PREFIX + roomId);
+		updateDebateScore(roomId);
 	}
 
 	/**
@@ -130,4 +139,26 @@ public class DebateUserStore {
 		}
 	}
 
+	public void updateDebateScore(String roomId) {
+		Long proCount = redisTemplate.opsForSet().size(PRO_KEY_PREFIX + roomId);
+		Long conCount = redisTemplate.opsForSet().size(CON_KEY_PREFIX + roomId);
+		int pro = proCount != null ? proCount.intValue() : 0;
+		int con = conCount != null ? conCount.intValue() : 0;
+		double score = pro + con ;
+		redisTemplate.opsForZSet().add(SCORE_ZSET_KEY, roomId, score);
+	}
+
+	public List<Debate> getDebatedSortedByScoreDesc() {
+		Set<String> debateIds = redisTemplate.opsForZSet().reverseRange(SCORE_ZSET_KEY, 0 , -1);
+		List<Debate> debates =new ArrayList<>();
+		if (debateIds != null) {
+			for (String debateId : debateIds) {
+				Debate debate = debateRoomStore.get(debateId);
+				if (debate != null) {
+					debates.add(debate);
+				}
+			}
+		}
+		return debates;
+	}
 }

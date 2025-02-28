@@ -16,8 +16,10 @@ import com.example.earthtalk.domain.debate.dto.DebateMessage;
 import com.example.earthtalk.domain.debate.dto.ObserverMessage;
 import com.example.earthtalk.domain.debate.dto.SessionInfo;
 import com.example.earthtalk.domain.debate.entity.Debate;
+import com.example.earthtalk.domain.debate.repository.DebateRepository;
 import com.example.earthtalk.domain.debate.service.DebateChatManagementService;
 import com.example.earthtalk.domain.debate.service.DebateRoomService;
+import com.example.earthtalk.domain.debate.service.DebateService;
 import com.example.earthtalk.domain.debate.service.DebateUserService;
 import com.example.earthtalk.domain.debate.service.ObserverChatManagementService;
 import com.example.earthtalk.domain.debate.service.ObserverUserService;
@@ -49,6 +51,8 @@ public class WebSocketEventListener {
 
 	private final DebateMessageStore debateMessageStore;
 	private final ObserverMessageStore observerMessageStore;
+	private final DebateRepository debateRepository;
+	private final DebateService debateService;
 
 	/**
 	 * WebSocket 연결 이벤트를 처리하여 세션 정보를 저장하고, 해당 채팅방에 사용자를 추가합니다.
@@ -129,6 +133,7 @@ public class WebSocketEventListener {
 						try {
 							debateChatManagementService.saveChatHistory(debateRoomId, debateMessages);
 							observerChatManagementService.saveChatHistory(debateRoomId, observerMessages);
+							debateRoomService.updateStatus(debateRoomId);
 						} catch(Exception e) {
 							throw new SaveFailedException(ErrorCode.SAVE_FAILED);
 						}

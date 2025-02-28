@@ -13,6 +13,7 @@ import com.example.earthtalk.domain.debate.dto.VoteRequest;
 import com.example.earthtalk.domain.debate.entity.Debate;
 import com.example.earthtalk.domain.debate.entity.DebateParticipants;
 import com.example.earthtalk.domain.debate.entity.FlagType;
+import com.example.earthtalk.domain.debate.entity.RoomType;
 import com.example.earthtalk.domain.debate.repository.DebateRepository;
 import com.example.earthtalk.domain.debate.store.DebateRoomStore;
 import com.example.earthtalk.domain.news.entity.News;
@@ -121,5 +122,11 @@ public class DebateRoomService {
 
 		debate.updateVoteCounts(request.getAgreeNumber(), request.getDisagreeNumber(), request.getNeutralNumber());
 		debateRepository.save(debate);
+	}
+
+	public void updateStatus(String roomId) {
+		Debate debate = debateRepository.findByUuid(UUID.fromString(roomId))
+				.orElseThrow(() -> new IllegalArgumentException(ErrorCode.DEBATEROOM_NOT_FOUND.getMessage()));
+		debate.updateRoomType(RoomType.CLOSED);
 	}
 }
