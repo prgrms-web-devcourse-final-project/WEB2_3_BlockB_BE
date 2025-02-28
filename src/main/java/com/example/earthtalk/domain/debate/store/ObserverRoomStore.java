@@ -1,16 +1,20 @@
 package com.example.earthtalk.domain.debate.store;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Component;
 
 import com.example.earthtalk.domain.debate.dto.DebateMetaDataResponse;
 import com.example.earthtalk.domain.debate.entity.Debate;
+import com.example.earthtalk.domain.debate.repository.DebateRepository;
 import com.example.earthtalk.global.exception.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
@@ -28,9 +32,6 @@ public class ObserverRoomStore {
 	private static final String OBSERVER_MAX_ZSET_KEY = "debate:observers:score:max";
 
 	private final StringRedisTemplate redisTemplate;
-
-	private final DebateRoomStore debateRoomStore;
-	private final DebateUserStore debateUserStore;
 
 	public void addUser(String roomId, String userName) {
 		validateRoomIdAndUserId(roomId, userName);
@@ -104,39 +105,16 @@ public class ObserverRoomStore {
 		}
 	}
 
-	public List<DebateMetaDataResponse> getAllDebateObserverResponsesSortedByCurrentDesc() {
-		Set<String> roomIds = redisTemplate.opsForZSet()
-			.reverseRange(OBSERVER_CURRENT_ZSET_KEY, 0, -1);
-		return buildDebateObserverResponseList(roomIds);
+	public List<String> getSortedRoomIdsByCurrentViewer() {
+		ZSetOperations<String, String> zSetOps = redisTemplate.opsForZSet();
+		Set<String> sortedRoomIds = zSetOps.reverseRange(OBSERVER_CURRENT_ZSET_KEY, 0, -1);
+		return (sortedRoomIds != null) ? new ArrayList<>(sortedRoomIds) : Collections.emptyList();
 	}
 
-	public List<DebateMetaDataResponse> getAllDebateObserverResponsesSortedByMaxDesc() {
-		Set<String> roomIds = redisTemplate.opsForZSet()
-			.reverseRange(OBSERVER_MAX_ZSET_KEY, 0, -1);
-		return buildDebateObserverResponseList(roomIds);
+	public List<String> getSortedRoomIdsByMaxViewer() {
+		ZSetOperations<String, String> zSetOps = redisTemplate.opsForZSet();
+		Set<String> sortedRoomIds = zSetOps.reverseRange(OBSERVER_MAX_ZSET_KEY, 0, -1);
+		return (sortedRoomIds != null) ? new ArrayList<>(sortedRoomIds) : Collections.emptyList();
 	}
 
-	private List<DebateMetaDataResponse> buildDebateObserverResponseList(Set<String> roomIds) {
-		List<DebateMetaDataResponse> responseList = new ArrayList<>();
-		if (roomIds != null) {
-			for (String roomId : roomIds) {
-				Debate debate = debateRoomStore.get(roomId);
-				if (debate != null) {
-					Long currentCount = getObserverCount(roomId);
-					Long maxCount = getMaxObserverCount(roomId);
-					Set<String> proUsers = debateUserStore.getProUsers(roomId);
-					Set<String> conUsers = debateUserStore.getConUsers(roomId);
-					DebateMetaDataResponse response = DebateMetaDataResponse.builder()
-						.debate(debate)
-						.proUsers(proUsers)
-						.conUsers(conUsers)
-						.currentCount(currentCount)
-						.maxCount(maxCount)
-						.build();
-					responseList.add(response);
-				}
-			}
-		}
-		return responseList;
-	}
 }

@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Component;
 
 import com.example.earthtalk.domain.debate.dto.DebateMetaDataResponse;
@@ -32,8 +33,6 @@ public class DebateUserStore {
 	private static final String SCORE_ZSET_KEY = "debate:score:";
 
 	private final StringRedisTemplate redisTemplate;
-	private final DebateRoomStore debateRoomStore;
-	private final ObserverRoomStore observerRoomStore;
 
 	/**
 	 * 주어진 채팅방 ID에 대한 찬성 사용자 집합을 반환합니다.
@@ -148,25 +147,23 @@ public class DebateUserStore {
 		redisTemplate.opsForZSet().add(SCORE_ZSET_KEY, roomId, score);
 	}
 
-	public List<DebateMetaDataResponse> getDebatedSortedByScoreDesc() {
-		Set<String> debateIds = redisTemplate.opsForZSet().reverseRange(SCORE_ZSET_KEY, 0 , -1);
-		List<DebateMetaDataResponse> responses =new ArrayList<>();
-		if (debateIds != null) {
-			for (String debateId : debateIds) {
-				Debate debate = debateRoomStore.get(debateId);
-				if (debate != null) {
-					Set<String> proUsers = getProUsers(debateId);
-					Set<String> conUsers = getConUsers(debateId);
-					responses.add(DebateMetaDataResponse.builder()
-							.debate(debate)
-							.currentCount(observerRoomStore.getObserverCount(debateId))
-							.maxCount(observerRoomStore.getMaxObserverCount(debateId))
-							.proUsers(proUsers)
-							.conUsers(conUsers)
-							.build());
-				}
-			}
+	public Set<String> fetchProUsers(String roomId) {
+		Set<String> members = redisTemplate.opsForSet().members(PRO_KEY_PREFIX + roomId);
+		return (members != null) ? members : Collections.emptySet();
+	}
+
+	public Set<String> fetchConUsers(String roomId) {
+		Set<String> members = redisTemplate.opsForSet().members(CON_KEY_PREFIX + roomId);
+		return (members != null) ? members : Collections.emptySet();
+	}
+
+	public List<String> getSortedRoomIdsByScoreDesc() {
+		ZSetOperations<String, String> zSetOps = redisTemplate.opsForZSet();
+		Set<String> sortedKeys = zSetOps.reverseRange(SCORE_ZSET_KEY, 0, -1);
+		List<String> roomKeys = new ArrayList<>();
+		if (sortedKeys != null) {
+			roomKeys.addAll(sortedKeys);
 		}
-		return responses;
+		return roomKeys;
 	}
 }

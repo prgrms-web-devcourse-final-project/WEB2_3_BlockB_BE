@@ -5,9 +5,7 @@ import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Controller;
 
 import com.example.earthtalk.domain.debate.dto.RoomStatusUpdate;
-import com.example.earthtalk.domain.debate.store.DebateRoomStore;
-import com.example.earthtalk.domain.debate.store.DebateUserStore;
-import com.example.earthtalk.domain.debate.store.ObserverRoomStore;
+import com.example.earthtalk.domain.debate.service.DebateMetaDataService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -15,19 +13,17 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class RealTimeUpdateController {
 
-	private final DebateRoomStore debateRoomStore;
-	private final DebateUserStore debateUserStore;
-	private final ObserverRoomStore observerRoomStore;
+	private final DebateMetaDataService debateMetaDataService;
 
 	@MessageMapping("/updateStatus")
 	@SendTo("/topic/roomStatus")
 	public RoomStatusUpdate sendRoomStatusUpdate() {
 		return RoomStatusUpdate.builder()
-			.roomCount(debateRoomStore.getAll().size())
-			.roomSortedByCreatedAt(debateRoomStore.getAllSortedByCreatedAt())
-			.roomSortedByUserCount(debateUserStore.getDebatedSortedByScoreDesc())
-			.observerCurrent(observerRoomStore.getAllDebateObserverResponsesSortedByCurrentDesc())
-			.observerMax(observerRoomStore.getAllDebateObserverResponsesSortedByMaxDesc())
+			.roomCount(debateMetaDataService.getSortByCurrentCount().size())
+			.roomSortedByCreatedAt(debateMetaDataService.getSortByTime())
+			.roomSortedByUserCount(debateMetaDataService.getSortByDebaterScore())
+			.observerCurrent(debateMetaDataService.getSortByCurrentCount())
+			.observerMax(debateMetaDataService.getSortByMaxCount())
 			.build();
 	}
 }
