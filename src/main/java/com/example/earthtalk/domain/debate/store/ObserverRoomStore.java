@@ -9,9 +9,8 @@ import java.util.Set;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
-import com.example.earthtalk.domain.debate.dto.DebateObserverResponse;
+import com.example.earthtalk.domain.debate.dto.DebateMetaDataResponse;
 import com.example.earthtalk.domain.debate.entity.Debate;
-import com.example.earthtalk.domain.debate.repository.DebateRepository;
 import com.example.earthtalk.global.exception.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
@@ -31,6 +30,7 @@ public class ObserverRoomStore {
 	private final StringRedisTemplate redisTemplate;
 
 	private final DebateRoomStore debateRoomStore;
+	private final DebateUserStore debateUserStore;
 
 	public void addUser(String roomId, String userName) {
 		validateRoomIdAndUserId(roomId, userName);
@@ -63,15 +63,15 @@ public class ObserverRoomStore {
 		updateObserverScore(roomId);
 	}
 
-	public int getObserverCount(String roomId) {
+	public Long getObserverCount(String roomId) {
 		String key = OBSERVER_KEY_PREFIX + roomId;
 		Long size = redisTemplate.opsForSet().size(key);
-		return (size != null) ? size.intValue() : 0;
+		return (size != null) ? size : 0L;
 	}
 
-	public int getMaxObserverCount(String roomId) {
+	public Long getMaxObserverCount(String roomId) {
 		Object value = redisTemplate.opsForHash().get(MAX_OBSERVER_KEY, roomId);
-		return (value != null) ? Integer.parseInt(value.toString()) : 0;
+		return (value != null) ? Long.parseLong(value.toString()) : 0L;
 	}
 
 	public Map<String, Integer> getObserverCounts() {
@@ -88,9 +88,9 @@ public class ObserverRoomStore {
 	}
 
 	private void updateObserverScore(String roomId) {
-		int currentCount = getObserverCount(roomId);
+		Long currentCount = getObserverCount(roomId);
 		redisTemplate.opsForZSet().add(OBSERVER_CURRENT_ZSET_KEY, roomId, currentCount);
-		int maxCount = getMaxObserverCount(roomId);
+		Long maxCount = getMaxObserverCount(roomId);
 		redisTemplate.opsForZSet().add(OBSERVER_MAX_ZSET_KEY, roomId, maxCount);
 	}
 
@@ -104,30 +104,34 @@ public class ObserverRoomStore {
 		}
 	}
 
-	public List<DebateObserverResponse> getAllDebateObserverResponsesSortedByCurrentDesc() {
+	public List<DebateMetaDataResponse> getAllDebateObserverResponsesSortedByCurrentDesc() {
 		Set<String> roomIds = redisTemplate.opsForZSet()
 			.reverseRange(OBSERVER_CURRENT_ZSET_KEY, 0, -1);
 		return buildDebateObserverResponseList(roomIds);
 	}
 
-	public List<DebateObserverResponse> getAllDebateObserverResponsesSortedByMaxDesc() {
+	public List<DebateMetaDataResponse> getAllDebateObserverResponsesSortedByMaxDesc() {
 		Set<String> roomIds = redisTemplate.opsForZSet()
 			.reverseRange(OBSERVER_MAX_ZSET_KEY, 0, -1);
 		return buildDebateObserverResponseList(roomIds);
 	}
 
-	private List<DebateObserverResponse> buildDebateObserverResponseList(Set<String> roomIds) {
-		List<DebateObserverResponse> responseList = new ArrayList<>();
+	private List<DebateMetaDataResponse> buildDebateObserverResponseList(Set<String> roomIds) {
+		List<DebateMetaDataResponse> responseList = new ArrayList<>();
 		if (roomIds != null) {
 			for (String roomId : roomIds) {
 				Debate debate = debateRoomStore.get(roomId);
 				if (debate != null) {
-					int currentCount = getObserverCount(roomId);
-					int maxCount = getMaxObserverCount(roomId);
-					DebateObserverResponse response = DebateObserverResponse.builder()
+					Long currentCount = getObserverCount(roomId);
+					Long maxCount = getMaxObserverCount(roomId);
+					Set<String> proUsers = debateUserStore.getProUsers(roomId);
+					Set<String> conUsers = debateUserStore.getConUsers(roomId);
+					DebateMetaDataResponse response = DebateMetaDataResponse.builder()
 						.debate(debate)
-						.currentCount((long) currentCount)
-						.maxCount((long) maxCount)
+						.proUsers(proUsers)
+						.conUsers(conUsers)
+						.currentCount(currentCount)
+						.maxCount(maxCount)
 						.build();
 					responseList.add(response);
 				}

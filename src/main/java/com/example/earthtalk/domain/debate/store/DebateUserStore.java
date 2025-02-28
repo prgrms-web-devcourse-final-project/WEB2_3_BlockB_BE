@@ -2,16 +2,15 @@ package com.example.earthtalk.domain.debate.store;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
+import com.example.earthtalk.domain.debate.dto.DebateMetaDataResponse;
 import com.example.earthtalk.domain.debate.entity.Debate;
 import com.example.earthtalk.global.exception.ErrorCode;
 
@@ -34,6 +33,7 @@ public class DebateUserStore {
 
 	private final StringRedisTemplate redisTemplate;
 	private final DebateRoomStore debateRoomStore;
+	private final ObserverRoomStore observerRoomStore;
 
 	/**
 	 * 주어진 채팅방 ID에 대한 찬성 사용자 집합을 반환합니다.
@@ -148,17 +148,25 @@ public class DebateUserStore {
 		redisTemplate.opsForZSet().add(SCORE_ZSET_KEY, roomId, score);
 	}
 
-	public List<Debate> getDebatedSortedByScoreDesc() {
+	public List<DebateMetaDataResponse> getDebatedSortedByScoreDesc() {
 		Set<String> debateIds = redisTemplate.opsForZSet().reverseRange(SCORE_ZSET_KEY, 0 , -1);
-		List<Debate> debates =new ArrayList<>();
+		List<DebateMetaDataResponse> responses =new ArrayList<>();
 		if (debateIds != null) {
 			for (String debateId : debateIds) {
 				Debate debate = debateRoomStore.get(debateId);
 				if (debate != null) {
-					debates.add(debate);
+					Set<String> proUsers = getProUsers(debateId);
+					Set<String> conUsers = getConUsers(debateId);
+					responses.add(DebateMetaDataResponse.builder()
+							.debate(debate)
+							.currentCount(observerRoomStore.getObserverCount(debateId))
+							.maxCount(observerRoomStore.getMaxObserverCount(debateId))
+							.proUsers(proUsers)
+							.conUsers(conUsers)
+							.build());
 				}
 			}
 		}
-		return debates;
+		return responses;
 	}
 }

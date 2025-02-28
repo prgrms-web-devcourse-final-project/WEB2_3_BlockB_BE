@@ -26,8 +26,6 @@ public class RealTimeUpdateController {
 			.roomCount(debateRoomStore.getAll().size())
 			.roomSortedByCreatedAt(debateRoomStore.getAllSortedByCreatedAt())
 			.roomSortedByUserCount(debateUserStore.getDebatedSortedByScoreDesc())
-			.proUserCounts(debateUserStore.getProUserCounts())
-			.conUserCounts(debateUserStore.getConUserCounts())
 			.observerCurrent(observerRoomStore.getAllDebateObserverResponsesSortedByCurrentDesc())
 			.observerMax(observerRoomStore.getAllDebateObserverResponsesSortedByMaxDesc())
 			.build();

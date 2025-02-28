@@ -57,12 +57,6 @@ public class ObserverUserService {
 		}
 	}
 
-	public int getCurrentObserverCount(String roomId) {
-		return observerRoomStore.getObserverCount(roomId);
-	}
 
-	public int getMaxObserverCount(String roomId) {
-		return observerRoomStore.getMaxObserverCount(roomId);
-	}
 
 }

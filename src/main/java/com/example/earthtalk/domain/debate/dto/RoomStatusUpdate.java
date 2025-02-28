@@ -6,22 +6,16 @@ import lombok.Getter;
 import java.util.List;
 import java.util.Map;
 
-import com.example.earthtalk.domain.debate.entity.Debate;
-
 @Getter
 @Builder
 public class RoomStatusUpdate {
 	private final int roomCount;
 
-	private final List<Debate> roomSortedByCreatedAt;
+	private final List<DebateMetaDataResponse> roomSortedByCreatedAt;
 
-	private final List<Debate> roomSortedByUserCount;
+	private final List<DebateMetaDataResponse> roomSortedByUserCount;
 
-	private final Map<String, Integer> proUserCounts;
+	private final List<DebateMetaDataResponse> observerCurrent;
 
-	private final Map<String, Integer> conUserCounts;
-
-	private final List<DebateObserverResponse> observerCurrent;
-
-	private final List<DebateObserverResponse> observerMax;
+	private final List<DebateMetaDataResponse> observerMax;
 }
