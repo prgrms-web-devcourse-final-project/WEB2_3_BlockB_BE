@@ -1,7 +1,6 @@
 package com.example.earthtalk.domain.user.service;
 
 import com.example.earthtalk.config.S3Config;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
