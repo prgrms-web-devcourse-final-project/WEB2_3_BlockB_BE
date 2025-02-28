@@ -64,10 +64,7 @@ public class NotificationService {
         if(isNotificationNotAllowed(request.userId())) {
             redisTemplate.opsForValue().set(redisKey, "true");
         }
-
-        if(!fcmTokenService.isAlreadyStored(request.userId(), request.token())) {
-            fcmTokenService.saveFcmToken(request.userId(), request.token());
-        }
+        fcmTokenService.saveFcmToken(request.userId(), request.token());
     }
 
     /*
