@@ -101,7 +101,8 @@ public class User extends BaseTimeEntity {
             return;
         }
 
-        if (resultType == ResultType.SUSPENSION) {
+        if (resultType == ResultType.SUSPENSION ||
+                (resultType == ResultType.WARNING && this.accountStatusType == AccountStatusType.WARNING)) {
             this.accountStatusType = AccountStatusType.SUSPENDED;
             return;
         }
