@@ -20,6 +20,9 @@ public class FcmTokenService {
     // 토큰값을 저장하는 메서드
     public void saveFcmToken(Long userId, String token) {
         String redisKey = FCM_TOKEN_PREFIX + userId;
+
+        // 기존 토큰을 삭제 후 다시 토큰을 저장 - 토큰 유효기간 관리
+        redisTemplate.opsForSet().remove(redisKey, token);
         redisTemplate.opsForSet().add(redisKey, token);
     }
 
@@ -27,13 +30,6 @@ public class FcmTokenService {
     public Set<String> getFcmTokens(Long userId) {
         String redisKey = FCM_TOKEN_PREFIX + userId;
         return redisTemplate.opsForSet().members(redisKey);
-    }
-
-    // 토큰이 이미 저장되어잇는지 확인하는 메서드
-    public boolean isAlreadyStored(Long userId, String token) {
-        String redisKey = FCM_TOKEN_PREFIX + userId;
-        Boolean result = redisTemplate.opsForSet().isMember(redisKey, token);
-        return result != null && result;
     }
 
     // redis 에 저장된 토큰값을 삭제하는 명령어 - 로그아웃과 웹 닫기등에서 사용
