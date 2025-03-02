@@ -10,6 +10,7 @@ import com.example.earthtalk.domain.user.dto.response.UserFolloweesResponse;
 import com.example.earthtalk.domain.user.dto.response.UserFollowersResponse;
 import com.example.earthtalk.domain.user.dto.response.UserLikesResponse;
 import com.example.earthtalk.domain.user.entity.User;
+import com.example.earthtalk.domain.user.service.S3StorageService;
 import com.example.earthtalk.domain.user.service.UserService;
 import com.example.earthtalk.domain.user.dto.response.UserInfoResponse;
 import com.example.earthtalk.global.response.ApiResponse;
@@ -18,6 +19,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import java.io.IOException;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +33,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 @SecurityRequirement(name = "JWT")
 @RestController
@@ -41,6 +44,7 @@ public class UserController {
 
     private final UserService userService;
     private final NewsDataService newsDataService;
+    private final S3StorageService s3StorageService;
 
     @Operation(summary = "사용자 정보 조회 API", description = "사용자 정보를 조회합니다.")
     @ApiResponses(value = {
@@ -210,16 +214,19 @@ public class UserController {
     @Operation(summary = "사용자 정보 수정", description = "사용자 프로필을 업데이트합니다.")
     @ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "성공")})
-    @PutMapping("/mypage/{userId}")
+    @PutMapping(value = "/mypage/{userId}", consumes = "multipart/form-data")
     public ResponseEntity<ApiResponse<Object>> updateUserInfos(
         @RequestParam(required = false) String nickname,
         @RequestParam(required = false) String introduction,
-        @RequestParam(required = false) String profileUrl,
-        @PathVariable("userId") Long userId) {
+        @RequestParam(value = "file", required = false) MultipartFile file,
+        @PathVariable("userId") Long userId) throws IOException {
 
-        userService.updateUsers(nickname, introduction, profileUrl, userId);
+        String imageUrl = (file != null) ? s3StorageService.uploadImage(file) : null;
+
+        userService.updateUsers(nickname, introduction, imageUrl, userId);
         return ResponseEntity.ok(ApiResponse.createSuccessWithNoData());
     }
+
 
     /**
      * 사용자 인증 테스트 API
