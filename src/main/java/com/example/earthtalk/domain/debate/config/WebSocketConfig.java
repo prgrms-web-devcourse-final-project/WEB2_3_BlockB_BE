@@ -1,12 +1,17 @@
 package com.example.earthtalk.domain.debate.config;
 
 import org.springframework.context.annotation.Configuration;
+import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
 import com.example.earthtalk.domain.debate.component.RoomIdInterceptor;
+import com.example.earthtalk.domain.debate.component.WebSocketAuthChannelInterceptor;
+import com.example.earthtalk.global.security.util.JwtTokenProvider;
+
+import lombok.RequiredArgsConstructor;
 
 /**
  * WebSocket 및 STOMP 메시지 브로커를 설정하는 클래스.
@@ -22,8 +27,10 @@ import com.example.earthtalk.domain.debate.component.RoomIdInterceptor;
  */
 @Configuration
 @EnableWebSocketMessageBroker
+@RequiredArgsConstructor
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
+	private final JwtTokenProvider jwtTokenProvider;
 	/**
 	 * 메시지 브로커를 설정하여 WebSocket 메시지를 효율적으로 관리하도록 구성한다.
 	 *
@@ -63,5 +70,10 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 		registry.addEndpoint("/room-list")
 			.setAllowedOrigins("*")
 			.withSockJS();
+	}
+
+	@Override
+	public void configureClientInboundChannel(ChannelRegistration registration) {
+		registration.interceptors(new WebSocketAuthChannelInterceptor(jwtTokenProvider));
 	}
 }
