@@ -6,26 +6,23 @@ import com.example.earthtalk.global.exception.NotFoundException;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
+import java.io.InputStream;
 import com.google.firebase.messaging.FirebaseMessaging;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import javax.annotation.PostConstruct;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import org.springframework.core.io.ClassPathResource;
 
 @Configuration
 public class FirebaseConfig {
 
-    @Value("${firebase.dir}")
-    private String firebaseDirectory;
-
     @PostConstruct
     public void init() {
         try {
-            FileInputStream serviceAccount = new FileInputStream(firebaseDirectory);
+            InputStream serviceAccount = new ClassPathResource("firebase.json").getInputStream();
 
             FirebaseOptions options = FirebaseOptions.builder()
                     .setCredentials(GoogleCredentials.fromStream(serviceAccount))

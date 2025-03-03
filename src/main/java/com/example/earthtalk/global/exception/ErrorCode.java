@@ -49,6 +49,9 @@ public enum ErrorCode { // 예외 발생시, body에 실어 날려줄 상태, co
     DUPLICATE_NICKNAME(400, -6002, "이미 사용 중인 닉네임입니다."),
     EXIST_USER(400, -6003, "이미 회원가입이 완료된 사용자입니다."),
     OAUTH_LOGIN_FALIED(401, -6004, "소셜로그인에 실패하였습니다."),
+    INVALID_OAUTH_TOKEN(400, -6005, "OAuth 인가 코드가 올바르지 않습니다."),
+    NOTFOUND_OAUTH_TOKEN(404, -6006, "인가 코드가 비어있습니다."),
+    OAUTH_SERVER_ERROR(400, -6006, "Resource 서버 통신 에러입니다."),
 
     //-7000: NEWS
     NEWS_NOT_FOUND(404, -7001, "뉴스를 찾을 수 없습니다."),
