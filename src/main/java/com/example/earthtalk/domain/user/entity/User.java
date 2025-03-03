@@ -1,5 +1,7 @@
 package com.example.earthtalk.domain.user.entity;
 
+import com.example.earthtalk.domain.report.entity.Report;
+import com.example.earthtalk.domain.report.entity.ResultType;
 import com.example.earthtalk.global.baseTime.BaseTimeEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -53,12 +55,14 @@ public class User extends BaseTimeEntity {
 
     private String socialId; // 소셜로그인 식별값
 
-    private String FCMToken; // 알림을 위한 FCM 토큰
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private AccountStatusType accountStatusType;
 
     @Builder
     public User(String email, String nickname, String introduction, String profileUrl,
         Long winNumber, Long drawNumber, Long defeatNumber, Role role, SocialType socialType,
-        String socialId, String FCMToken) {
+        String socialId) {
         this.email = email;
         this.nickname = nickname;
         this.introduction = introduction;
@@ -69,7 +73,6 @@ public class User extends BaseTimeEntity {
         this.role = role;
         this.socialType = socialType;
         this.socialId = socialId;
-        this.FCMToken = FCMToken;
     }
 
     public void updateNickname(String newNickname) {
@@ -90,5 +93,24 @@ public class User extends BaseTimeEntity {
 
     public void incrementDefeatNumber() {
         this.defeatNumber++;
+    }
+
+    public void reportUser(ResultType resultType) {
+        if (resultType == ResultType.BAN) {
+            this.accountStatusType = AccountStatusType.BANNED;
+            return;
+        }
+
+        if (resultType == ResultType.SUSPENSION ||
+                (resultType == ResultType.WARNING && this.accountStatusType == AccountStatusType.WARNING)) {
+            this.accountStatusType = AccountStatusType.SUSPENDED;
+            return;
+        }
+
+        this.accountStatusType = AccountStatusType.WARNING;
+    }
+
+    public void restoreUser() {
+        this.accountStatusType = AccountStatusType.ACTIVE;
     }
 }

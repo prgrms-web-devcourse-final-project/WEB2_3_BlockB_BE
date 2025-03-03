@@ -65,6 +65,9 @@ dependencies {
     // notifications - firebase
     implementation 'com.google.firebase:firebase-admin:9.4.3'
 
+    // redis
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis:3.4.3'
+
     // imageUrl storage - AWS SDK
     implementation 'software.amazon.awssdk:s3:2.17.68'
 }
