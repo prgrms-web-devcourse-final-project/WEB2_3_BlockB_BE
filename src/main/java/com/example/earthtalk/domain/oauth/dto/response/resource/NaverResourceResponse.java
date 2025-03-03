@@ -1,4 +1,4 @@
-package com.example.earthtalk.domain.oauth.dto.response;
+package com.example.earthtalk.domain.oauth.dto.response.resource;
 
 import com.example.earthtalk.global.exception.ErrorCode;
 import com.example.earthtalk.global.exception.OAuth2AuthenticationException;
