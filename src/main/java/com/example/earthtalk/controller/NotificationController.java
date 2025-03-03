@@ -1,8 +1,10 @@
 package com.example.earthtalk.controller;
 
+import com.example.earthtalk.domain.notification.dto.request.RemoveTokenRequest;
 import com.example.earthtalk.domain.notification.dto.request.SaveTokenRequest;
 import com.example.earthtalk.domain.notification.dto.request.SendNotificationRequest;
 import com.example.earthtalk.domain.notification.dto.response.NotificationListResponse;
+import com.example.earthtalk.domain.notification.service.FcmTokenService;
 import com.example.earthtalk.domain.notification.service.NotificationService;
 import com.example.earthtalk.global.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -18,6 +20,7 @@ import java.util.List;
 public class NotificationController {
 
     private final NotificationService notificationService;
+    private final FcmTokenService fcmTokenService;
 
     // 접속중인 사용자의 알림을 조회하기 위한 API.
     @Operation(summary = "알림 조회 API 입니다.", description = "userId 의 값을 받아 해당하는 알림들을 조회합니다.")
@@ -32,6 +35,13 @@ public class NotificationController {
     @PostMapping("/saveToken")
     public ResponseEntity<ApiResponse<Void>> saveToken(@RequestBody SaveTokenRequest request) {
         notificationService.saveToken(request);
+        return ResponseEntity.ok(ApiResponse.createSuccess(null));
+    }
+
+    @Operation(summary = "FCM 토큰 삭제 API 입니다.", description = "웹을 닫을 때 사용 - 토큰 값과 userId 값을 통해 해당하는 디바이스에 대한 토큰 값을 삭제합니다.")
+    @DeleteMapping("/removeToken")
+    public ResponseEntity<ApiResponse<Void>> removeToken(@RequestBody RemoveTokenRequest request) {
+        fcmTokenService.removeFcmToken(request.userId(), request.token());
         return ResponseEntity.ok(ApiResponse.createSuccess(null));
     }
 

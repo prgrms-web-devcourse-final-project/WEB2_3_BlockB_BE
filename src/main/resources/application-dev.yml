@@ -67,6 +67,12 @@ spring:
       host: 127.0.0.1
       port: 6379
 
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+
+
 logging:
   level:
     org.mariadb.jdbc: info
