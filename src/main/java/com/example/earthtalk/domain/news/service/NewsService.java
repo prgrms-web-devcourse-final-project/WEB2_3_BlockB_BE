@@ -15,9 +15,11 @@ import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoField;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.By;
+import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -49,8 +51,12 @@ public class NewsService {
             // 대륙별로 크롤링하기
             for (ContinentType continentType : ContinentType.values()) {
                 if (newsSite.getContinentUrl().get(continentType) != null) {
-                    List<News> newsResults = crawlNews(newsSite, continentType);
-                    newsList.addAll(newsResults);
+                    try {
+                        List<News> newsResults = crawlNews(newsSite, continentType);
+                        newsList.addAll(newsResults);
+                    }catch (Exception e) {
+                        log.error("{}의 {} 지역 크롤링에 실패했습니다.",newsSite.getName(), continentType.getValue());
+                    }
                 }
             }
         }
@@ -59,7 +65,7 @@ public class NewsService {
         log.info("기사 업데이트를 완료했습니다. 업데이트된 기사 총 갯수 : {}", newsList.size());
     }
 
-    private List<News> crawlNews(@NotNull NewsSite newsSite, ContinentType continentType) {
+    public List<News> crawlNews(@NotNull NewsSite newsSite, ContinentType continentType) {
         WebDriverManager.chromedriver().setup();
 
         // 브라우저 옵션 설정
@@ -82,21 +88,24 @@ public class NewsService {
             int currentPage = 1;
             int cnt = 0;
             boolean stopFlag = false;
+            int errorCount = 0;
             while (!stopFlag) {
                 String pageUrl = baseUrl + "?" + newsSite.getPageParam() + "=" + currentPage;
-                log.info("현재 크롤링 중인 페이지 : " + pageUrl);
+                log.info("현재 크롤링 중인 페이지 : {}", pageUrl);
                 driver.get(pageUrl);
                 Thread.sleep(500);
                 // 뉴스 목록 가져오기 (XPath 기반)
                 List<WebElement> articles = driver.findElements(
                     By.xpath(newsSite.getArticleXpath()));
-                log.info("현재 페이지의 기사 갯수 : " + articles.size());
+
                 if (articles.isEmpty()) {
-                    log.error("웹 페이지를 탐색할 수 없습니다.");
-                    break;
+                    log.error("웹 페이지에서 기사를 찾을 수 없습니다.");
+                    errorCount+=10;
+                    continue;
                 }
-                int errorCount = 0;
-                if (errorCount > 25) break;
+
+                if (errorCount > 50) throw new NoSuchElementException();
+                log.info("현재 페이지의 기사 갯수 : {}", articles.size());
                 // 기사 정보 출력
                 for (WebElement article : articles) {
                     try {
@@ -167,7 +176,7 @@ public class NewsService {
 
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new NoSuchElementException();
         } finally {
             // 브라우저 종료
             driver.quit();
