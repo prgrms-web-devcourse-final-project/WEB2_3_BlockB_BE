@@ -1,11 +1,15 @@
 package com.example.earthtalk.domain.debate.service;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.stereotype.Service;
 
 import com.example.earthtalk.domain.debate.dto.CreateDebateRoomRequest;
@@ -16,6 +20,7 @@ import com.example.earthtalk.domain.debate.entity.FlagType;
 import com.example.earthtalk.domain.debate.entity.RoomType;
 import com.example.earthtalk.domain.debate.repository.DebateRepository;
 import com.example.earthtalk.domain.debate.store.DebateRoomStore;
+import com.example.earthtalk.domain.news.entity.MemberNumberType;
 import com.example.earthtalk.domain.news.entity.News;
 import com.example.earthtalk.domain.news.repository.NewsRepository;
 import com.example.earthtalk.domain.user.entity.User;
@@ -31,6 +36,7 @@ import com.example.earthtalk.global.exception.ErrorCode;
  * </p>
  */
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class DebateRoomService {
 
@@ -68,6 +74,21 @@ public class DebateRoomService {
 				.build();
 			debateRoomStore.put(debate);
 		} catch (Exception e) {
+			log.error("토론방 생성 중 오류 발생: {}", e.getMessage(), e);
+
+			// 원본 예외의 상세 정보 추출
+			StringWriter sw = new StringWriter();
+			PrintWriter pw = new PrintWriter(sw);
+			e.printStackTrace(pw);
+			String fullStackTrace = sw.toString();
+
+			// 추가적인 디버깅 정보 로깅
+			log.error("전체 스택 트레이스: {}", fullStackTrace);
+
+			// 요청 파라미터 로깅 (민감한 정보 주의)
+			log.error("요청 파라미터: {}", request.toString());
+
+			// 원본 예외를 그대로 다시 던짐
 			throw new IllegalArgumentException(ErrorCode.INTERNAL_SERVER_ERROR.getMessage());
 		}
 		return roomId;
