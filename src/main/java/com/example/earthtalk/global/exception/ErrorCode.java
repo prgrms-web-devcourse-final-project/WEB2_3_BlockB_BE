@@ -54,8 +54,8 @@ public enum ErrorCode { // 예외 발생시, body에 실어 날려줄 상태, co
     //-7000: NEWS
     NEWS_NOT_FOUND(404, -7001, "뉴스를 찾을 수 없습니다."),
     CONTINENT_NOT_FOUND(404, -7002, "존재하지 않는 대륙 코드입니다."),
-    ALREADY_LIKED(409, -7003, "이미 좋아요를 누른 기사입니다."),
-    ALREADY_BOOKMARKED(409, -7004, "이미 북마크한 기사입니다."),
+    ALREADY_LIKED(400, -7003, "이미 좋아요를 누른 기사입니다."),
+    ALREADY_BOOKMARKED(400, -7004, "이미 북마크한 기사입니다."),
     LIKE_NOT_FOUND(404, -7005, "좋아요 내역을 찾을 수 없습니다."),
     BOOKMARK_NOT_FOUND(404, -7006, "북마크 내역을 찾을 수 없습니다."),
 

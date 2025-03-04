@@ -15,7 +15,9 @@ import com.example.earthtalk.domain.news.repository.NewsRepository;
 import com.example.earthtalk.domain.user.entity.User;
 import com.example.earthtalk.domain.user.repository.UserRepository;
 import com.example.earthtalk.global.constant.ContinentType;
+import com.example.earthtalk.global.exception.BadRequestException;
 import com.example.earthtalk.global.exception.ErrorCode;
+import com.example.earthtalk.global.exception.IllegalArgumentException;
 import com.example.earthtalk.global.exception.NotFoundException;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.OrderSpecifier;
@@ -105,7 +107,8 @@ public class NewsDataService {
             liked = newsFilterRepository.isLiked(userId, newsId);
             marked = newsFilterRepository.isMarked(userId, newsId);
         }
-        return new NewsDetailResponse(like, mark, news.getLink(), liked, marked);
+        return new NewsDetailResponse(like, mark, news.getTitle(), news.getLink(),
+            news.getContinent(), liked, marked);
     }
 
     public List<NewsListResponse> getNewsRanking() {
@@ -117,7 +120,9 @@ public class NewsDataService {
             .orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
         News news = newsRepository.findById(newsId)
             .orElseThrow(() -> new NotFoundException(ErrorCode.NEWS_NOT_FOUND));
-
+        if (likeRepository.existsByUserIdAndNewsId(userId, newsId)) {
+            throw new BadRequestException(ErrorCode.ALREADY_LIKED);
+        }
         Like like = Like.builder().news(news).user(user).build();
         likeRepository.save(like);
     }
@@ -138,6 +143,9 @@ public class NewsDataService {
             .orElseThrow(() -> new NotFoundException(ErrorCode.NEWS_NOT_FOUND));
 
         Bookmark mark = Bookmark.builder().news(news).user(user).build();
+        if (bookmarkRepository.existsByUserIdAndNewsId(userId, newsId)) {
+            throw new BadRequestException(ErrorCode.ALREADY_BOOKMARKED);
+        }
         bookmarkRepository.save(mark);
     }
 
