@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import com.example.earthtalk.domain.debate.dto.CreateDebateRoomRequest;
+import com.example.earthtalk.domain.debate.dto.DebateRoomRedisDto;
 import com.example.earthtalk.domain.debate.dto.VoteRequest;
 import com.example.earthtalk.domain.debate.entity.Debate;
 import com.example.earthtalk.domain.debate.entity.DebateParticipants;
@@ -59,7 +60,9 @@ public class DebateRoomService {
 		String roomId = UUID.randomUUID().toString();
 		Long newsId = Long.valueOf(request.getNewsId().toString());
 		try {
-			News news = newsRepository.findById(newsId).orElse(null);
+			News news = newsRepository.findById(newsId).orElseThrow(() ->
+				new IllegalArgumentException("News not found with id: " + newsId));
+
 			Debate debate = Debate.builder()
 				.uuid(UUID.fromString(roomId))
 				.news(news)
@@ -71,8 +74,15 @@ public class DebateRoomService {
 				.speakCount(request.getSpeakCount())
 				.resultEnabled(request.isResultEnabled())
 				.time(request.getTime())
+				.status(RoomType.DEBATE) // 기본 상태 설정
+				.agreeNumber(0L) // 초기 찬성 수
+				.disagreeNumber(0L) // 초기 반대 수
+				.neutralNumber(0L) // 초기 중립 수
 				.build();
+
 			debateRoomStore.put(debate);
+
+
 		} catch (Exception e) {
 			log.error("토론방 생성 중 오류 발생: {}", e.getMessage(), e);
 
