@@ -33,7 +33,7 @@ public class NotificationService {
     private final NotificationRepository notificationRepository;
     private final ReportRepository reportRepository;
     private final DebateRepository debateRepository;
-    private RedisTemplate<String, String> redisTemplate;
+    private final RedisTemplate<String, Object> redisTemplate;
 
     private static final String NOTIFICATION_AGREE_PREFIX = "notification_allowed:";
     private static final String FOLLOW_MESSAGE = "%s님이 당신을 팔로우했습니다.";
@@ -86,7 +86,7 @@ public class NotificationService {
             return;
         }
 
-        Set<String> fcmTokens = fcmTokenService.getFcmTokens(request.userId());
+        Set<Object> fcmTokens = fcmTokenService.getFcmTokens(request.userId());
         if (fcmTokens == null || fcmTokens.isEmpty()) {
             return;
         }
@@ -114,8 +114,11 @@ public class NotificationService {
     private boolean isNotificationNotAllowed(Long userId) {
         userRepository.findById(userId).orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
         String redisKey = NOTIFICATION_AGREE_PREFIX + userId;
-        String allowedStatus = redisTemplate.opsForValue().get(redisKey);
-        return allowedStatus == null || !allowedStatus.equals("true");
+        String allowedStatus = (String) redisTemplate.opsForValue().get(redisKey);
+        if (allowedStatus == null) {
+            return true;
+        }
+        return !allowedStatus.equals("true");
     }
 
     // notiType 에 따라 content 를 가져오는 메서드.
