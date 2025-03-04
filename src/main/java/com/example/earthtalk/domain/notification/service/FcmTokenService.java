@@ -14,8 +14,8 @@ import java.util.Set;
 public class FcmTokenService {
 
     private static final String FCM_TOKEN_PREFIX = "fcm_tokens:";
-    private RedisTemplate<String, String> redisTemplate;
-    private UserRepository userRepository;
+    private final RedisTemplate<String, Object> redisTemplate;
+    private final UserRepository userRepository;
 
     // 토큰값을 저장하는 메서드
     public void saveFcmToken(Long userId, String token) {
@@ -27,7 +27,7 @@ public class FcmTokenService {
     }
 
     // 저장된 토큰값을 조회하는 메서드
-    public Set<String> getFcmTokens(Long userId) {
+    public Set<Object> getFcmTokens(Long userId) {
         String redisKey = FCM_TOKEN_PREFIX + userId;
         return redisTemplate.opsForSet().members(redisKey);
     }

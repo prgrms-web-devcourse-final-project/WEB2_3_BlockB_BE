@@ -2,6 +2,7 @@ package com.example.earthtalk.domain.report.dto.request;
 
 import com.example.earthtalk.domain.report.entity.Report;
 import com.example.earthtalk.domain.report.entity.ReportType;
+import com.example.earthtalk.domain.report.entity.ResultType;
 import com.example.earthtalk.domain.report.entity.TargetType;
 import com.example.earthtalk.domain.user.entity.User;
 
@@ -22,6 +23,7 @@ public record InsertReportRequest(
                 .targetRoomId(targetRoomId)
                 .content(content)
                 .reportType(reportType)
+                .resultType(ResultType.UNKNOWN)
                 .build();
     }
 }

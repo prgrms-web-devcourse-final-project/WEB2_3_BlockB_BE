@@ -20,7 +20,7 @@ public class FirebaseService {
     private final FirebaseMessaging firebaseMessaging;
 
     // 푸시 알림 전송 메서드
-    public void pushNotification(Set<String> tokens, String content) {
+    public void pushNotification(Set<Object> tokens, String content) {
         try {
 
             // 유효성 검사
@@ -38,10 +38,10 @@ public class FirebaseService {
                     .setBody(content)
                     .build();
 
-            for (String token : tokens) {
+            for (Object token : tokens) {
                 // notification 객체와 token 값을 이용하여 message 생성
                 Message message = Message.builder()
-                        .setToken(token)
+                        .setToken((String) token)
                         .setNotification(notification)
                         .build();
 
