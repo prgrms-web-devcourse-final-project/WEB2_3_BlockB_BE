@@ -53,8 +53,8 @@ public class RedisConfig {
 		String redisAddress = String.format(REDIS_ADDRESS, redisHost, redisPort);
 		Config config = new Config();
 		config.useSingleServer()
-			.setAddress(redisAddress);
-			// .setPassword(redisPassword);
+			.setAddress(redisAddress)
+			.setPassword(redisPassword);
 		return Redisson.create(config);
 	}
 
