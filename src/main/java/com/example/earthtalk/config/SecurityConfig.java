@@ -1,8 +1,5 @@
 package com.example.earthtalk.config;
 
-import com.example.earthtalk.domain.oauth.handler.OAuth2LoginFailureHandler;
-import com.example.earthtalk.domain.oauth.handler.OAuth2LoginSuccessHandler;
-import com.example.earthtalk.domain.oauth.service.CustomOAuth2UserService;
 import com.example.earthtalk.global.security.handler.JwtAccessDeniedHandler;
 import com.example.earthtalk.global.security.handler.JwtAuthenticationEntryPoint;
 import com.example.earthtalk.global.security.handler.JwtAuthenticationFilter;
@@ -38,9 +35,6 @@ public class SecurityConfig {
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
-    private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
-    private final OAuth2LoginFailureHandler oAuth2LoginFailureHandler;
-    private final CustomOAuth2UserService customOAuth2UserService;
 
     private static final String[] FRONT_URL = {
         "/earth_talk/**"
@@ -52,7 +46,7 @@ public class SecurityConfig {
         "/api/auth/reissue",
         "/login/**",
         "/oauth2/**",
-        "/api/oauth2/**"
+        "/api/oauth2/**",
     };
 
     @Bean
@@ -70,13 +64,6 @@ public class SecurityConfig {
             .sessionManagement((sessionManagement) ->
                 sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
-            //== 소셜 로그인 설정 ==///
-            .oauth2Login((login) -> login
-                .successHandler(oAuth2LoginSuccessHandler)
-                .failureHandler(oAuth2LoginFailureHandler)
-                .authorizationEndpoint((auth) -> auth.baseUri("/oauth2/authorization"))
-                .userInfoEndpoint((service) -> service.userService(customOAuth2UserService)
-            ))
             .addFilterBefore(jwtAuthenticationFilter,
                 UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(new JwtFilterExceptionHandler(new ObjectMapper()), JwtAuthenticationFilter.class)
@@ -119,6 +106,5 @@ public class SecurityConfig {
     public static PasswordEncoder passwordEncoder() {
         return PasswordEncoderFactories.createDelegatingPasswordEncoder();
     }
-
 }
 

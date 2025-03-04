@@ -1,4 +1,4 @@
-package com.example.earthtalk.global.security.dto;
+package com.example.earthtalk.domain.oauth.dto.response;
 
 public record TokenResponse() {
 
@@ -12,13 +12,15 @@ public record TokenResponse() {
     }
 
     public record GetOauth(
+        Long userId,
         String accessToken,
         String refreshToken,
         String nickname,
-        String imgUrl
+        String imgUrl,
+        String role
     ) {
-        public static GetOauth from(final String accessToken, final String refreshToken, final String nickname, final String imgUrl) {
-            return new GetOauth(accessToken, refreshToken, nickname, imgUrl);
+        public static GetOauth from(final Long userId, final String accessToken, final String refreshToken, final String nickname, final String imgUrl, final String role) {
+            return new GetOauth(userId, accessToken, refreshToken, nickname, imgUrl, role);
         }
     }
 }

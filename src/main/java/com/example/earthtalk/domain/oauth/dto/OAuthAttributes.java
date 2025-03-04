@@ -1,9 +1,9 @@
 package com.example.earthtalk.domain.oauth.dto;
 
-import com.example.earthtalk.domain.oauth.dto.response.GoogleResourceResponse;
-import com.example.earthtalk.domain.oauth.dto.response.KakaoResourceResponse;
-import com.example.earthtalk.domain.oauth.dto.response.NaverResourceResponse;
-import com.example.earthtalk.domain.oauth.dto.response.OAuth2UserResponse;
+import com.example.earthtalk.domain.oauth.dto.response.resource.GoogleResourceResponse;
+import com.example.earthtalk.domain.oauth.dto.response.resource.KakaoResourceResponse;
+import com.example.earthtalk.domain.oauth.dto.response.resource.NaverResourceResponse;
+import com.example.earthtalk.domain.oauth.dto.response.resource.OAuth2UserResponse;
 import com.example.earthtalk.domain.user.entity.Role;
 import com.example.earthtalk.domain.user.entity.SocialType;
 import com.example.earthtalk.domain.user.entity.User;

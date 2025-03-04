@@ -46,10 +46,10 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ApiResponse<Object>> handleIllegalArgumentException(
         IllegalArgumentException e) {
-        log.error("[IllegalArgumentException] message: {}", e.getMessage());
+        log.error("[IllegalArgumentException] message: {}", e.getErrorCode().getMessage());
         ErrorCode errorCode = ErrorCode.BAD_REQUEST;
         return ResponseEntity.status(errorCode.getStatus())
-            .body(ApiResponse.createErrorWithMsg(e.getMessage()));
+            .body(ApiResponse.createErrorWithMsg(e.getErrorCode().getMessage()));
     }
 
     // JwtCustomException

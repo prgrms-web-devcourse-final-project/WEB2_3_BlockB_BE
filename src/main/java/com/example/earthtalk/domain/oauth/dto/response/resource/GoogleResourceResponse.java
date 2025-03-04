@@ -1,4 +1,4 @@
-package com.example.earthtalk.domain.oauth.dto.response;
+package com.example.earthtalk.domain.oauth.dto.response.resource;
 
 import java.util.Map;
 

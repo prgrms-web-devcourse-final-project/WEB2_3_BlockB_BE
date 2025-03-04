@@ -8,7 +8,7 @@ import static com.example.earthtalk.global.exception.ErrorCode.INVALID_REFRESH_T
 import com.example.earthtalk.domain.oauth.dto.CustomOAuth2User;
 import com.example.earthtalk.domain.user.entity.Role;
 import com.example.earthtalk.global.exception.JwtCustomException;
-import com.example.earthtalk.global.security.dto.TokenResponse;
+import com.example.earthtalk.domain.oauth.dto.response.TokenResponse;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Header;

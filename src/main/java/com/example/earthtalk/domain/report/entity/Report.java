@@ -54,7 +54,7 @@ public class Report extends BaseTimeEntity {
     private ReportType reportType; // 신고 사유
 
     @ManyToOne
-    @JoinColumn(name = "assigned_user_id", nullable = false)
+    @JoinColumn(name = "assigned_user_id")
     private User assignedUser; // 신고 처리 담당자
 
     private String reportContent; // 신고 처리한 내용

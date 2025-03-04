@@ -1,10 +1,10 @@
 package com.example.earthtalk.controller;
 
 import com.example.earthtalk.domain.oauth.dto.CustomOAuth2User;
-import com.example.earthtalk.domain.oauth.service.CustomOAuth2UserService;
+import com.example.earthtalk.domain.oauth.service.OAuth2Service;
 import com.example.earthtalk.domain.user.dto.request.UserInfoRequest;
 import com.example.earthtalk.global.response.ApiResponse;
-import com.example.earthtalk.global.security.dto.TokenResponse;
+import com.example.earthtalk.domain.oauth.dto.response.TokenResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -25,7 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "🔐 Auth", description = "인증 관련 API")
 public class AuthController {
 
-    private final CustomOAuth2UserService customOAuth2UserService;
+    private final OAuth2Service oAuth2Service;
     private final String AUTHORIZATION_HEADER = "Authorization";
 
     @Operation(summary = "토큰 재발급 API", description = "Refresh 토큰을 통해 Access 토큰, Refresh 토큰 모두 재발급합니다.")
@@ -36,7 +36,7 @@ public class AuthController {
     public ResponseEntity<ApiResponse<TokenResponse.GetToken>> getReissue(
         @RequestHeader(AUTHORIZATION_HEADER) String refreshToken) {
         return ResponseEntity.status(HttpStatus.CREATED)
-            .body(ApiResponse.createSuccess(customOAuth2UserService.getReissue(refreshToken)));
+            .body(ApiResponse.createSuccess(oAuth2Service.getReissue(refreshToken)));
     }
 
     @Operation(summary = "닉네임 검증후 회원가입 API", description = "닉네임 중복확인 후 회원가입을 완료합니다.")
@@ -46,7 +46,7 @@ public class AuthController {
     @PostMapping("/complete-signup")
     public ResponseEntity<ApiResponse<Object>> oauthSignup(UserInfoRequest userInfoRequest,
         @AuthenticationPrincipal CustomOAuth2User user) {
-        customOAuth2UserService.completeSignup(userInfoRequest, user.getEmail());
+        oAuth2Service.completeSignup(userInfoRequest, user.getEmail());
         return ResponseEntity.status(HttpStatus.CREATED)
             .body(ApiResponse.createSuccessWithNoData());
     }
