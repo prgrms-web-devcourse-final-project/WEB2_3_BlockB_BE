@@ -51,10 +51,7 @@ public class ChatController {
 		SimpMessageHeaderAccessor headerAccessor
 	) {
 
-		if (message.getEvent() == null || message.getEvent().trim().isEmpty() ||
-			message.getUserName() == null || message.getUserName().trim().isEmpty() ||
-			message.getPosition() == null || message.getPosition().trim().isEmpty() ||
-			message.getMessage() == null || message.getMessage().trim().isEmpty()) {
+		if (!message.isValidMessage()) {
 			throw new IllegalArgumentException(ErrorCode.INVALID_REQUEST_BODY.getMessage());
 		}
 

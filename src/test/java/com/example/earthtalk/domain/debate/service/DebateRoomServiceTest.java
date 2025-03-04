@@ -17,8 +17,13 @@ import com.example.earthtalk.domain.news.repository.NewsRepository;
 import com.example.earthtalk.global.constant.ContinentType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.springframework.data.redis.core.RedisTemplate;
 
 public class DebateRoomServiceTest {
+
+	@Mock
+	private RedisTemplate<String, Object> redisTemplate;
 
 	private DebateRoomService debateRoomService;
 	private DebateRoomStore debateRoomStore;
@@ -29,6 +34,10 @@ public class DebateRoomServiceTest {
 	// 간단한 인메모리 구현체
 	static class InMemoryDebateRoomStore extends DebateRoomStore {
 		private final Map<String, Debate> store = new HashMap<>();
+
+		public InMemoryDebateRoomStore(RedisTemplate<String, Object> redisTemplate) {
+			super(redisTemplate);
+		}
 
 		@Override
 		public void put(Debate debate) {
@@ -48,7 +57,7 @@ public class DebateRoomServiceTest {
 
 	@BeforeEach
 	public void setup() {
-		debateRoomStore = new InMemoryDebateRoomStore();
+		debateRoomStore = new InMemoryDebateRoomStore(redisTemplate);
 		debateRoomService = new DebateRoomService(debateRoomStore, debateRepository, newsRepository, userRepository);
 	}
 

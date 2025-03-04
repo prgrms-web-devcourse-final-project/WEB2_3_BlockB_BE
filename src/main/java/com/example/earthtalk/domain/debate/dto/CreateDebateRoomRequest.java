@@ -20,7 +20,7 @@ public class CreateDebateRoomRequest {
 
 	private String title;
 
-	private News news;
+	private String newsUrl;
 
 	private String description;
 

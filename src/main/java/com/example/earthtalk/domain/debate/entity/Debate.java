@@ -58,6 +58,7 @@ public class Debate extends BaseTimeEntity {
     private String description;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private MemberNumberType member;
 
     @Enumerated(EnumType.STRING)
@@ -67,6 +68,7 @@ public class Debate extends BaseTimeEntity {
     private CategoryType category;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private TimeType time;
 
     private LocalDateTime endTime;
@@ -117,5 +119,9 @@ public class Debate extends BaseTimeEntity {
         this.agreeNumber = agree;
         this.disagreeNumber = disagree;
         this.neutralNumber = neutral;
+    }
+
+    public void updateRoomType(RoomType roomType) {
+        this.status = roomType;
     }
 }

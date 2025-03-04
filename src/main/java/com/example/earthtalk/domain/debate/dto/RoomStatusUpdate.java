@@ -3,6 +3,7 @@ package com.example.earthtalk.domain.debate.dto;
 import lombok.Builder;
 import lombok.Getter;
 
+import java.util.List;
 import java.util.Map;
 
 @Getter
@@ -10,9 +11,11 @@ import java.util.Map;
 public class RoomStatusUpdate {
 	private final int roomCount;
 
-	private final Map<String, Integer> proUserCounts;
+	private final List<DebateMetaDataResponse> roomSortedByCreatedAt;
 
-	private final Map<String, Integer> conUserCounts;
+	private final List<DebateMetaDataResponse> roomSortedByUserCount;
 
-	private final Map<String, Integer> observerUserCounts;
+	private final List<DebateMetaDataResponse> observerCurrent;
+
+	private final List<DebateMetaDataResponse> observerMax;
 }

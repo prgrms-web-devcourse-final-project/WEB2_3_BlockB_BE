@@ -41,6 +41,7 @@ public enum ErrorCode { // 예외 발생시, body에 실어 날려줄 상태, co
     TOO_MANY_PARTICIPANTS(409, -5001, "참가자가 이미 최대 인원 입니다."),
     DEBATEROOM_NOT_FOUND(404, -5002, "토론방 내역을 찾을 수 없습니다."),
     DEBATE_NO_PARTICIPANTS(400, -5003, "토론방에 인원이 없습니다."),
+    SAVE_FAILED(500, -5004, "토론방 저장에 실패했습니다."),
     CHAT_NOT_FOUND(404, -5004, "조회된 채팅이 존재하지 않습니다."),
 
     //-6000 OAUTH
