@@ -20,6 +20,11 @@ public class RedisConfig {
 	@Value("${spring.data.redis.port}")
 	private int redisPort;
 
+	@Value("${spring.data.redis.password}")
+	private String redisPassword;
+
+	private static final String REDIS_ADDRESS = "redis://%s:%d";
+
 
 	@Bean
 	public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
@@ -37,10 +42,11 @@ public class RedisConfig {
 
 	@Bean(destroyMethod = "shutdown")
 	public RedissonClient redissonClient() {
+		String redisAddress = String.format(REDIS_ADDRESS, redisHost, redisPort);
 		Config config = new Config();
 		config.useSingleServer()
-			.setAddress("redis://"+redisHost+":"+redisPort)
-			.setPassword(null);
+			.setAddress(redisAddress)
+			.setPassword(redisPassword);
 		return Redisson.create(config);
 	}
 }
