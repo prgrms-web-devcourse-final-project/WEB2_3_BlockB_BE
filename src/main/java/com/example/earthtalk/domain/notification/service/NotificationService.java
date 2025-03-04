@@ -114,11 +114,11 @@ public class NotificationService {
     private boolean isNotificationNotAllowed(Long userId) {
         userRepository.findById(userId).orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
         String redisKey = NOTIFICATION_AGREE_PREFIX + userId;
-        Object allowedStatus = redisTemplate.opsForValue().get(redisKey);
+        String allowedStatus = (String) redisTemplate.opsForValue().get(redisKey);
         if (allowedStatus == null) {
             return true;
         }
-        return !allowedStatus.toString().equals("true");
+        return !allowedStatus.equals("true");
     }
 
     // notiType 에 따라 content 를 가져오는 메서드.
