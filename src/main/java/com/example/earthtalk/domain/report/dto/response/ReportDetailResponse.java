@@ -31,7 +31,7 @@ public record ReportDetailResponse(
                 report.getTargetRoomId(),
                 report.getTargetUser().getId(),
                 report.getTargetUser().getNickname(),
-                report.getAssignedUser().getNickname(),
+                report.getAssignedUserNickname(),
                 report.getContent(),
                 report.getReportType().getValue(),
                 Report.getStringByResultType(report.getResultType()),
