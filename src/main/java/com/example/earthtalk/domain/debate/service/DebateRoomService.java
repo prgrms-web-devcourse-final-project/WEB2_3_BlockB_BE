@@ -57,9 +57,9 @@ public class DebateRoomService {
 	 */
 	public String createDebateRoom(CreateDebateRoomRequest request) {
 		String roomId = UUID.randomUUID().toString();
+		Long newsId = Long.valueOf(request.getNewsId().toString());
 		try {
-			News news = newsRepository.findById(request.getNewsId())
-				.orElseThrow(() -> new IllegalArgumentException(ErrorCode.NEWS_NOT_FOUND.getMessage()));
+			News news = newsRepository.findById(newsId).orElse(null);
 			Debate debate = Debate.builder()
 				.uuid(UUID.fromString(roomId))
 				.news(news)
