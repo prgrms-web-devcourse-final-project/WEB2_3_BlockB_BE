@@ -1,8 +1,12 @@
 package com.example.earthtalk.domain.debate.service;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
@@ -12,6 +16,8 @@ import com.example.earthtalk.domain.debate.repository.DebateRepository;
 import com.example.earthtalk.domain.debate.store.DebateRoomStore;
 import com.example.earthtalk.domain.debate.store.DebateUserStore;
 import com.example.earthtalk.domain.debate.store.ObserverRoomStore;
+import com.example.earthtalk.domain.user.entity.User;
+import com.example.earthtalk.domain.user.repository.UserRepository;
 import com.example.earthtalk.global.exception.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
@@ -24,6 +30,7 @@ public class DebateMetaDataService {
 	private final DebateUserStore debateUserStore;
 	private final ObserverRoomStore observerRoomStore;
 	private final DebateRepository debateRepository;
+	private final UserRepository userRepository;
 
 	/**
 	 * 시간 기준 내림차순 정렬된 Debate 목록에서 roomId를 추출하여 집계한 DebateMetaDataResponse 리스트 반환
@@ -72,8 +79,9 @@ public class DebateMetaDataService {
 				.orElseThrow(() -> new IllegalArgumentException(ErrorCode.DEBATEROOM_NOT_FOUND.getMessage()));
 			Long currentCount = observerRoomStore.getObserverCount(roomId);
 			Long maxCount = observerRoomStore.getMaxObserverCount(roomId);
-			var proUsers = debateUserStore.getProUsers(roomId);
-			var conUsers = debateUserStore.getConUsers(roomId);
+
+			Set<User> proUsers = fetchUsersByNames(debateUserStore.getProUsers(roomId));
+			Set<User> conUsers = fetchUsersByNames(debateUserStore.getConUsers(roomId));
 
 			DebateMetaDataResponse response = DebateMetaDataResponse.builder()
 				.debate(debate)
@@ -85,5 +93,12 @@ public class DebateMetaDataService {
 			responses.add(response);
 		}
 		return responses;
+	}
+
+	private Set<User> fetchUsersByNames(Collection<String> userNames) {
+		return userNames.stream()
+			.map(userName -> userRepository.findByNickname(userName)
+				.orElseThrow(() -> new IllegalArgumentException(ErrorCode.USER_NOT_FOUND.getMessage())))
+			.collect(Collectors.toSet());
 	}
 }
