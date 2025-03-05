@@ -16,6 +16,8 @@ import com.example.earthtalk.domain.news.entity.TimeType;
 import com.example.earthtalk.domain.news.repository.BookmarkRepository;
 import com.example.earthtalk.domain.news.repository.LikeRepository;
 import com.example.earthtalk.domain.news.repository.NewsRepository;
+import com.example.earthtalk.domain.notification.dto.request.SendNotificationRequest;
+import com.example.earthtalk.domain.notification.entity.NotificationType;
 import com.example.earthtalk.domain.notification.repository.NotificationRepository;
 import com.example.earthtalk.domain.oauth.repository.RefreshTokenRepository;
 import com.example.earthtalk.domain.report.repository.ReportRepository;
@@ -283,6 +285,16 @@ public class UserService {
             .orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
 
         Follow follow = Follow.builder().followee(followee).follower(follower).build();
+
+        // 알림 전송에 관한 내용 - 알림 기능 정상적으로 작동 확인 시 추가
+        /*
+        SendNotificationRequest sendNotificationRequest = new SendNotificationRequest(
+                followeeId,
+                NotificationType.FOLLOW,
+                followerId,
+                null
+        );
+        */
 
         followRepository.save(follow);
     }
