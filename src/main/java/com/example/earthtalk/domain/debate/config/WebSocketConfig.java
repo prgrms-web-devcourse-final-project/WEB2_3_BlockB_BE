@@ -30,22 +30,20 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
 	@Override
 	public void registerStompEndpoints(StompEndpointRegistry registry) {
+		// 순수 WebSocket 엔드포인트 (withSockJS() 없이 ws:// 프로토콜 사용)
 		registry.addEndpoint("/debate/{roomId}")
 			.setAllowedOrigins("*")
-			.addInterceptors(new RoomIdInterceptor())
-			.withSockJS();
-		log.info("Registered STOMP endpoint: /debate/{roomId} with SockJS fallback");
+			.addInterceptors(new RoomIdInterceptor());
+		log.info("Registered STOMP endpoint: /debate/{roomId}");
 
 		registry.addEndpoint("/observer/{roomId}")
 			.setAllowedOrigins("*")
-			.addInterceptors(new RoomIdInterceptor())
-			.withSockJS();
-		log.info("Registered STOMP endpoint: /observer/{roomId} with SockJS fallback");
+			.addInterceptors(new RoomIdInterceptor());
+		log.info("Registered STOMP endpoint: /observer/{roomId}");
 
 		registry.addEndpoint("/room-list")
-			.setAllowedOrigins("*")
-			.withSockJS();
-		log.info("Registered STOMP endpoint: /room-list with SockJS fallback");
+			.setAllowedOrigins("*");
+		log.info("Registered STOMP endpoint: /room-list");
 	}
 
 	@Override
