@@ -43,7 +43,7 @@ public class DebateRoomStore {
 		String debateKey = redisDto.getUuid().toString();
 		hashOps.put(KEY, debateKey, redisDto);
 
-		double score = redisDto.getCreatedAt().toEpochSecond(ZoneOffset.UTC);
+		double score = redisDto.getCachedTime().toEpochSecond(ZoneOffset.UTC);
 
 		zSetOps.add(KEY_ZSET, debateKey, score);
 	}

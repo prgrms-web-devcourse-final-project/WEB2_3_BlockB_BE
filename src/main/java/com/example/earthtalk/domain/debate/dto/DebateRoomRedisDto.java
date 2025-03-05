@@ -50,6 +50,8 @@ public class DebateRoomRedisDto implements Serializable {
 
 	private SpeakCountType speakCount;
 
+	private LocalDateTime cachedTime;
+
 	private Long agreeNumber;
 
 	private Long disagreeNumber;

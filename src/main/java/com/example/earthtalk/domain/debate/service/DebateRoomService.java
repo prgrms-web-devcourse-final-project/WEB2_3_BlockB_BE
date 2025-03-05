@@ -2,6 +2,7 @@ package com.example.earthtalk.domain.debate.service;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -58,11 +59,18 @@ public class DebateRoomService {
 	 */
 	public String createDebateRoom(CreateDebateRoomRequest request) {
 		String roomId = UUID.randomUUID().toString();
-		Long newsId = Long.valueOf(request.getNewsId().toString());
-		try {
-			News news = newsRepository.findById(newsId).orElseThrow(() ->
-				new IllegalArgumentException("News not found with id: " + newsId));
 
+		News news = null;
+		if (request.getNewsId() != null) {
+			Long newsId = Long.valueOf(request.getNewsId().toString());
+			try {
+				news = newsRepository.findById(newsId)
+					.orElse(null); // news가 없으면 null로 처리
+			} catch (Exception e) {
+				log.error("News 조회 중 오류 발생: {}", e.getMessage(), e);
+			}
+		}
+		try {
 			Debate debate = Debate.builder()
 				.uuid(UUID.fromString(roomId))
 				.news(news)
@@ -74,6 +82,7 @@ public class DebateRoomService {
 				.speakCount(request.getSpeakCount())
 				.resultEnabled(request.isResultEnabled())
 				.time(request.getTime())
+				.cachedTime(LocalDateTime.now())
 				.status(RoomType.DEBATE) // 기본 상태 설정
 				.agreeNumber(0L) // 초기 찬성 수
 				.disagreeNumber(0L) // 초기 반대 수
