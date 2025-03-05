@@ -1,6 +1,7 @@
 package com.example.earthtalk.domain.debate.component;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
@@ -35,6 +36,7 @@ import com.example.earthtalk.global.exception.SaveFailedException;
  */
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class WebSocketEventListener {
 
 	private final DebateUserService debateUserService;
@@ -61,6 +63,7 @@ public class WebSocketEventListener {
 	 */
 	@EventListener
 	public void handleWebSocketConnectListener(SessionConnectedEvent event) {
+		log.info("새로운 WebSocket 연결 수신: sessionId={}", StompHeaderAccessor.wrap(event.getMessage()).getSessionId());
 		StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
 		String destination = headerAccessor.getDestination();
 		if (destination != null && !destination.startsWith("/room-list")) {
@@ -114,6 +117,7 @@ public class WebSocketEventListener {
 	 */
 	@EventListener
 	public void handleWebSocketDisconnectListener(SessionDisconnectEvent event) {
+		log.info("WebSocket 연결 종료: sessionId={}", event.getSessionId());
 		StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
 		String sessionId = event.getSessionId();
 		String userNameAttr = (String)headerAccessor.getSessionAttributes().get("userName");
