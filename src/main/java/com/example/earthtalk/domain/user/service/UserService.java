@@ -1,10 +1,12 @@
 package com.example.earthtalk.domain.user.service;
 
+import com.example.earthtalk.domain.chat.repository.ObserverChatRepository;
 import com.example.earthtalk.domain.debate.entity.CategoryType;
 import com.example.earthtalk.domain.debate.entity.Debate;
 import com.example.earthtalk.domain.debate.entity.DebateRole;
 import com.example.earthtalk.domain.debate.entity.FlagType;
 import com.example.earthtalk.domain.debate.entity.RoomType;
+import com.example.earthtalk.domain.debate.repository.DebateParticipantsRepository;
 import com.example.earthtalk.domain.debate.repository.DebateRepository;
 import com.example.earthtalk.domain.news.entity.Bookmark;
 import com.example.earthtalk.domain.news.entity.Like;
@@ -14,6 +16,9 @@ import com.example.earthtalk.domain.news.entity.TimeType;
 import com.example.earthtalk.domain.news.repository.BookmarkRepository;
 import com.example.earthtalk.domain.news.repository.LikeRepository;
 import com.example.earthtalk.domain.news.repository.NewsRepository;
+import com.example.earthtalk.domain.notification.repository.NotificationRepository;
+import com.example.earthtalk.domain.oauth.repository.RefreshTokenRepository;
+import com.example.earthtalk.domain.report.repository.ReportRepository;
 import com.example.earthtalk.domain.user.dto.response.UserBookmarksResponse;
 import com.example.earthtalk.domain.user.dto.response.UserDebateChatsResponse;
 import com.example.earthtalk.domain.user.dto.response.UserDebateDetailsResponse;
@@ -29,8 +34,10 @@ import com.example.earthtalk.domain.user.dto.response.UserInfoResponse;
 import com.example.earthtalk.global.constant.ContinentType;
 import com.example.earthtalk.global.exception.ConflictException;
 import com.example.earthtalk.global.exception.ErrorCode;
+import com.example.earthtalk.global.exception.IllegalArgumentException;
 import com.example.earthtalk.global.exception.NotFoundException;
 import com.querydsl.core.Tuple;
+import jakarta.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -47,6 +54,11 @@ public class UserService {
     private final LikeRepository likeRepository;
     private final BookmarkRepository bookmarkRepository;
     private final FollowRepository followRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
+    private final ReportRepository reportRepository;
+    private final NotificationRepository notificationRepository;
+    private final ObserverChatRepository observerChatRepository;
+    private final DebateParticipantsRepository debateParticipantsRepository;
 
     //유저 조회
     public User getUSerInfo(Long userId) {
@@ -289,14 +301,34 @@ public class UserService {
 
     //유저 프로필 수정
     public void updateUsers(String nickname, String introduction, String profile, Long userId) {
-
+        // 닉네임 중복 확인
+        if (userRepository.existsByNickname(nickname)) {
+            throw new IllegalArgumentException(ErrorCode.DUPLICATE_NICKNAME);
+        }
         userRepository.updateUserById(nickname, introduction, profile, userId);
     }
-
-
 
     public User getUser(String email) {
         return userRepository.findByEmail(email)
             .orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
+    }
+
+    @Transactional
+    public void deleteMember(String email) {
+        //TODO: 각 도메인 의존성 분리
+        User user = userRepository.findByEmail(email)
+            .orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
+
+        refreshTokenRepository.deleteByUserEmail(email);
+        reportRepository.deleteAllByUserId(user.getId());
+        reportRepository.deleteAllByTargetUserId(user.getId());
+        reportRepository.deleteAllByAssignedUserId(user.getId());
+        followRepository.deleteAllByFollows(user.getId());
+        notificationRepository.deleteAllByUserId(user.getId());
+        likeRepository.deleteAllByUserId(user.getId());
+        bookmarkRepository.deleteAllByUserId(user.getId());
+        observerChatRepository.deleteAllByUserId(user.getId());
+        debateParticipantsRepository.deleteAllByUserId(user.getId());
+        userRepository.deleteById(user.getId());
     }
 }

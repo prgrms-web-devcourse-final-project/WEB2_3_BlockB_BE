@@ -7,6 +7,7 @@ import com.example.earthtalk.domain.notification.entity.StatusType;
 import java.time.LocalDateTime;
 
 public record NotificationListResponse(
+        Long id,
         NotificationType notificationType,
         Long typeId,
         String content,
@@ -16,6 +17,7 @@ public record NotificationListResponse(
 
     public static NotificationListResponse from(Notification notification) {
         return new NotificationListResponse(
+                notification.getId(),
                 notification.getNotificationType(),
                 notification.getNotificationTypeId(),
                 notification.getContent(),

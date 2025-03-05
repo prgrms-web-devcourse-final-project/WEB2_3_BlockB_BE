@@ -1,6 +1,5 @@
 package com.example.earthtalk.domain.user.entity;
 
-import com.example.earthtalk.domain.report.entity.Report;
 import com.example.earthtalk.domain.report.entity.ResultType;
 import com.example.earthtalk.global.baseTime.BaseTimeEntity;
 import jakarta.persistence.Column;
@@ -53,34 +52,43 @@ public class User extends BaseTimeEntity {
     @Column(nullable = false)
     private SocialType socialType;
 
+    @Column(nullable = false)
     private String socialId; // 소셜로그인 식별값
+
+    private String socialAccessToken;
+
+    private String socialRefreshToken;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private AccountStatusType accountStatusType;
 
     @Builder
-    public User(String email, String nickname, String introduction, String profileUrl,
-        Long winNumber, Long drawNumber, Long defeatNumber, Role role, SocialType socialType,
-        String socialId) {
+    public User(String email, String nickname, String profileUrl, Role role, SocialType socialType,
+        String socialId, String socialAccessToken, String socialRefreshToken) {
         this.email = email;
         this.nickname = nickname;
-        this.introduction = introduction;
         this.profileUrl = profileUrl;
-        this.winNumber = winNumber;
-        this.drawNumber = drawNumber;
-        this.defeatNumber = defeatNumber;
         this.role = role;
         this.socialType = socialType;
         this.socialId = socialId;
-    }
-
-    public void updateNickname(String newNickname) {
-        this.nickname = newNickname;
+        this.socialAccessToken = socialAccessToken;
+        this.socialRefreshToken = socialRefreshToken;
+        this.accountStatusType = AccountStatusType.ACTIVE;
     }
 
     public void updateRole(Role newRole) {
         this.role = newRole;
+    }
+
+    public void updateSignupInfo(String nickname, String introduction) {
+        this.nickname = nickname;
+        this.introduction = introduction;
+    }
+
+    public void updateTokens(String socialAccessToken, String socialRefreshToken) {
+        this.socialAccessToken = socialAccessToken;
+        this.socialRefreshToken = socialRefreshToken;
     }
 
     public void incrementWinNumber() {

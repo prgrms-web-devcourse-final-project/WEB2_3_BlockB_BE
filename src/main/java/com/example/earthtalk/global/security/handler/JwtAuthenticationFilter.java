@@ -38,7 +38,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             "/login/**",
             "/oauth2/**",
             "/api/oauth2/**",
-            "/earth_talk/**"
+            "/earth_talk/**",
+            "/api/debates/**",
+            "/api/chat/**",
+            "/room-list/**", "/debate/**", "/observer/**",
+            "/topic/**",
+            "/app/**"
         };
 
         AntPathMatcher pathMatcher = new AntPathMatcher();
