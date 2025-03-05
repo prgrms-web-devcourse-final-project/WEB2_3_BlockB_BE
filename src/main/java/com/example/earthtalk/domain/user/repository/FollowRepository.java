@@ -13,4 +13,8 @@ public interface FollowRepository extends JpaRepository<Follow, Long> {
     @Transactional
     @Query("DELETE FROM follows f WHERE f.followee.id = :followeeId AND f.follower.id = :followerId")
     void deleteByFollows(@Param("followeeId") long followeeId, @Param("followerId") long followerId);
+
+    @Modifying
+    @Query("DELETE FROM follows f WHERE f.followee.id = :userId OR f.follower.id = :userId")
+    void deleteAllByFollows(@Param("userId") long userId);
 }

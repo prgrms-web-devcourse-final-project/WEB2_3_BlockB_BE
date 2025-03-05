@@ -11,4 +11,6 @@ public interface DebateParticipantsRepository extends JpaRepository<DebatePartic
 	Optional<DebateParticipants> findByUser_Nickname(String username);
 	Optional<DebateParticipants> findByDebate_UuidAndUser_Nickname(UUID debateUuid, String username);
 	Optional<DebateParticipants> findByDebate_Uuid(UUID debateUuid);
+
+    void deleteAllByUserId(Long id);
 }
