@@ -12,4 +12,6 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
 
     @Query("SELECT n FROM notifications n WHERE n.user = :user ORDER BY n.id DESC LIMIT 10")
     List<Notification> getNotifications(@Param("user") User user);
+
+    void deleteAllByUserId(Long id);
 }

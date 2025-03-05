@@ -21,4 +21,10 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
                                     @Param("reportType") ReportType reportType,
                                     @Param("resultType")ResultType resultType,
                                     Pageable pageable);
+
+    void deleteAllByAssignedUserId(Long id);
+
+    void deleteAllByUserId(Long id);
+
+    void deleteAllByTargetUserId(Long id);
 }

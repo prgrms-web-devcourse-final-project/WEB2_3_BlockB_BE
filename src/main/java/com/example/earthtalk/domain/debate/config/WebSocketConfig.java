@@ -31,19 +31,19 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 	@Override
 	public void registerStompEndpoints(StompEndpointRegistry registry) {
 		registry.addEndpoint("/debate/{roomId}")
-			.setAllowedOrigins("*")
+			.setAllowedOrigins("http://localhost:5173")
 			.addInterceptors(new RoomIdInterceptor())
 			.withSockJS();
 		log.info("Registered STOMP endpoint: /debate/{roomId} with SockJS fallback");
 
 		registry.addEndpoint("/observer/{roomId}")
-			.setAllowedOrigins("*")
+			.setAllowedOrigins("http://localhost:5173")
 			.addInterceptors(new RoomIdInterceptor())
 			.withSockJS();
 		log.info("Registered STOMP endpoint: /observer/{roomId} with SockJS fallback");
 
 		registry.addEndpoint("/room-list")
-			.setAllowedOrigins("*")
+			.setAllowedOrigins("http://localhost:5173")
 			.withSockJS();
 		log.info("Registered STOMP endpoint: /room-list with SockJS fallback");
 	}

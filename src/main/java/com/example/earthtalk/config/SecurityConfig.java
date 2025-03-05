@@ -47,6 +47,11 @@ public class SecurityConfig {
         "/login/**",
         "/oauth2/**",
         "/api/oauth2/**",
+        "/api/debates/**",
+        "/api/chat/**",
+        "/room-list/**", "/debate/**", "/observer/**",
+        "/topic/**",
+        "/app/**"
     };
 
     @Bean
