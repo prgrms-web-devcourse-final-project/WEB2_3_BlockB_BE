@@ -32,6 +32,9 @@ public class FcmTokenService {
     public boolean checkFcmToken(Long userId, String token) {
         String redisKey = FCM_TOKEN_PREFIX + userId;
         Boolean result = null;
+        if (token == null) {
+            return false;
+        }
         try {
             result = redisTemplate.opsForSet().isMember(redisKey, token);
         } catch (Exception e) {
