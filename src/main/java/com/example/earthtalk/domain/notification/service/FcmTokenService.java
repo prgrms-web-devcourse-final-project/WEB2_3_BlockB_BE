@@ -4,11 +4,13 @@ import com.example.earthtalk.domain.user.repository.UserRepository;
 import com.example.earthtalk.global.exception.ErrorCode;
 import com.example.earthtalk.global.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.Set;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class FcmTokenService {
@@ -24,6 +26,20 @@ public class FcmTokenService {
         // 기존 토큰을 삭제 후 다시 토큰을 저장 - 토큰 유효기간 관리
         redisTemplate.opsForSet().remove(redisKey, token);
         redisTemplate.opsForSet().add(redisKey, token);
+    }
+
+    public boolean checkFcmToken(Long userId, String token) {
+        String redisKey = FCM_TOKEN_PREFIX + userId;
+        Boolean result = null;
+        try {
+            result = redisTemplate.opsForSet().isMember(redisKey, token);
+        } catch (Exception e) {
+            log.error("Redis error : {}", e.getMessage());
+        }
+        if (result == null) {
+            return false;
+        }
+        return result;
     }
 
     // 저장된 토큰값을 조회하는 메서드

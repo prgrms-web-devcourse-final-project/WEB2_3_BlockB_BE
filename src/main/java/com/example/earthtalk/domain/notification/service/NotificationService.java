@@ -1,6 +1,7 @@
 package com.example.earthtalk.domain.notification.service;
 
 import com.example.earthtalk.domain.debate.repository.DebateRepository;
+import com.example.earthtalk.domain.notification.dto.request.CheckTokenRequest;
 import com.example.earthtalk.domain.notification.dto.request.SaveNotificationRequest;
 import com.example.earthtalk.domain.notification.dto.request.SaveTokenRequest;
 import com.example.earthtalk.domain.notification.dto.request.SendNotificationRequest;
@@ -53,6 +54,14 @@ public class NotificationService {
         return responses;
     }
 
+    public boolean checkToken(CheckTokenRequest request) {
+        userRepository.findById(request.userId()).orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
+        if(request.token() == null) {
+            return false;
+        }
+        return fcmTokenService.checkFcmToken(request.userId(), request.token());
+    }
+
     // FE 에서 받은 토큰을 fcmToken 값을 redis 에 저장하는 메서드
     public void saveToken(SaveTokenRequest request) {
         if(request == null || request.token() == null) {
@@ -101,6 +110,11 @@ public class NotificationService {
     public void readNotification(Long notificationId) {
         Notification notification = notificationRepository.findById(notificationId).orElseThrow(() -> new NotFoundException(ErrorCode.NOTIFICATION_NOT_FOUND));
         notification.read();
+    }
+
+    public void removeNotification(Long notificationId) {
+        notificationRepository.findById(notificationId).orElseThrow(() -> new NotFoundException(ErrorCode.NOTIFICATION_NOT_FOUND));
+        notificationRepository.deleteById(notificationId);
     }
 
     // 알림 허용에 대해 거부하는 메서드 - 마이페이지에서 알림 거부할 때 사용.

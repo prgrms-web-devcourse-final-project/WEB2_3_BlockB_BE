@@ -19,7 +19,7 @@ public record ReportListResponse(
         return new ReportListResponse(report.getId(),
                 report.getUser().getNickname(),
                 report.getTargetUser().getNickname(),
-                report.getAssignedUser().getNickname(),
+                report.getAssignedUserNickname(),
                 report.getReportType().getValue(),
                 Report.getStringByResultType(report.getResultType()),
                 ReportListResponse.getStatus(report.getResultType()),
