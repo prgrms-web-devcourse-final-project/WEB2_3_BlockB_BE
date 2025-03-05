@@ -1,6 +1,9 @@
 spring:
+  config:
+    import:
+      - classpath:/config/application-prod.yml
   profiles:
     active: prod
     group:
-      "prod": "prod"
-      "dev":  "dev"
+      prod: "prod"
+      dev:  "dev"
