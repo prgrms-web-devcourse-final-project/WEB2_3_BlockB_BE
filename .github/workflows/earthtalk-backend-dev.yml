@@ -3,8 +3,6 @@ name: Earthtalk Backend Dev Server CI/CD
 on:
   push:
     branches: [ "develop" ] # develop 브랜치에 푸시되었을 때 실행
-  pull_request:
-    branches: [ "develop" ] # develop 브랜치에 pr이 발생했을 때 실행
 
 permissions:
   contents: read
