@@ -5,6 +5,7 @@ import com.example.earthtalk.domain.notification.dto.request.CheckTokenRequest;
 import com.example.earthtalk.domain.notification.dto.request.SaveNotificationRequest;
 import com.example.earthtalk.domain.notification.dto.request.SaveTokenRequest;
 import com.example.earthtalk.domain.notification.dto.request.SendNotificationRequest;
+import com.example.earthtalk.domain.notification.dto.response.CheckTokenResponse;
 import com.example.earthtalk.domain.notification.dto.response.NotificationListResponse;
 import com.example.earthtalk.domain.notification.entity.Notification;
 import com.example.earthtalk.domain.notification.entity.NotificationType;
@@ -54,12 +55,11 @@ public class NotificationService {
         return responses;
     }
 
-    public boolean checkToken(CheckTokenRequest request) {
+    public CheckTokenResponse checkToken(CheckTokenRequest request) {
         userRepository.findById(request.userId()).orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
-        if(request.token() == null) {
-            return false;
-        }
-        return fcmTokenService.checkFcmToken(request.userId(), request.token());
+        boolean isAllow = !isNotificationNotAllowed(request.userId());
+        boolean isExist = fcmTokenService.checkFcmToken(request.userId(), request.token());
+        return new CheckTokenResponse(isExist, isAllow);
     }
 
     // FE 에서 받은 토큰을 fcmToken 값을 redis 에 저장하는 메서드
@@ -124,7 +124,7 @@ public class NotificationService {
         redisTemplate.opsForValue().set(redisKey, "false");
     }
 
-    // 알림 허용 여부를 redis 에서 가져오는 메서드 - 허용한 적이 없으면 true
+    // 알림 허용 여부를 redis 에서 가져오는 메서드 - 거부할 시 true
     private boolean isNotificationNotAllowed(Long userId) {
         userRepository.findById(userId).orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
         String redisKey = NOTIFICATION_AGREE_PREFIX + userId;
