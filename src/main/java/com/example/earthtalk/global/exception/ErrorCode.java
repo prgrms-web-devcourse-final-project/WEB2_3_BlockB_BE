@@ -53,6 +53,7 @@ public enum ErrorCode { // 예외 발생시, body에 실어 날려줄 상태, co
     INVALID_OAUTH_TOKEN(400, -6005, "OAuth 인가 코드가 올바르지 않습니다."),
     NOTFOUND_OAUTH_TOKEN(404, -6006, "인가 코드가 비어있습니다."),
     OAUTH_SERVER_ERROR(400, -6006, "Resource 서버 통신 에러입니다."),
+    INVALID_SOCIAL_TYPE(400, -6007, "지원되지 않는 OAuth 타입입니다."),
 
     //-7000: NEWS
     NEWS_NOT_FOUND(404, -7001, "뉴스를 찾을 수 없습니다."),

@@ -82,4 +82,11 @@ public class Report extends BaseTimeEntity {
         }
         return resultType.getValue();
     }
+
+    public String getAssignedUserNickname() {
+        if (this.getAssignedUser() == null) {
+            return null;
+        }
+        return this.getAssignedUser().getNickname();
+    }
 }

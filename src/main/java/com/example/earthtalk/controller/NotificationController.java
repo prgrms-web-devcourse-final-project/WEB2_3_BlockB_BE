@@ -1,5 +1,6 @@
 package com.example.earthtalk.controller;
 
+import com.example.earthtalk.domain.notification.dto.request.CheckTokenRequest;
 import com.example.earthtalk.domain.notification.dto.request.RemoveTokenRequest;
 import com.example.earthtalk.domain.notification.dto.request.SaveTokenRequest;
 import com.example.earthtalk.domain.notification.dto.request.SendNotificationRequest;
@@ -28,6 +29,13 @@ public class NotificationController {
     public ResponseEntity<ApiResponse<List<NotificationListResponse>>> getNotificationList(@PathVariable Long userId) {
         List<NotificationListResponse> responses = notificationService.getNotifications(userId);
         return ResponseEntity.ok(ApiResponse.createSuccess(responses));
+    }
+
+    @Operation(summary = "FCM 토큰 조회 API 입니다.", description = "토큰 값과 userId 값을 통해 토큰값이 이미 존재하는지 확인합니다.")
+    @PostMapping("/checkToken")
+    public ResponseEntity<ApiResponse<Boolean>> checkToken(@RequestBody CheckTokenRequest request) {
+        boolean result = notificationService.checkToken(request);
+        return ResponseEntity.ok(ApiResponse.createSuccess(result));
     }
 
     // FE 에서 전송한 토큰값을 저장하기 위한 API.
@@ -78,6 +86,13 @@ public class NotificationController {
     @PutMapping("/{notificationId}/read")
     public ResponseEntity<ApiResponse<Void>> readNotification(@PathVariable("notificationId") Long notificationId) {
         notificationService.readNotification(notificationId);
+        return ResponseEntity.ok(ApiResponse.createSuccess(null));
+    }
+
+    @Operation(summary = "전송된 알림의 상태를 변경시키는 API 입니다.", description = "읽지 않은 알림에 대하여 읽음 상태로 변경 시킬 수 있습니다.")
+    @DeleteMapping("/{notificationId}/remove")
+    public ResponseEntity<ApiResponse<Void>> removeNotification(@PathVariable("notificationId") Long notificationId) {
+        notificationService.removeNotification(notificationId);
         return ResponseEntity.ok(ApiResponse.createSuccess(null));
     }
 }

@@ -1,6 +1,8 @@
 package com.example.earthtalk.domain.oauth.util;
 
 import com.example.earthtalk.domain.oauth.dto.request.SocialAccessTokenRequest;
+import com.example.earthtalk.domain.oauth.dto.response.TokenResponse;
+import com.example.earthtalk.domain.oauth.dto.response.TokenResponse.GetToken;
 import com.example.earthtalk.domain.oauth.dto.response.accessToken.GoogleAccessTokenResponse;
 import com.example.earthtalk.global.exception.ErrorCode;
 import com.example.earthtalk.global.exception.OAuth2AuthenticationException;
@@ -33,17 +35,15 @@ public class GoogleClient implements OAuthClient {
     }
 
     @Override
-    public String getAccessTokenFromAuthCode(ClientRegistration clientRegistration, String authCode) {
+    public GetToken getAccessTokenFromAuthCode(ClientRegistration clientRegistration, String authCode) {
         String decodedAuthCode = decodeAuthCode(authCode);
         HttpEntity<MultiValueMap<String, String>> httpEntity = createHttpEntityForRequestAccessToken(
             clientRegistration, decodedAuthCode);
 
-        GoogleAccessTokenResponse response = requestGoogleOauthAPIServer(clientRegistration, httpEntity);
-        System.out.println(response);
+        GoogleAccessTokenResponse response = Optional.ofNullable(requestGoogleOauthAPIServer(clientRegistration, httpEntity))
+            .orElseThrow(() -> new OAuth2AuthenticationException(ErrorCode.INVALID_OAUTH_TOKEN));
 
-        return Optional.ofNullable(response)
-            .orElseThrow(() -> new OAuth2AuthenticationException(ErrorCode.INVALID_OAUTH_TOKEN))
-            .getAccessToken();
+        return new TokenResponse.GetToken(response.getAccessToken(), response.getRefreshToken());
     }
 
     @Override
