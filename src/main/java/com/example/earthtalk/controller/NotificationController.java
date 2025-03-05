@@ -4,6 +4,7 @@ import com.example.earthtalk.domain.notification.dto.request.CheckTokenRequest;
 import com.example.earthtalk.domain.notification.dto.request.RemoveTokenRequest;
 import com.example.earthtalk.domain.notification.dto.request.SaveTokenRequest;
 import com.example.earthtalk.domain.notification.dto.request.SendNotificationRequest;
+import com.example.earthtalk.domain.notification.dto.response.CheckTokenResponse;
 import com.example.earthtalk.domain.notification.dto.response.NotificationListResponse;
 import com.example.earthtalk.domain.notification.service.FcmTokenService;
 import com.example.earthtalk.domain.notification.service.NotificationService;
@@ -33,9 +34,9 @@ public class NotificationController {
 
     @Operation(summary = "FCM 토큰 조회 API 입니다.", description = "토큰 값과 userId 값을 통해 토큰값이 이미 존재하는지 확인합니다.")
     @PostMapping("/checkToken")
-    public ResponseEntity<ApiResponse<Boolean>> checkToken(@RequestBody CheckTokenRequest request) {
-        boolean result = notificationService.checkToken(request);
-        return ResponseEntity.ok(ApiResponse.createSuccess(result));
+    public ResponseEntity<ApiResponse<CheckTokenResponse>> checkToken(@RequestBody CheckTokenRequest request) {
+        CheckTokenResponse response = notificationService.checkToken(request);
+        return ResponseEntity.ok(ApiResponse.createSuccess(response));
     }
 
     // FE 에서 전송한 토큰값을 저장하기 위한 API.
