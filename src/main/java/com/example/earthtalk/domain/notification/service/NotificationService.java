@@ -111,6 +111,7 @@ public class NotificationService {
     public void readNotification(Long notificationId) {
         Notification notification = notificationRepository.findById(notificationId).orElseThrow(() -> new NotFoundException(ErrorCode.NOTIFICATION_NOT_FOUND));
         notification.read();
+        notificationRepository.save(notification);
     }
 
     public void removeNotification(Long notificationId) {
