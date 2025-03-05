@@ -58,17 +58,17 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 	@Override
 	public void registerStompEndpoints(StompEndpointRegistry registry) {
 		registry.addEndpoint("/debate/{roomId}")
-			.setAllowedOrigins("*")
+			.setAllowedOrigins("http://localhost:5173")
 			.addInterceptors(new RoomIdInterceptor())
 			.withSockJS();
 
 		registry.addEndpoint("/observer/{roomId}")
-			.setAllowedOrigins("*")
+			.setAllowedOrigins("http://localhost:5173")
 			.addInterceptors(new RoomIdInterceptor())
 			.withSockJS();
 
 		registry.addEndpoint("/room-list")
-			.setAllowedOrigins("*")
+			.setAllowedOrigins("http://localhost:5173")
 			.withSockJS();
 	}
 
