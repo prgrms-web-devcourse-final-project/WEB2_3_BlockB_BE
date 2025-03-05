@@ -2,6 +2,7 @@ package com.example.earthtalk.domain.debate.service;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -74,6 +75,7 @@ public class DebateRoomService {
 				.speakCount(request.getSpeakCount())
 				.resultEnabled(request.isResultEnabled())
 				.time(request.getTime())
+				.cachedTime(LocalDateTime.now())
 				.status(RoomType.DEBATE) // 기본 상태 설정
 				.agreeNumber(0L) // 초기 찬성 수
 				.disagreeNumber(0L) // 초기 반대 수

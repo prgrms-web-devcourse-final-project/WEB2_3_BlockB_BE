@@ -92,6 +92,9 @@ public class Debate extends BaseTimeEntity {
     @Column(nullable = false)
     private boolean resultEnabled;
 
+    @Column(nullable = false)
+    private LocalDateTime cachedTime;
+
     @OneToMany(mappedBy = "debate", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @Builder.Default
     private List<DebateParticipants> participants = new ArrayList<>();
