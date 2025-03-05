@@ -6,7 +6,6 @@ import com.example.earthtalk.domain.news.entity.News;
 import com.example.earthtalk.domain.news.entity.NewsType;
 import com.example.earthtalk.domain.news.repository.NewsRepository;
 import com.example.earthtalk.global.constant.ContinentType;
-import io.github.bonigarcia.wdm.WebDriverManager;
 import jakarta.validation.constraints.NotNull;
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -19,11 +18,11 @@ import java.util.NoSuchElementException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.By;
-import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,17 +33,20 @@ import org.springframework.transaction.annotation.Transactional;
 public class NewsService {
 
     private final NewsRepository newsRepository;
-
     private final CrawlConfig crawlConfig;
-
-
     public List<News> getAllNews() {
         return newsRepository.findAll();
     }
+    private static final String WEB_DRIVER_ID = "webdriver.chrome.driver";
+
+    @Value("${webdriver.chrome.path}")
+    private String chromeDriverPath;
 
     @Transactional
     @Scheduled(cron = "0 */30 * * * *")
     public void crawlAllNews() {
+        System.setProperty(WEB_DRIVER_ID, chromeDriverPath);
+
         List<News> newsList = new ArrayList<>();
         // 모든 사이트 크롤링
         for (NewsSite newsSite : crawlConfig.getSites()) {
@@ -66,8 +68,6 @@ public class NewsService {
     }
 
     public List<News> crawlNews(@NotNull NewsSite newsSite, ContinentType continentType) {
-        WebDriverManager.chromedriver().setup();
-
         // 브라우저 옵션 설정
         ChromeOptions options = new ChromeOptions();
         options.addArguments("--headless");  // GUI 없이 실행
@@ -81,10 +81,8 @@ public class NewsService {
 
         List<News> newsList = new ArrayList<>();
         LocalDateTime latestArticleTime = getLatestNews(newsSite.getName(), continentType);
-
         try {
             String baseUrl = newsSite.getBaseUrl() + newsSite.getContinentUrl().get(continentType);
-
             int currentPage = 1;
             int cnt = 0;
             boolean stopFlag = false;
@@ -122,7 +120,6 @@ public class NewsService {
                             .getAttribute("src");
                         String date = article.findElement(By.xpath(newsSite.getDateXpath()))
                             .getText().replace(".", "-");
-
                         // 날짜 형식 통일
                         DateTimeFormatter formatter = new DateTimeFormatterBuilder()
                             .appendPattern("yyyy-MM-dd HH:mm")
@@ -131,7 +128,6 @@ public class NewsService {
                             .optionalEnd()
                             .parseDefaulting(ChronoField.SECOND_OF_MINUTE, 0) // 초단위가 없다면 0으로 초기화
                             .toFormatter();
-
                         LocalDateTime deliveryTime = LocalDateTime.parse(date, formatter);
 
                         // 이미 크롤링 한 뉴스 중복 방지
@@ -152,17 +148,13 @@ public class NewsService {
                             .deliveryTime(deliveryTime)
                             .imgUrl(imgUrl)
                             .build();
-
                         newsList.add(news);
-
                         // 크롤링한 뉴스 갯수
                         cnt++;
-
                         if (cnt >= 50) {
                             stopFlag = true;
                             break;
                         }
-
                     } catch (Exception e) {
                         // 예외발생은 이미지가 없는 기사의 경우가 대부분입니다.
                         // 그 외에 하나라도 빠지는 요소가 있을 경우 배제
@@ -170,10 +162,7 @@ public class NewsService {
                         errorCount++;
                     }
                 }
-
                 currentPage++;
-
-
             }
         } catch (Exception e) {
             throw new NoSuchElementException();
@@ -184,7 +173,6 @@ public class NewsService {
         log.info(newsSite.getName().getValue() + "에서 총 " + newsList.size() + "개의 뉴스를 크롤링했습니다.");
         return newsList;
     }
-
     // 뉴스 사이트별, 대륙별로 DB에 저장된 가장 최신기사의 작성시간 확인
     // 그 이전에 작성된 기사는 크롤링 하지 않습니다. (중복 방지)
     private LocalDateTime getLatestNews(NewsType newsType, ContinentType continentType) {
