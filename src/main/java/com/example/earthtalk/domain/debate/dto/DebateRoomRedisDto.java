@@ -42,10 +42,6 @@ public class DebateRoomRedisDto implements Serializable {
 
 	private TimeType time;
 
-	private LocalDateTime createdAt;
-
-	private LocalDateTime endTime;
-
 	private RoomType status;
 
 	private SpeakCountType speakCount;
@@ -67,15 +63,14 @@ public class DebateRoomRedisDto implements Serializable {
 	public static DebateRoomRedisDto fromEntity(Debate debate) {
 		return DebateRoomRedisDto.builder()
 			.uuid(debate.getUuid())
-			.newsId(debate.getNews().getId()) // News ID만 저장
+			.newsId(debate.getNews() != null ? debate.getNews().getId() : null)
 			.title(debate.getTitle())
 			.description(debate.getDescription())
 			.member(debate.getMember())
 			.continent(debate.getContinent())
 			.category(debate.getCategory())
 			.time(debate.getTime())
-			.createdAt(LocalDateTime.now())
-			.endTime(debate.getEndTime())
+			.cachedTime(debate.getCachedTime() != null ? debate.getCachedTime() : LocalDateTime.now())
 			.status(debate.getStatus())
 			.speakCount(debate.getSpeakCount())
 			.agreeNumber(debate.getAgreeNumber())
@@ -98,8 +93,8 @@ public class DebateRoomRedisDto implements Serializable {
 			.member(this.member)
 			.continent(this.continent)
 			.category(this.category)
+			.cachedTime(this.cachedTime)
 			.time(this.time)
-			.endTime(this.endTime)
 			.status(this.status)
 			.speakCount(this.speakCount)
 			.agreeNumber(this.agreeNumber)
