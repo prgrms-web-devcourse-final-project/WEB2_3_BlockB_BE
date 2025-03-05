@@ -90,6 +90,7 @@ public class DebateRoomService {
 				.build();
 
 			debateRoomStore.put(debate);
+			debateRepository.save(debate);
 
 
 		} catch (Exception e) {

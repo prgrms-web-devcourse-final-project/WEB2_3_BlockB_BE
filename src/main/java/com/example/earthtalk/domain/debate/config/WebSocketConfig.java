@@ -30,7 +30,6 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
 	@Override
 	public void registerStompEndpoints(StompEndpointRegistry registry) {
-		// 순수 WebSocket 엔드포인트 (withSockJS() 없이 ws:// 프로토콜 사용)
 		registry.addEndpoint("/debate/{roomId}")
 			.setAllowedOrigins("*")
 			.addInterceptors(new RoomIdInterceptor());
