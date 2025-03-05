@@ -69,9 +69,10 @@ public class NotificationService {
         }
         userRepository.findById(request.userId()).orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
         String redisKey = NOTIFICATION_AGREE_PREFIX + request.userId();
-
-        if(isNotificationNotAllowed(request.userId())) {
+        if (request.isAllow().equals("true")) {
             redisTemplate.opsForValue().set(redisKey, "true");
+        } else {
+            redisTemplate.opsForValue().set(redisKey, "false");
         }
         fcmTokenService.saveFcmToken(request.userId(), request.token());
     }
