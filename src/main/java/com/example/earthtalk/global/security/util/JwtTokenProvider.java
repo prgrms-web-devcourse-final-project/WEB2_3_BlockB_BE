@@ -63,6 +63,7 @@ public class JwtTokenProvider {
         return Jwts.builder()
             .setHeaderParam(Header.TYPE, Header.JWT_TYPE)
             .setSubject(oAuth2User.getEmail()) //사용자 이메일정보 활용
+            .claim(AUTHORITIES_KEY, oAuth2User.getRole().toString())
             .setIssuedAt(now)
             .setExpiration(new Date(now.getTime() + jwtProperties.getRefreshExpirationTime()))
             .signWith(jwtProperties.getSecretKey(), SignatureAlgorithm.HS512)
