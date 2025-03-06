@@ -1,7 +1,11 @@
 package com.example.earthtalk.domain.debate.controller;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,12 +20,15 @@ import com.example.earthtalk.domain.debate.dto.DebateRoomResponse;
 import com.example.earthtalk.domain.debate.dto.DebateUserResponse;
 import com.example.earthtalk.domain.debate.dto.VoteRequest;
 import com.example.earthtalk.domain.debate.dto.VoteResponse;
+import com.example.earthtalk.domain.debate.dto.WaitRoomResponse;
 import com.example.earthtalk.domain.debate.entity.Debate;
 import com.example.earthtalk.domain.debate.entity.DebateParticipants;
 import com.example.earthtalk.domain.debate.entity.FlagType;
 import com.example.earthtalk.domain.debate.repository.DebateParticipantsRepository;
 import com.example.earthtalk.domain.debate.repository.DebateRepository;
 import com.example.earthtalk.domain.debate.service.DebateRoomService;
+import com.example.earthtalk.domain.debate.service.DebateUserService;
+import com.example.earthtalk.domain.debate.store.DebateUserStore;
 import com.example.earthtalk.domain.report.dto.request.InsertReportRequest;
 import com.example.earthtalk.domain.report.service.ReportService;
 import com.example.earthtalk.domain.user.entity.User;
@@ -45,6 +52,8 @@ public class DebateRoomController {
 	private final UserRepository userRepository;
 	private final ReportService reportService;
 	private final DebateRoomService debateRoomService;
+	private final DebateUserService debateUserService;
+	private final DebateUserStore debateUserStore;
 
 	@Operation(summary = "토론방 상세 조회 API", description = "토론방의 UUID로 상세 정보를 조회합니다.")
 	@ApiResponses(value = {
@@ -85,16 +94,58 @@ public class DebateRoomController {
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "토론방 정보를 성공적으로 조회했습니다."),
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 토론방을 찾을 수 없습니다.")
 	})
-	@GetMapping("/observer/waitroom/{uuid}")
+	@GetMapping("/waitroom/{uuid}")
 	public ResponseEntity<ApiResponse<Object>> getObserverWaitRoom(
 		@PathVariable("uuid") String uuid
 	) {
 		UUID roomId = UUID.fromString(uuid);
 		Debate debate = debateRepository.findByUuid(roomId)
 			.orElseThrow(() -> new IllegalArgumentException(ErrorCode.DEBATEROOM_NOT_FOUND.getMessage()));
-		DebateRoomResponse response = buildDebateRoomResponse(debate, roomId, false);
+		Set<String> proUsers = debateUserStore.getProUsers(roomId.toString());
+		Set<DebateUserResponse> proResponse = convertUsernamesToUserResponses(proUsers);
+
+		Set<String> conUsers = debateUserStore.getConUsers(roomId.toString());
+		Set<DebateUserResponse> conResponse = convertUsernamesToUserResponses(conUsers);
+
+		WaitRoomResponse response = WaitRoomResponse.builder()
+			.roomId(debate.getId())
+			.title(debate.getTitle())
+			.description(debate.getDescription())
+			.memberNumberType(debate.getMember().getValue())
+			.categoryType(debate.getCategory())
+			.continentType(debate.getContinent())
+			.newsUrl(debate.getNews() != null ? debate.getNews().getLink() : null)
+			.status(debate.getStatus())
+			.timeType(debate.getTime().getValue())
+			.speakCountType(debate.getSpeakCount().getValue())
+			.proUsers(proResponse)
+			.conUsers(conResponse)
+			.build();
+
 		return ResponseEntity.ok().body(ApiResponse.createSuccess(response));
 	}
+
+	private Set<DebateUserResponse> convertUsernamesToUserResponses(Set<String> usernames) {
+		return usernames.stream()
+			.map(userRepository::findByNickname)
+			.filter(Optional::isPresent)
+			.map(Optional::get)
+			.map(user -> DebateUserResponse.builder()
+				.id(user.getId())
+				.nickname(user.getNickname())
+				.email(user.getEmail())
+				.introduction(user.getIntroduction())
+				.profileUrl(user.getProfileUrl())
+				.winNumber(user.getWinNumber())
+				.defeatNumber(user.getDefeatNumber())
+				.drawNumber(user.getDrawNumber())
+				.build())
+			.collect(Collectors.toSet());
+	}
+
+
+
+
 
 	@Operation(summary = "투표 업데이트 API", description = "토론방의 투표 수(찬성, 반대, 중립)를 업데이트하고 업데이트 된 결과에 따라 유저의 승/패를 추가적으로 업데이트합니다.")
 	@ApiResponses(value = {
@@ -164,8 +215,10 @@ public class DebateRoomController {
 				.stream()
 				.map(dp -> new DebateUserResponse(
 					dp.getUser().getId(),
+					dp.getUser().getEmail(),
 					dp.getUser().getNickname(),
-					dp.getPosition(),
+					dp.getUser().getIntroduction(),
+					dp.getUser().getProfileUrl(),
 					dp.getUser().getWinNumber(),
 					dp.getUser().getDefeatNumber(),
 					dp.getUser().getDrawNumber()

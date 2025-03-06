@@ -17,7 +17,7 @@ import lombok.Getter;
 @Getter
 @Builder
 @AllArgsConstructor
-public class DebateRoomResponse {
+public class WaitRoomResponse {
 	private final Long roomId;
 	private final String title;
 	private final String description;
@@ -28,5 +28,6 @@ public class DebateRoomResponse {
 	private final RoomType status;
 	private final int timeType;
 	private final int speakCountType;
-	private final List<DebateUserResponse> participants;
+	private final Set<DebateUserResponse> proUsers;
+	private final Set<DebateUserResponse> conUsers;
 }
