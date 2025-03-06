@@ -17,6 +17,7 @@ import com.example.earthtalk.domain.news.entity.MemberNumberType;
 import com.example.earthtalk.domain.news.entity.TimeType;
 import com.example.earthtalk.domain.news.repository.NewsRepository;
 import com.example.earthtalk.global.constant.ContinentType;
+import com.example.earthtalk.global.exception.ErrorCode;
 
 @Getter
 @Setter
@@ -83,11 +84,9 @@ public class DebateRoomRedisDto implements Serializable {
 			.build();
 	}
 
-	// RedisDto를 Debate 엔티티로 변환하는 메서드
 	public Debate toEntity(NewsRepository newsRepository) {
-		return Debate.builder()
+		Debate.DebateBuilder builder = Debate.builder()
 			.uuid(this.uuid)
-			.news(newsRepository.findById(this.newsId).orElseThrow())
 			.title(this.title)
 			.description(this.description)
 			.member(this.member)
@@ -100,7 +99,18 @@ public class DebateRoomRedisDto implements Serializable {
 			.agreeNumber(this.agreeNumber)
 			.disagreeNumber(this.disagreeNumber)
 			.neutralNumber(this.neutralNumber)
-			.resultEnabled(this.resultEnabled)
-			.build();
+			.resultEnabled(this.resultEnabled);
+
+		if (this.newsId != null) {
+			builder.news(
+				newsRepository.findById(this.newsId)
+					.orElseThrow(() -> new IllegalArgumentException(ErrorCode.NEWS_NOT_FOUND.getMessage()))
+			);
+		} else {
+			builder.news(null);
+		}
+
+		return builder.build();
 	}
+
 }
