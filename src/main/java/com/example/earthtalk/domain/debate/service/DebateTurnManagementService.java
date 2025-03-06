@@ -45,7 +45,10 @@ public class DebateTurnManagementService {
 
     public void removeDebateTurn(UUID roomId) {
         debateTurns.remove(roomId);
-        turnScheduler.remove(roomId);
+        ScheduledExecutorService scheduler = turnScheduler.remove(roomId);
+        if (scheduler != null) {
+            scheduler.shutdown(); // 스케줄러 종료
+        }
     }
 
 }
