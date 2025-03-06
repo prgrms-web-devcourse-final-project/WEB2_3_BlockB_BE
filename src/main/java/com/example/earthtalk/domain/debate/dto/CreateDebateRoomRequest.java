@@ -10,11 +10,12 @@ import com.example.earthtalk.domain.news.entity.News;
 import com.example.earthtalk.domain.news.entity.TimeType;
 import com.example.earthtalk.global.constant.ContinentType;
 
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
-@Setter
+@Builder
 public class CreateDebateRoomRequest {
 	private Long newsId;
 
