@@ -6,20 +6,23 @@ import com.example.earthtalk.domain.oauth.repository.RefreshTokenRepository;
 import com.example.earthtalk.domain.oauth.dto.OAuthAttributes;
 import com.example.earthtalk.domain.oauth.util.OAuthClient;
 import com.example.earthtalk.domain.user.dto.request.UserInfoRequest;
+import com.example.earthtalk.domain.user.entity.AccountStatusType;
 import com.example.earthtalk.domain.user.entity.Role;
 import com.example.earthtalk.domain.user.entity.SocialType;
 import com.example.earthtalk.domain.user.entity.User;
 import com.example.earthtalk.domain.user.repository.UserRepository;
+import com.example.earthtalk.global.exception.BadRequestException;
 import com.example.earthtalk.global.exception.ErrorCode;
 import com.example.earthtalk.global.exception.NotFoundException;
 import com.example.earthtalk.global.exception.IllegalArgumentException;
 import com.example.earthtalk.global.exception.OAuth2AuthenticationException;
 import com.example.earthtalk.domain.oauth.dto.response.TokenResponse;
+import com.example.earthtalk.global.exception.UserLockedException;
 import com.example.earthtalk.global.security.util.JwtTokenProvider;
 import io.jsonwebtoken.Claims;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Map;
@@ -30,7 +33,6 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
-import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -46,7 +48,8 @@ public class OAuth2Service {
     private static final String NAVER = "naver";
     private static final String KAKAO = "kakao";
 
-    public TokenResponse.GetOauth getResource(HttpServletRequest request, HttpServletResponse response, String provider, String authCode) {
+    @Transactional
+    public TokenResponse.GetOauth getResource(String provider, String authCode) {
         if (authCode == null || authCode.isEmpty()) {
             throw new OAuth2AuthenticationException(ErrorCode.NOTFOUND_OAUTH_TOKEN);
         }
@@ -54,12 +57,13 @@ public class OAuth2Service {
         OAuthClient oAuthClient = oauthClients.get(provider);
 
         log.info("call OAuthService.getIdTokenFromAuthCode[authCode: {}]", authCode);
-        TokenResponse.GetToken tokens = oAuthClient.getAccessTokenFromAuthCode(clientRegistration, authCode);
-        return getResourceFromToken(request, response, oAuthClient, tokens, clientRegistration);
+        TokenResponse.GetToken tokens = oAuthClient.getAccessTokenFromAuthCode(clientRegistration,
+            authCode);
+        return getResourceFromToken(oAuthClient, tokens, clientRegistration);
     }
 
-    public TokenResponse.GetOauth getResourceFromToken(HttpServletRequest request, HttpServletResponse response,
-        OAuthClient oAuthClient, TokenResponse.GetToken tokens, ClientRegistration clientRegistration) {
+    public TokenResponse.GetOauth getResourceFromToken(OAuthClient oAuthClient, TokenResponse.GetToken tokens,
+        ClientRegistration clientRegistration) {
 
         // 소셜 타입 결정
         SocialType socialType = getSocialType(clientRegistration.getClientName());
@@ -70,7 +74,8 @@ public class OAuth2Service {
             .getUserNameAttributeName();
 
         // Access Token으로 사용자 정보 가져오기
-        Map<String, Object> userAttributes = oAuthClient.getProfileFromAccessToken(clientRegistration, tokens.accessToken());
+        Map<String, Object> userAttributes = oAuthClient.getProfileFromAccessToken(
+            clientRegistration, tokens.accessToken());
         log.info("userAttributes: {}", userAttributes);
 
         OAuthAttributes extractAttributes = OAuthAttributes.of(
@@ -80,9 +85,11 @@ public class OAuth2Service {
         );
 
         User user = getOrSaveUser(extractAttributes, socialType, tokens); // 유저 정보 저장 또는 업데이트
-        CustomOAuth2User oAuth2User = setAuthenticationContext(user, userAttributes, extractAttributes.getNameAttributeKey()); // 인증 객체 생성 및 SecurityContext에 설정
+        CustomOAuth2User oAuth2User = setAuthenticationContext(user, userAttributes,
+            extractAttributes.getNameAttributeKey()); // 인증 객체 생성 및 SecurityContext에 설정
 
-        TokenResponse.GetToken tokenResponse = jwtTokenProvider.generateAllTokens(oAuth2User, new Date());
+        TokenResponse.GetToken tokenResponse = jwtTokenProvider.generateAllTokens(oAuth2User,
+            new Date());
         saveRefreshToken(oAuth2User, tokenResponse.refreshToken());
 
         // 프론트엔드로 JWT, 프로필 포함하여 반환
@@ -109,7 +116,8 @@ public class OAuth2Service {
             .orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
 
         CustomOAuth2User customOAuth2User = jwtTokenProvider.getCustomOAuth2User(claims);
-        TokenResponse.GetToken newTokens = jwtTokenProvider.generateAllTokens(customOAuth2User, new Date());
+        TokenResponse.GetToken newTokens = jwtTokenProvider.generateAllTokens(customOAuth2User,
+            new Date());
         originToken.updateToken(newTokens.refreshToken());
 
         return newTokens;
@@ -152,26 +160,30 @@ public class OAuth2Service {
      * SocialType과 attributes에 들어있는 소셜 로그인의 식별값 id를 통해 회원을 찾아 반환하는 메소드<br> 만약 찾은 회원이 있다면, 그대로 반환하고
      * 없다면 saveUser()를 호출하여 회원을 저장한다.
      */
-    public User getOrSaveUser(OAuthAttributes attributes, SocialType socialType, TokenResponse.GetToken tokens) {
+    public User getOrSaveUser(OAuthAttributes attributes, SocialType socialType,
+        TokenResponse.GetToken tokens) {
         User findUser = userRepository.findBySocialTypeAndSocialId(socialType,
             attributes.getOauth2UserResponse().getId()).orElse(null);
 
         if (findUser == null) {
             return saveUser(attributes, socialType, tokens);
         }
+        // 신고 예외 처리
+        validateUserStatus(findUser);
         findUser.updateTokens(tokens.accessToken(), tokens.refreshToken());
         return userRepository.save(findUser);
     }
 
     private ClientRegistration getClientRegistration(String provider) {
-        ClientRegistration clientRegistration = ((InMemoryClientRegistrationRepository) clientRegistrationRepository).findByRegistrationId(provider);
+        ClientRegistration clientRegistration = clientRegistrationRepository.findByRegistrationId(provider);
         if (clientRegistration == null) {
             throw new IllegalArgumentException(ErrorCode.INVALID_SOCIAL_TYPE);
         }
         return clientRegistration;
     }
 
-    private CustomOAuth2User setAuthenticationContext(User user, Map<String, Object> attributes, String nameAttributeKey) {
+    private CustomOAuth2User setAuthenticationContext(User user, Map<String, Object> attributes,
+        String nameAttributeKey) {
         CustomOAuth2User customOAuth2User = new CustomOAuth2User(
             Collections.singleton(new SimpleGrantedAuthority(user.getRole().toString())),
             attributes,
@@ -192,7 +204,8 @@ public class OAuth2Service {
     }
 
     // 닉네임 입력을 안 받았기 때문에 임시 닉네임 설정 후, GUEST User 객체 생성 후 반환
-    private User saveUser(OAuthAttributes attributes, SocialType socialType, TokenResponse.GetToken tokens) {
+    private User saveUser(OAuthAttributes attributes, SocialType socialType,
+        TokenResponse.GetToken tokens) {
         User createdUser = attributes.toEntity(socialType, attributes.getOauth2UserResponse(), tokens);
         return userRepository.save(createdUser);
     }
@@ -205,5 +218,24 @@ public class OAuth2Service {
             return SocialType.KAKAO;
         }
         return SocialType.GOOGLE;
+    }
+
+    private void validateUserStatus(User user) {
+        if (user.isSuspended()) {
+            // 3일이 지나지 않아서 계정 정지 상태
+            if (!user.isSuspensionPeriodOver()) {
+                long remainingDays = ChronoUnit.DAYS.between(
+                    LocalDateTime.now(), user.getSuspendedAt().plusDays(3)
+                );
+                throw new UserLockedException(ErrorCode.REPORT_SUSPENDED_USER,
+                    String.format(ErrorCode.REPORT_SUSPENDED_USER.getMessage(), remainingDays)
+                );
+            }
+            // 3일이 지나면 상태 복구
+            user.resetAccountStatusType(AccountStatusType.ACTIVE);
+        }
+        if (user.isBanned()) {
+            throw new BadRequestException(ErrorCode.REPORT_BANNED_USER);
+        }
     }
 }
