@@ -79,6 +79,7 @@ dependencies {
     // https://mvnrepository.com/artifact/com.fasterxml.jackson.datatype/jackson-datatype-hibernate5
     implementation group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-hibernate5', version: '2.18.3'
 
+    implementation 'javax.persistence:javax.persistence-api:2.2'
 
 }
 
