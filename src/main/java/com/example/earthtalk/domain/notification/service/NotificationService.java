@@ -20,6 +20,10 @@ import com.example.earthtalk.global.exception.IllegalArgumentException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -40,22 +44,20 @@ public class NotificationService {
     private final DebateRepository debateRepository;
     private final RedisTemplate<String, Object> redisTemplate;
 
+    private static final int size = 10;
     private static final String NOTIFICATION_AGREE_PREFIX = "notification_allowed:";
     private static final String FOLLOW_MESSAGE = "%s님이 당신을 팔로우했습니다.";
     private static final String REPORT_MESSAGE = "%s(으)로 운영자에게 %s을(를) 처분받았습니다.";
     private static final String CHAT_MESSAGE = "참가 중인 채팅방의 대기가 완료되었습니다.";
 
     // 접속중인 사용자의 id 값을 전달해주면 그와 관련된 알림을 조회하여 반환합니다.
-    public List<NotificationListResponse> getNotifications(Long userId) {
+    public Slice<NotificationListResponse> getNotifications(Long userId, int page) {
         User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
 
-        List<Notification> notifications = notificationRepository.getNotifications(user);
-        List<NotificationListResponse> responses = new ArrayList<>();
-        for (Notification notification : notifications) {
-            NotificationListResponse response = NotificationListResponse.from(notification);
-            responses.add(response);
-        }
-        return responses;
+        Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "id"));
+        Slice<Notification> notifications = notificationRepository.getNotifications(user, pageable);
+
+        return notifications.map(NotificationListResponse::from);
     }
 
     public CheckTokenResponse checkToken(CheckTokenRequest request) {
@@ -91,7 +93,7 @@ public class NotificationService {
      */
     public void sendNotification(SendNotificationRequest request) {
         User user = userRepository.findById(request.userId()).orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
-        log.info("알림 받는 사용자 조회");
+
         if (isNotificationNotAllowed(request.userId())) {
             return;
         }
@@ -100,15 +102,15 @@ public class NotificationService {
         if (fcmTokens == null || fcmTokens.isEmpty()) {
             return;
         }
-        log.info("FCM 토큰 조회");
+
         String content = request.content();
         if (content == null) {
             content = getContent(request);
         }
-        log.info("알림 내용 입력");
+
         SaveNotificationRequest saveNotificationRequest = request.toSave(content);
         notificationRepository.save(saveNotificationRequest.toEntity(user));
-        firebaseService.pushNotification(fcmTokens, content);
+        firebaseService.pushNotification(fcmTokens, content, request.userId());
     }
 
     // 사용자가 알림을 확인했을 때 status 를 read 로 변경시키는 메서드.
@@ -123,7 +125,8 @@ public class NotificationService {
         if (userId == null) {
             throw new IllegalArgumentException(ErrorCode.INVALID_REQUEST_BODY);
         }
-        notificationRepository.markAllAsReadByUserId(userId);
+        User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
+        notificationRepository.markAllAsReadByUserId(user);
     }
 
     // 알림 삭제 메서드

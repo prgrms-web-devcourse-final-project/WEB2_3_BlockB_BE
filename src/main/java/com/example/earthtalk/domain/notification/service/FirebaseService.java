@@ -3,6 +3,7 @@ package com.example.earthtalk.domain.notification.service;
 
 import com.example.earthtalk.global.exception.ErrorCode;
 import com.google.firebase.messaging.FirebaseMessaging;
+import com.google.firebase.messaging.FirebaseMessagingException;
 import com.google.firebase.messaging.Message;
 import com.google.firebase.messaging.Notification;
 import com.example.earthtalk.global.exception.IllegalArgumentException;
@@ -18,38 +19,48 @@ import java.util.Set;
 public class FirebaseService {
 
     private final FirebaseMessaging firebaseMessaging;
+    private final FcmTokenService fcmTokenService;
 
-    // 푸시 알림 전송 메서드
-    public void pushNotification(Set<Object> tokens, String content) {
+    public void pushNotification(Set<Object> tokens, String content, Long userId) {
         try {
-
-            // 유효성 검사
-            if (tokens == null || tokens.isEmpty()) {
+            if (tokens == null || tokens.isEmpty() || content == null || content.isEmpty()) {
                 throw new IllegalArgumentException(ErrorCode.INVALID_REQUEST_BODY);
             }
 
-            if (content == null || content.isEmpty()) {
-                throw new IllegalArgumentException(ErrorCode.INVALID_REQUEST_BODY);
-            }
-
-            // firebase 기반 notification 객체 생성
             Notification notification = Notification.builder()
                     .setTitle("알림")
                     .setBody(content)
                     .build();
 
-            for (Object token : tokens) {
-                // notification 객체와 token 값을 이용하여 message 생성
+            for (Object tokenObj : tokens) {
+                if (!(tokenObj instanceof String)) {
+                    log.info("Invalid token type: " + tokenObj);
+                    continue;
+                }
+                String token = (String) tokenObj;
+
+                if (token.isEmpty()) {
+                    log.info("Skipping empty token");
+                    continue;
+                }
+
                 Message message = Message.builder()
-                        .setToken((String) token)
+                        .setToken(token)
                         .setNotification(notification)
                         .build();
 
-                // 알림 전송
-                firebaseMessaging.send(message);
+                try {
+                    String response = firebaseMessaging.send(message);
+                    log.info("FCM Response: " + response);
+                } catch (FirebaseMessagingException e) {
+                    log.error("FCM send failed: " + e.getMessage());
+                    if (e.getMessage().equals("Requested entity was not found.")) {
+                        fcmTokenService.removeFcmToken(userId, token);
+                    }
+                }
             }
         } catch (Exception e) {
-            log.info("Error sending message : " + e.getMessage());
+            log.error("Error sending push notification: " + e.getMessage(), e);
             throw new IllegalArgumentException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
     }
