@@ -3,15 +3,26 @@ package com.example.earthtalk.domain.debate.dto;
 import com.example.earthtalk.domain.debate.entity.FlagType;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
+@Builder
 public class DebateUserResponse {
-	private final Long userId;
-	private final String userName;
-	private final FlagType flagType;
-	private final Long win;
-	private final Long loss;
-	private final Long draw;
+	private Long id;
+
+	private String email;
+
+	private String nickname;
+
+	private String introduction;
+
+	private String profileUrl;
+
+	private Long winNumber = 0L;
+
+	private Long drawNumber = 0L;
+
+	private Long defeatNumber = 0L;
 }
