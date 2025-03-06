@@ -11,6 +11,7 @@ import com.example.earthtalk.domain.notification.service.NotificationService;
 import com.example.earthtalk.global.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Slice;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,8 +28,9 @@ public class NotificationController {
     // 접속중인 사용자의 알림을 조회하기 위한 API.
     @Operation(summary = "알림 조회 API 입니다.", description = "userId 의 값을 받아 해당하는 알림들을 조회합니다.")
     @GetMapping("/{userId}")
-    public ResponseEntity<ApiResponse<List<NotificationListResponse>>> getNotificationList(@PathVariable Long userId) {
-        List<NotificationListResponse> responses = notificationService.getNotifications(userId);
+    public ResponseEntity<ApiResponse<Slice<NotificationListResponse>>> getNotificationList(@PathVariable Long userId,
+                                                                                            @RequestParam(value = "page", required = false, defaultValue = "1") int page) {
+        Slice<NotificationListResponse> responses = notificationService.getNotifications(userId, page);
         return ResponseEntity.ok(ApiResponse.createSuccess(responses));
     }
 
@@ -90,10 +92,25 @@ public class NotificationController {
         return ResponseEntity.ok(ApiResponse.createSuccess(null));
     }
 
-    @Operation(summary = "전송된 알림의 상태를 변경시키는 API 입니다.", description = "읽지 않은 알림에 대하여 읽음 상태로 변경 시킬 수 있습니다.")
+    // 사용자가 알림을 읽었을 때 status 값을 변경하기 위한 API
+    @Operation(summary = "해당 유저의 모든 알림의 상태를 변경시키는 API 입니다.", description = "해당 유저의 모든 알림에 대하여 읽음 상태로 변경 시킬 수 있습니다.")
+    @PutMapping("/{userId}/readAll")
+    public ResponseEntity<ApiResponse<Void>> readAllNotification(@PathVariable("userId") Long userId) {
+        notificationService.readAllNotifications(userId);
+        return ResponseEntity.ok(ApiResponse.createSuccess(null));
+    }
+
+    @Operation(summary = "해당 알림을 삭제하는 API 입니다.", description = "해당되어 있는 알림을 삭제합니다..")
     @DeleteMapping("/{notificationId}/remove")
     public ResponseEntity<ApiResponse<Void>> removeNotification(@PathVariable("notificationId") Long notificationId) {
         notificationService.removeNotification(notificationId);
+        return ResponseEntity.ok(ApiResponse.createSuccess(null));
+    }
+
+    @Operation(summary = "해당 알림을 삭제하는 API 입니다.", description = "해당되어 있는 알림을 삭제합니다..")
+    @DeleteMapping("/{userId}/removeAll")
+    public ResponseEntity<ApiResponse<Void>> removeAllNotification(@PathVariable("userId") Long userId) {
+        notificationService.removeAllNotifications(userId);
         return ResponseEntity.ok(ApiResponse.createSuccess(null));
     }
 }

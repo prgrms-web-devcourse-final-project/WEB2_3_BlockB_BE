@@ -19,6 +19,7 @@ import com.example.earthtalk.global.exception.ErrorCode;
 import com.example.earthtalk.global.exception.NotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -28,6 +29,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ReportService {
@@ -84,9 +86,10 @@ public class ReportService {
 
     // 신고를 처리하는 메서드 - 알림 추가
     @Transactional
-    public Long updateReport(Long id, UpdateReportRequest request) {
+    public Long updateReport(Long reportId, UpdateReportRequest request) {
+
         // 받은 id 값으로 report 조회
-        Report report = reportRepository.findById(id).orElseThrow(() -> new NotFoundException(ErrorCode.REPORT_NOT_FOUND));
+        Report report = reportRepository.findById(reportId).orElseThrow(() -> new NotFoundException(ErrorCode.REPORT_NOT_FOUND));
 
         // 신고 처리 담당자 조회
         User assignedUser = userRepository.findById(request.assignedUserId()).orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
@@ -98,14 +101,13 @@ public class ReportService {
         User user = userRepository.findById(report.getTargetUser().getId()).orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
         user.reportUser(report.getResultType());
 
-        // 알림 전송에 관한 내용
-        SendNotificationRequest sendNotificationRequest = new SendNotificationRequest(
+        // 알림 전송
+        notificationService.sendNotification(new SendNotificationRequest(
                 report.getTargetUser().getId(),
                 NotificationType.REPORT,
-                report.getTargetRoomId(),
+                report.getId(),
                 null
-        );
-        notificationService.sendNotification(sendNotificationRequest);
+        ));
 
         // 신고에 관한 내용 업데이트
         return report.getId();

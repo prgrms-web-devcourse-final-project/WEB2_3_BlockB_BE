@@ -54,10 +54,12 @@ public class AdminController {
     @PutMapping("/reports/{reportId}")
     public ResponseEntity<ApiResponse<Long>> putReportById(
             @PathVariable("reportId") Long reportId,
-            @RequestBody UpdateReportRequest request ) throws Exception {
+            @RequestBody UpdateReportRequest request ) {
         Long id = reportService.updateReport(reportId, request);
         return ResponseEntity.ok(ApiResponse.createSuccess(id));
     }
+
+
 
     @Operation(summary = "신고 복구 API", description = "이미 처리된 신고를 미처리 상태로 복구합니다.")
     @ApiResponses(value = {

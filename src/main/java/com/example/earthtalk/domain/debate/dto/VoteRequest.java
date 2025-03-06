@@ -6,7 +6,6 @@ import lombok.Getter;
 @Getter
 @Builder
 public class VoteRequest {
-	private Long roomId;
 	private Long agreeNumber;
 	private Long disagreeNumber;
 	private Long neutralNumber;

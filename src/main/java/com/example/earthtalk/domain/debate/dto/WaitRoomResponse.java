@@ -1,9 +1,13 @@
 package com.example.earthtalk.domain.debate.dto;
 
 import java.util.List;
+import java.util.Set;
 
 import com.example.earthtalk.domain.debate.entity.CategoryType;
 import com.example.earthtalk.domain.debate.entity.RoomType;
+import com.example.earthtalk.domain.debate.entity.SpeakCountType;
+import com.example.earthtalk.domain.news.entity.MemberNumberType;
+import com.example.earthtalk.domain.news.entity.TimeType;
 import com.example.earthtalk.global.constant.ContinentType;
 
 import lombok.AllArgsConstructor;
@@ -13,7 +17,7 @@ import lombok.Getter;
 @Getter
 @Builder
 @AllArgsConstructor
-public class DebateRoomResponse {
+public class WaitRoomResponse {
 	private final Long roomId;
 	private final String title;
 	private final String description;
@@ -24,5 +28,6 @@ public class DebateRoomResponse {
 	private final RoomType status;
 	private final int timeType;
 	private final int speakCountType;
-	private final List<DebateUserResponse> participants;
+	private final Set<DebateUserResponse> proUsers;
+	private final Set<DebateUserResponse> conUsers;
 }
