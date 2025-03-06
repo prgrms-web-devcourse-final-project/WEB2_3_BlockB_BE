@@ -99,7 +99,11 @@ public class NotificationService {
             return;
         }
 
-        String content = request.content() == null ? getContent(request) : request.content();
+        String content = request.content();
+        if (content == null) {
+            content = getContent(request);
+        }
+
         SaveNotificationRequest saveNotificationRequest = request.toSave(content);
         notificationRepository.save(saveNotificationRequest.toEntity(user));
         firebaseService.pushNotification(fcmTokens, content);
