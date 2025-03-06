@@ -118,9 +118,9 @@ public class DebateRoomController {
 	})
 	@PutMapping("/vote/{roomId}")
 	public ResponseEntity<ApiResponse<Object>> putVote(
-		@PathVariable("roomId") Long roomId,
+		@PathVariable("roomId") String roomId,
 		@RequestBody VoteRequest request) {
-		Debate debate = debateRepository.findById(roomId)
+		Debate debate = debateRepository.findByUuid(UUID.fromString(roomId))
 			.orElseThrow(() -> new IllegalArgumentException(ErrorCode.DEBATEROOM_NOT_FOUND.getMessage()));
 
 		if (request.getNeutralNumber() < 0 || request.getDisagreeNumber() < 0 || request.getAgreeNumber() < 0) {
