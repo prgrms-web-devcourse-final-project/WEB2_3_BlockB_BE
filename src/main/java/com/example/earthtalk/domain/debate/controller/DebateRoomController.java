@@ -154,7 +154,7 @@ public class DebateRoomController {
 			.memberNumberType(debate.getMember().getValue())
 			.categoryType(debate.getCategory())
 			.continentType(debate.getContinent())
-			.newsUrl(debate.getNews().getLink())
+			.newsUrl(debate.getNews() != null ? debate.getNews().getLink() : null)
 			.status(debate.getStatus())
 			.timeType(debate.getTime().getValue())
 			.speakCountType(debate.getSpeakCount().getValue());
