@@ -44,7 +44,7 @@ public class ChatController {
 	 * @return 검증 후 그대로 반환된 DebateMessage, 이는 "/topic/debate/{roomId}"로 전송됩니다.
 	 * @throws IllegalArgumentException 메시지의 필수 필드가 null 또는 공백인 경우
 	 */
-	@MessageMapping("/debate/{roomId}")
+	@MessageMapping("/a/{roomId}")
 	@SendTo("/topic/debate/{roomId}")
 	public DebateMessage sendDebateMessage(@DestinationVariable String roomId,
 		@Payload DebateMessage message,
