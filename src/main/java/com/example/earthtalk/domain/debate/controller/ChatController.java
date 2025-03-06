@@ -13,6 +13,8 @@ import com.example.earthtalk.domain.debate.dto.ObserverMessage;
 import com.example.earthtalk.domain.debate.store.ObserverMessageStore;
 import com.example.earthtalk.global.exception.ErrorCode;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * ChatWebSocketHandler는 WebSocket을 통한 토론 및 관찰 메시지 처리를 담당하는 컨트롤러입니다.
  * <p>
@@ -21,6 +23,7 @@ import com.example.earthtalk.global.exception.ErrorCode;
  * </p>
  */
 @Controller
+@Slf4j
 public class ChatController {
 
 	private final DebateMessageStore debateMessageStore;
@@ -50,6 +53,7 @@ public class ChatController {
 		@Payload DebateMessage message,
 		SimpMessageHeaderAccessor headerAccessor
 	) {
+		log.info("new debate message : {}", message.getMessage());
 
 		if (!message.isValidMessage()) {
 			throw new IllegalArgumentException(ErrorCode.INVALID_REQUEST_BODY.getMessage());
