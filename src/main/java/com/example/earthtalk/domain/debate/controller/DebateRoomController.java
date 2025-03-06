@@ -67,7 +67,7 @@ public class DebateRoomController {
 		UUID roomId = UUID.fromString(uuid);
 		Debate debate = debateRepository.findByUuid(roomId)
 			.orElseThrow(() -> new IllegalArgumentException(ErrorCode.DEBATEROOM_NOT_FOUND.getMessage()));
-		DebateRoomResponse response = buildDebateRoomResponse(debate, roomId, true);
+		DebateRoomResponse response = debateRoomService.buildDebateRoomResponse(debate, roomId, true);
 
 		return ResponseEntity.ok().body(ApiResponse.createSuccess(response));
 	}
@@ -84,7 +84,7 @@ public class DebateRoomController {
 		UUID roomId = UUID.fromString(uuid);
 		Debate debate = debateRepository.findByUuid(roomId)
 			.orElseThrow(() -> new IllegalArgumentException(ErrorCode.DEBATEROOM_NOT_FOUND.getMessage()));
-		DebateRoomResponse response = buildDebateRoomResponse(debate, roomId, true);
+		DebateRoomResponse response = debateRoomService.buildDebateRoomResponse(debate, roomId, true);
 		return ResponseEntity.ok().body(ApiResponse.createSuccess(response));
 
 	}
@@ -101,47 +101,12 @@ public class DebateRoomController {
 		UUID roomId = UUID.fromString(uuid);
 		Debate debate = debateRepository.findByUuid(roomId)
 			.orElseThrow(() -> new IllegalArgumentException(ErrorCode.DEBATEROOM_NOT_FOUND.getMessage()));
-		Set<String> proUsers = debateUserStore.getProUsers(roomId.toString());
-		Set<DebateUserResponse> proResponse = convertUsernamesToUserResponses(proUsers);
 
-		Set<String> conUsers = debateUserStore.getConUsers(roomId.toString());
-		Set<DebateUserResponse> conResponse = convertUsernamesToUserResponses(conUsers);
-
-		WaitRoomResponse response = WaitRoomResponse.builder()
-			.roomId(debate.getId())
-			.title(debate.getTitle())
-			.description(debate.getDescription())
-			.memberNumberType(debate.getMember().getValue())
-			.categoryType(debate.getCategory())
-			.continentType(debate.getContinent())
-			.newsUrl(debate.getNews() != null ? debate.getNews().getLink() : null)
-			.status(debate.getStatus())
-			.timeType(debate.getTime().getValue())
-			.speakCountType(debate.getSpeakCount().getValue())
-			.proUsers(proResponse)
-			.conUsers(conResponse)
-			.build();
+		WaitRoomResponse response = debateRoomService.buildWaitRoomResponse(debate, roomId);
 
 		return ResponseEntity.ok().body(ApiResponse.createSuccess(response));
 	}
 
-	private Set<DebateUserResponse> convertUsernamesToUserResponses(Set<String> usernames) {
-		return usernames.stream()
-			.map(userRepository::findByNickname)
-			.filter(Optional::isPresent)
-			.map(Optional::get)
-			.map(user -> DebateUserResponse.builder()
-				.id(user.getId())
-				.nickname(user.getNickname())
-				.email(user.getEmail())
-				.introduction(user.getIntroduction())
-				.profileUrl(user.getProfileUrl())
-				.winNumber(user.getWinNumber())
-				.defeatNumber(user.getDefeatNumber())
-				.drawNumber(user.getDrawNumber())
-				.build())
-			.collect(Collectors.toSet());
-	}
 
 
 
@@ -197,38 +162,6 @@ public class DebateRoomController {
 		return ResponseEntity.ok(ApiResponse.createSuccess(response));
 	}
 
-	private DebateRoomResponse buildDebateRoomResponse(Debate debate, UUID roomId, boolean includeParticipants) {
-		DebateRoomResponse.DebateRoomResponseBuilder builder = DebateRoomResponse.builder()
-			.roomId(debate.getId())
-			.title(debate.getTitle())
-			.description(debate.getDescription())
-			.memberNumberType(debate.getMember().getValue())
-			.categoryType(debate.getCategory())
-			.continentType(debate.getContinent())
-			.newsUrl(debate.getNews() != null ? debate.getNews().getLink() : null)
-			.status(debate.getStatus())
-			.timeType(debate.getTime().getValue())
-			.speakCountType(debate.getSpeakCount().getValue());
-
-		if (includeParticipants) {
-			List<DebateUserResponse> participants = debateParticipantsRepository.findByDebate_Uuid(roomId)
-				.stream()
-				.map(dp -> new DebateUserResponse(
-					dp.getUser().getId(),
-					dp.getUser().getEmail(),
-					dp.getUser().getNickname(),
-					dp.getUser().getIntroduction(),
-					dp.getUser().getProfileUrl(),
-					dp.getUser().getWinNumber(),
-					dp.getUser().getDefeatNumber(),
-					dp.getUser().getDrawNumber()
-				))
-				.toList();
-			builder.participants(participants);
-		}
-
-		return builder.build();
-	}
 
 
 }

@@ -4,8 +4,11 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -15,13 +18,18 @@ import org.springframework.stereotype.Service;
 
 import com.example.earthtalk.domain.debate.dto.CreateDebateRoomRequest;
 import com.example.earthtalk.domain.debate.dto.DebateRoomRedisDto;
+import com.example.earthtalk.domain.debate.dto.DebateRoomResponse;
+import com.example.earthtalk.domain.debate.dto.DebateUserResponse;
 import com.example.earthtalk.domain.debate.dto.VoteRequest;
+import com.example.earthtalk.domain.debate.dto.WaitRoomResponse;
 import com.example.earthtalk.domain.debate.entity.Debate;
 import com.example.earthtalk.domain.debate.entity.DebateParticipants;
 import com.example.earthtalk.domain.debate.entity.FlagType;
 import com.example.earthtalk.domain.debate.entity.RoomType;
+import com.example.earthtalk.domain.debate.repository.DebateParticipantsRepository;
 import com.example.earthtalk.domain.debate.repository.DebateRepository;
 import com.example.earthtalk.domain.debate.store.DebateRoomStore;
+import com.example.earthtalk.domain.debate.store.DebateUserStore;
 import com.example.earthtalk.domain.news.entity.MemberNumberType;
 import com.example.earthtalk.domain.news.entity.News;
 import com.example.earthtalk.domain.news.repository.NewsRepository;
@@ -46,6 +54,8 @@ public class DebateRoomService {
 	private final DebateRepository debateRepository;
 	private final NewsRepository newsRepository;
 	private final UserRepository userRepository;
+	private final DebateUserStore debateUserStore;
+	private final DebateParticipantsRepository debateParticipantsRepository;
 
 	/**
 	 * 새로운 채팅방을 생성하고 저장소에 등록합니다.
@@ -171,4 +181,80 @@ public class DebateRoomService {
 				.orElseThrow(() -> new IllegalArgumentException(ErrorCode.DEBATEROOM_NOT_FOUND.getMessage()));
 		debate.updateRoomType(RoomType.CLOSED);
 	}
+
+	public WaitRoomResponse buildWaitRoomResponse(Debate debate, UUID roomId) {
+		Set<String> proUsers = debateUserStore.getProUsers(roomId.toString());
+		Set<DebateUserResponse> proResponse = convertUsernamesToUserResponses(proUsers);
+
+		Set<String> conUsers  =debateUserStore.getConUsers(roomId.toString());
+		Set<DebateUserResponse> conResponse = convertUsernamesToUserResponses(conUsers);
+
+		return WaitRoomResponse.builder()
+			.roomId(debate.getId())
+			.title(debate.getTitle())
+			.description(debate.getDescription())
+			.memberNumberType(debate.getMember().getValue())
+			.categoryType(debate.getCategory())
+			.continentType(debate.getContinent())
+			.newsUrl(debate.getNews() != null ? debate.getNews().getLink() : null)
+			.status(debate.getStatus())
+			.timeType(debate.getTime().getValue())
+			.speakCountType(debate.getSpeakCount().getValue())
+			.proUsers(proResponse)
+			.conUsers(conResponse)
+			.build();
+	}
+
+	private Set<DebateUserResponse> convertUsernamesToUserResponses(Set<String> usernames) {
+		return usernames.stream()
+			.map(userRepository::findByNickname)
+			.filter(Optional::isPresent)
+			.map(Optional::get)
+			.map(user -> DebateUserResponse.builder()
+				.id(user.getId())
+				.nickname(user.getNickname())
+				.email(user.getEmail())
+				.introduction(user.getIntroduction())
+				.profileUrl(user.getProfileUrl())
+				.winNumber(user.getWinNumber())
+				.defeatNumber(user.getDefeatNumber())
+				.drawNumber(user.getDrawNumber())
+				.build())
+			.collect(Collectors.toSet());
+	}
+
+	public DebateRoomResponse buildDebateRoomResponse(Debate debate, UUID roomId, boolean includeParticipants) {
+		DebateRoomResponse.DebateRoomResponseBuilder builder = DebateRoomResponse.builder()
+			.roomId(debate.getId())
+			.title(debate.getTitle())
+			.description(debate.getDescription())
+			.memberNumberType(debate.getMember().getValue())
+			.categoryType(debate.getCategory())
+			.continentType(debate.getContinent())
+			.newsUrl(debate.getNews() != null ? debate.getNews().getLink() : null)
+			.status(debate.getStatus())
+			.timeType(debate.getTime().getValue())
+			.speakCountType(debate.getSpeakCount().getValue());
+
+		if (includeParticipants) {
+			List<DebateUserResponse> participants = debateParticipantsRepository.findByDebate_Uuid(roomId)
+				.stream()
+				.map(dp -> new DebateUserResponse(
+					dp.getUser().getId(),
+					dp.getUser().getEmail(),
+					dp.getUser().getNickname(),
+					dp.getUser().getIntroduction(),
+					dp.getUser().getProfileUrl(),
+					dp.getUser().getWinNumber(),
+					dp.getUser().getDefeatNumber(),
+					dp.getUser().getDrawNumber()
+				))
+				.toList();
+			builder.participants(participants);
+		}
+
+		return builder.build();
+	}
+
+
 }
