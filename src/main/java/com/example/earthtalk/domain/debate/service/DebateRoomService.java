@@ -56,6 +56,7 @@ public class DebateRoomService {
 	private final UserRepository userRepository;
 	private final DebateUserStore debateUserStore;
 	private final DebateParticipantsRepository debateParticipantsRepository;
+	private final DebateTurnManagementService debateTurnManagementService;
 
 	/**
 	 * 새로운 채팅방을 생성하고 저장소에 등록합니다.
@@ -101,7 +102,7 @@ public class DebateRoomService {
 
 			debateRoomStore.put(debate);
 			debateRepository.save(debate);
-
+			debateTurnManagementService.createDebateTurn(UUID.fromString(roomId),request.getSpeakCount());
 
 		} catch (Exception e) {
 			log.error("토론방 생성 중 오류 발생: {}", e.getMessage(), e);
@@ -146,6 +147,7 @@ public class DebateRoomService {
 	 */
 	public void removeDebateRoom(String roomId) {
 		debateRoomStore.remove(roomId);
+		debateTurnManagementService.removeDebateTurn(UUID.fromString(roomId));
 	}
 
 	@Transactional
