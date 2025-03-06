@@ -10,6 +10,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -63,6 +64,8 @@ public class User extends BaseTimeEntity {
     @Column(nullable = false)
     private AccountStatusType accountStatusType;
 
+    private LocalDateTime suspendedAt;
+
     @Builder
     public User(String email, String nickname, String profileUrl, Role role, SocialType socialType,
         String socialId, String socialAccessToken, String socialRefreshToken) {
@@ -106,12 +109,15 @@ public class User extends BaseTimeEntity {
     public void reportUser(ResultType resultType) {
         if (resultType == ResultType.BAN) {
             this.accountStatusType = AccountStatusType.BANNED;
+            this.role = Role.ROLE_BANNED;
             return;
         }
 
         if (resultType == ResultType.SUSPENSION ||
                 (resultType == ResultType.WARNING && this.accountStatusType == AccountStatusType.WARNING)) {
             this.accountStatusType = AccountStatusType.SUSPENDED;
+            this.suspendedAt = LocalDateTime.now();
+            this.role = Role.ROLE_BANNED;
             return;
         }
 
@@ -120,5 +126,23 @@ public class User extends BaseTimeEntity {
 
     public void restoreUser() {
         this.accountStatusType = AccountStatusType.ACTIVE;
+    }
+
+    public boolean isSuspended() {
+        return this.accountStatusType == AccountStatusType.SUSPENDED;
+    }
+
+    public boolean isBanned() {
+        return this.accountStatusType == AccountStatusType.BANNED;
+    }
+
+    public boolean isSuspensionPeriodOver() {
+        return this.suspendedAt != null && LocalDateTime.now().isAfter(this.suspendedAt.plusDays(3));
+    }
+
+    public void resetAccountStatusType(AccountStatusType accountStatusType) {
+        this.accountStatusType = accountStatusType;
+        this.suspendedAt = null;
+        this.role = Role.ROLE_MEMBER;
     }
 }

@@ -64,7 +64,11 @@ public enum ErrorCode { // 예외 발생시, body에 실어 날려줄 상태, co
     BOOKMARK_NOT_FOUND(404, -7006, "북마크 내역을 찾을 수 없습니다."),
 
     //-8000: NOTIFICATIONS
-    NOTIFICATION_NOT_FOUND(404, -8001, "조회된 알림이 존재하지 않습니다.");
+    NOTIFICATION_NOT_FOUND(404, -8001, "조회된 알림이 존재하지 않습니다."),
+
+    //-9000: REPORT
+    REPORT_BANNED_USER(403, -9000, "영구 사용 정지된 계정입니다."),
+    REPORT_SUSPENDED_USER(403, -9001, "계정이 정지 상태입니다. 남은 정지 기간: %d일 입니다.");
 
 
     // 1. status = 날려줄 상태코드
