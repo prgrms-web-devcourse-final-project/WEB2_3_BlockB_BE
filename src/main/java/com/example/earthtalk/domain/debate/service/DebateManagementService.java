@@ -1,9 +1,17 @@
 package com.example.earthtalk.domain.debate.service;
 
+import com.example.earthtalk.domain.debate.dto.DebateTurnResponse;
+import com.example.earthtalk.domain.debate.entity.SpeakCountType;
+import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import com.example.earthtalk.domain.debate.entity.Debate;
@@ -89,7 +97,5 @@ public class DebateManagementService {
 			}
 		}
 		debateRoomService.removeDebateRoom(debate.getUuid().toString());
-
 	}
-
 }
