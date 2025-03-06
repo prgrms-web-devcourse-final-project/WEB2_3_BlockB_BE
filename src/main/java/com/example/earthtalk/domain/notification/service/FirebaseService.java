@@ -21,7 +21,7 @@ public class FirebaseService {
     private final FirebaseMessaging firebaseMessaging;
     private final FcmTokenService fcmTokenService;
 
-    public void pushNotification(Set<Object> tokens, String content, Long userId) {
+    public void pushNotification(Set<Object> tokens, String content, Long userId, String notificationString) {
         try {
             if (tokens == null || tokens.isEmpty() || content == null || content.isEmpty()) {
                 throw new IllegalArgumentException(ErrorCode.INVALID_REQUEST_BODY);
@@ -30,6 +30,7 @@ public class FirebaseService {
             Notification notification = Notification.builder()
                     .setTitle("알림")
                     .setBody(content)
+                    .setImage(notificationString)
                     .build();
 
             for (Object tokenObj : tokens) {
