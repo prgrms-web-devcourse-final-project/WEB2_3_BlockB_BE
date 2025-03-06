@@ -2,7 +2,6 @@ package com.example.earthtalk.domain.debate.service;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -10,7 +9,9 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import com.example.earthtalk.domain.debate.dto.CreateDebateRoomRequest;
 import com.example.earthtalk.domain.debate.dto.DebateMetaDataResponse;
+import com.example.earthtalk.domain.debate.dto.DebateUserResponse;
 import com.example.earthtalk.domain.debate.entity.Debate;
 import com.example.earthtalk.domain.debate.repository.DebateRepository;
 import com.example.earthtalk.domain.debate.store.DebateRoomStore;
@@ -83,17 +84,40 @@ public class DebateMetaDataService {
 			Set<User> proUsers = fetchUsersByNames(debateUserStore.getProUsers(roomId));
 			Set<User> conUsers = fetchUsersByNames(debateUserStore.getConUsers(roomId));
 
+			// CreateDebateRoomRequest를 builder를 통해 생성
+			CreateDebateRoomRequest debateRoomRequest = CreateDebateRoomRequest.builder()
+				.newsId(debate.getNews() != null ? debate.getNews().getId() : null)
+				.title(debate.getTitle())
+				.newsUrl(debate.getNews() != null ? debate.getNews().getLink() : "")
+				.description(debate.getDescription())
+				.memberNumber(debate.getMember())
+				.continent(debate.getContinent())
+				.category(debate.getCategory())
+				.time(debate.getTime())
+				.speakCount(debate.getSpeakCount())
+				.resultEnabled(debate.isResultEnabled())
+				.build();
+
+			Set<DebateUserResponse> proUserResponses = proUsers.stream()
+				.map(DebateUserResponse::fromEntity)
+				.collect(Collectors.toSet());
+			Set<DebateUserResponse> conUserResponses = conUsers.stream()
+				.map(DebateUserResponse::fromEntity)
+				.collect(Collectors.toSet());
+
 			DebateMetaDataResponse response = DebateMetaDataResponse.builder()
-				.debate(debate)
+				.debateRoomRequest(debateRoomRequest)
 				.currentCount(currentCount)
 				.maxCount(maxCount)
-				.proUsers(proUsers)
-				.conUsers(conUsers)
+				.proUsers(proUserResponses)
+				.conUsers(conUserResponses)
 				.build();
 			responses.add(response);
 		}
 		return responses;
 	}
+
+
 
 	private Set<User> fetchUsersByNames(Collection<String> userNames) {
 		return userNames.stream()
