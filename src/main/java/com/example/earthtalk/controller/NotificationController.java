@@ -90,10 +90,25 @@ public class NotificationController {
         return ResponseEntity.ok(ApiResponse.createSuccess(null));
     }
 
-    @Operation(summary = "전송된 알림의 상태를 변경시키는 API 입니다.", description = "읽지 않은 알림에 대하여 읽음 상태로 변경 시킬 수 있습니다.")
+    // 사용자가 알림을 읽었을 때 status 값을 변경하기 위한 API
+    @Operation(summary = "해당 유저의 모든 알림의 상태를 변경시키는 API 입니다.", description = "해당 유저의 모든 알림에 대하여 읽음 상태로 변경 시킬 수 있습니다.")
+    @PutMapping("/{userId}/readAll")
+    public ResponseEntity<ApiResponse<Void>> readAllNotification(@PathVariable("userId") Long userId) {
+        notificationService.readAllNotifications(userId);
+        return ResponseEntity.ok(ApiResponse.createSuccess(null));
+    }
+
+    @Operation(summary = "해당 알림을 삭제하는 API 입니다.", description = "해당되어 있는 알림을 삭제합니다..")
     @DeleteMapping("/{notificationId}/remove")
     public ResponseEntity<ApiResponse<Void>> removeNotification(@PathVariable("notificationId") Long notificationId) {
         notificationService.removeNotification(notificationId);
+        return ResponseEntity.ok(ApiResponse.createSuccess(null));
+    }
+
+    @Operation(summary = "해당 알림을 삭제하는 API 입니다.", description = "해당되어 있는 알림을 삭제합니다..")
+    @DeleteMapping("/{userId}/removeAll")
+    public ResponseEntity<ApiResponse<Void>> removeAllNotification(@PathVariable("userId") Long userId) {
+        notificationService.removeAllNotifications(userId);
         return ResponseEntity.ok(ApiResponse.createSuccess(null));
     }
 }

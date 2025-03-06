@@ -19,6 +19,7 @@ import com.example.earthtalk.global.exception.ErrorCode;
 import com.example.earthtalk.global.exception.NotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -28,6 +29,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ReportService {
@@ -84,20 +86,24 @@ public class ReportService {
 
     // 신고를 처리하는 메서드 - 알림 추가
     @Transactional
-    public Long updateReport(Long id, UpdateReportRequest request) {
-        // 받은 id 값으로 report 조회
-        Report report = reportRepository.findById(id).orElseThrow(() -> new NotFoundException(ErrorCode.REPORT_NOT_FOUND));
+    public Long updateReport(Long reportId, UpdateReportRequest request) {
 
+        // 에러 확인용 request 값 확인 로그 추가 - 추후에 삭제할 것
+        log.info("reportId : ${} , request : ${}", reportId, request.toString());
+
+        // 받은 id 값으로 report 조회
+        Report report = reportRepository.findById(reportId).orElseThrow(() -> new NotFoundException(ErrorCode.REPORT_NOT_FOUND));
+        log.info("report 조회");
         // 신고 처리 담당자 조회
         User assignedUser = userRepository.findById(request.assignedUserId()).orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
-
+        log.info("assignedUser 조회");
         // 신고에 관한 내용 처리
         report.updateReport(request, assignedUser);
 
         // 유저에 관한 정보 업데이트
         User user = userRepository.findById(report.getTargetUser().getId()).orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
         user.reportUser(report.getResultType());
-
+        log.info("신고당한 유저 조회");
         // 알림 전송
         notificationService.sendNotification(new SendNotificationRequest(
                 report.getTargetUser().getId(),

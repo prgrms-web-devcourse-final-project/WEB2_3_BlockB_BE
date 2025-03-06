@@ -64,8 +64,8 @@ public class Report extends BaseTimeEntity {
     private ResultType resultType; // 신고 처리 유형
 
 
-    public void updateReport(UpdateReportRequest request, User user) {
-        this.assignedUser = user;
+    public void updateReport(UpdateReportRequest request, User assignedUser) {
+        this.assignedUser = assignedUser;
         this.resultType = request.result();
         this.reportContent = request.reportContent();
     }

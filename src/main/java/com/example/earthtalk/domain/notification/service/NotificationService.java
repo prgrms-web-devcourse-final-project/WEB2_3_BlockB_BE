@@ -19,6 +19,7 @@ import com.example.earthtalk.global.exception.NotFoundException;
 import com.example.earthtalk.global.exception.IllegalArgumentException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -26,6 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class NotificationService {
@@ -89,7 +91,7 @@ public class NotificationService {
      */
     public void sendNotification(SendNotificationRequest request) {
         User user = userRepository.findById(request.userId()).orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
-
+        log.info("알림 받는 사용자 조회");
         if (isNotificationNotAllowed(request.userId())) {
             return;
         }
@@ -98,12 +100,12 @@ public class NotificationService {
         if (fcmTokens == null || fcmTokens.isEmpty()) {
             return;
         }
-
+        log.info("FCM 토큰 조회");
         String content = request.content();
         if (content == null) {
             content = getContent(request);
         }
-
+        log.info("알림 내용 입력");
         SaveNotificationRequest saveNotificationRequest = request.toSave(content);
         notificationRepository.save(saveNotificationRequest.toEntity(user));
         firebaseService.pushNotification(fcmTokens, content);
@@ -116,9 +118,25 @@ public class NotificationService {
         notification.read();
     }
 
+    @Transactional
+    public void readAllNotifications(Long userId) {
+        if (userId == null) {
+            throw new IllegalArgumentException(ErrorCode.INVALID_REQUEST_BODY);
+        }
+        notificationRepository.markAllAsReadByUserId(userId);
+    }
+
     // 알림 삭제 메서드
     public void removeNotification(Long notificationId) {
         notificationRepository.deleteById(notificationId);
+    }
+
+    @Transactional
+    public void removeAllNotifications(Long userId) {
+        if (userId == null) {
+            throw new IllegalArgumentException(ErrorCode.INVALID_REQUEST_BODY);
+        }
+        notificationRepository.deleteAllByUserId(userId);
     }
 
     // 알림 허용에 대한 값을 redis 에 저장하는 메서드
