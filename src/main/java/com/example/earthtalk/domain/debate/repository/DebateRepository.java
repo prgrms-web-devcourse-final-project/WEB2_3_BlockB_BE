@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.example.earthtalk.domain.debate.entity.Debate;
@@ -11,4 +13,5 @@ import com.example.earthtalk.domain.debate.entity.RoomType;
 
 public interface DebateRepository extends JpaRepository<Debate, Long> {
 	Optional<Debate> findByUuid(UUID uuid);
+	Page<Debate> findByStatus(RoomType status, Pageable pageable);
 }
