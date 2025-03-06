@@ -20,15 +20,13 @@ import com.example.earthtalk.global.exception.IllegalArgumentException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 
 @Slf4j
@@ -51,11 +49,11 @@ public class NotificationService {
     private static final String CHAT_MESSAGE = "참가 중인 채팅방의 대기가 완료되었습니다.";
 
     // 접속중인 사용자의 id 값을 전달해주면 그와 관련된 알림을 조회하여 반환합니다.
-    public Slice<NotificationListResponse> getNotifications(Long userId, int page) {
+    public Page<NotificationListResponse> getNotifications(Long userId, int page) {
         User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
 
         Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "id"));
-        Slice<Notification> notifications = notificationRepository.getNotifications(user, pageable);
+        Page<Notification> notifications = notificationRepository.getNotifications(user, pageable);
 
         return notifications.map(NotificationListResponse::from);
     }
