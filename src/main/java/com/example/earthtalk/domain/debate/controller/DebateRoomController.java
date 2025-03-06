@@ -24,6 +24,7 @@ import com.example.earthtalk.domain.debate.dto.WaitRoomResponse;
 import com.example.earthtalk.domain.debate.entity.Debate;
 import com.example.earthtalk.domain.debate.entity.DebateParticipants;
 import com.example.earthtalk.domain.debate.entity.FlagType;
+import com.example.earthtalk.domain.debate.entity.RoomType;
 import com.example.earthtalk.domain.debate.repository.DebateParticipantsRepository;
 import com.example.earthtalk.domain.debate.repository.DebateRepository;
 import com.example.earthtalk.domain.debate.service.DebateRoomService;
@@ -106,9 +107,6 @@ public class DebateRoomController {
 
 		return ResponseEntity.ok().body(ApiResponse.createSuccess(response));
 	}
-
-
-
 
 
 
