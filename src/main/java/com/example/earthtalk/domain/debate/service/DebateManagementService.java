@@ -2,6 +2,7 @@ package com.example.earthtalk.domain.debate.service;
 
 import java.util.Set;
 
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -38,6 +39,7 @@ public class DebateManagementService {
 	private final DebateRepository debateRepository;
 	private final UserRepository userRepository;
 	private final DebateRoomService debateRoomService;
+	private final DebateTurnManagementService debateTurnManagementService;
 
 	/**
 	 * 주어진 roomId에 해당하는 채팅방의 캐시 정보가 존재하고, 채팅방이 꽉 찼다면,
@@ -59,6 +61,8 @@ public class DebateManagementService {
 		}
 
 		debateRepository.save(debate);
+		debateTurnManagementService.createDebateTurn(
+			UUID.fromString(debate.getUuid().toString()),debate.getSpeakCount());
 
 		int maxMembers = debate.getMember().getValue();
 		if (proUserNames.size() == maxMembers && conUserNames.size() == maxMembers) {

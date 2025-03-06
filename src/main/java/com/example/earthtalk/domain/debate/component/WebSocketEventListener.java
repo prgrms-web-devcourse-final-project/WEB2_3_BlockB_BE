@@ -1,5 +1,7 @@
 package com.example.earthtalk.domain.debate.component;
 
+import com.example.earthtalk.domain.debate.service.DebateTurnManagementService;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -41,6 +43,7 @@ public class WebSocketEventListener {
 
 	private final DebateUserService debateUserService;
 	private final DebateRoomService debateRoomService;
+	private final DebateTurnManagementService debateTurnManagementService;
 
 	private final DebateChatManagementService debateChatManagementService;
 	private final ObserverChatManagementService observerChatManagementService;
@@ -138,6 +141,7 @@ public class WebSocketEventListener {
 							debateChatManagementService.saveChatHistory(debateRoomId, debateMessages);
 							observerChatManagementService.saveChatHistory(debateRoomId, observerMessages);
 							debateRoomService.updateStatus(debateRoomId);
+							debateTurnManagementService.removeDebateTurn(UUID.fromString(debateRoomId));
 						} catch(Exception e) {
 							throw new SaveFailedException(ErrorCode.SAVE_FAILED);
 						}
