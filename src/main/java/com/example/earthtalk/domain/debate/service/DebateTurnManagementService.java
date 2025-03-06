@@ -1,6 +1,5 @@
 package com.example.earthtalk.domain.debate.service;
 
-import com.example.earthtalk.domain.debate.dto.DebateTurnResponse;
 import com.example.earthtalk.domain.debate.entity.FlagType;
 import com.example.earthtalk.domain.debate.entity.SpeakCountType;
 import java.util.Map;
@@ -38,9 +37,12 @@ public class DebateTurnManagementService {
             case CON -> FlagType.PRO;
             case NO_POSITION -> FlagType.NO_POSITION;
         };
-        debateTurns.put(roomId, nextTurn);
-        messagingTemplate.convertAndSend("/topic/debate/" + roomId.toString(),
-            new DebateTurnResponse("turn_change", nextTurn));
+
+        Map<String, Object> message = Map.of(
+            "event", "turn_change",
+            "turn", nextTurn
+        );
+        messagingTemplate.convertAndSend("/topic/debate/" + roomId.toString(),message);
     }
 
     public void removeDebateTurn(UUID roomId) {
