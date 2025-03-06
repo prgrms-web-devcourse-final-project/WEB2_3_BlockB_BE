@@ -98,14 +98,13 @@ public class ReportService {
         User user = userRepository.findById(report.getTargetUser().getId()).orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
         user.reportUser(report.getResultType());
 
-        // 알림 전송에 관한 내용
-        SendNotificationRequest sendNotificationRequest = new SendNotificationRequest(
+        // 알림 전송
+        notificationService.sendNotification(new SendNotificationRequest(
                 report.getTargetUser().getId(),
                 NotificationType.REPORT,
-                report.getTargetRoomId(),
+                report.getId(),
                 null
-        );
-        notificationService.sendNotification(sendNotificationRequest);
+        ));
 
         // 신고에 관한 내용 업데이트
         return report.getId();

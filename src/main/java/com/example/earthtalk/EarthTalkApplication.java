@@ -6,6 +6,9 @@ import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
+import javax.annotation.PostConstruct;
+import java.util.TimeZone;
+
 @SpringBootApplication
 @EnableJpaAuditing
 @EnableScheduling
@@ -15,4 +18,8 @@ public class EarthTalkApplication {
         SpringApplication.run(EarthTalkApplication.class, args);
     }
 
+    @PostConstruct
+    public void configureTimeZone() {
+        TimeZone.setDefault(TimeZone.getTimeZone("Asia/Seoul"));
+    }
 }
