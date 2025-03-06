@@ -21,7 +21,6 @@ public class DebateTurnManagementService {
     private final SimpMessagingTemplate messagingTemplate;
 
     public void createDebateTurn(UUID roomId, SpeakCountType speakCountType) {
-        System.out.println("createDebateTurn : " + roomId);
         debateTurns.put(roomId, FlagType.PRO);
         ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
         scheduler.scheduleAtFixedRate(() ->
@@ -30,7 +29,6 @@ public class DebateTurnManagementService {
     }
 
     private void switchTurn(UUID roomId) {
-        System.out.println("switchTurn : " + roomId);
         FlagType currentTurn = debateTurns.get(roomId);
         FlagType nextTurn = switch (currentTurn) {
             case PRO -> FlagType.CON;
@@ -46,7 +44,6 @@ public class DebateTurnManagementService {
     }
 
     public void removeDebateTurn(UUID roomId) {
-        System.out.println("Remove debate turn " + roomId);
         debateTurns.remove(roomId);
         turnScheduler.remove(roomId);
     }
