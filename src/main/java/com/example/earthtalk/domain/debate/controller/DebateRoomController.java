@@ -7,6 +7,10 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -14,6 +18,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.earthtalk.domain.debate.dto.DebateRoomResponse;
@@ -71,6 +76,16 @@ public class DebateRoomController {
 		DebateRoomResponse response = debateRoomService.buildDebateRoomResponse(debate, roomId, true);
 
 		return ResponseEntity.ok().body(ApiResponse.createSuccess(response));
+	}
+
+	@GetMapping("/debateroom/finished")
+	public ResponseEntity<ApiResponse<Object>> getFinishedDebateRoom(
+		@RequestParam(defaultValue = "0") int page,
+		@RequestParam(defaultValue = "15") int size
+	) {
+		Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
+		Page<Debate> debates = debateRepository.findByStatus(RoomType.CLOSED, pageable);
+		return ResponseEntity.ok(ApiResponse.createSuccess(debates.isEmpty() ? null : debates));
 	}
 
 	@Operation(summary = "관전자 토론방 상세 조회 API", description = "토론방의 UUID로 관전자용 상세 정보를 조회합니다.")
