@@ -11,6 +11,7 @@ import com.example.earthtalk.domain.notification.service.NotificationService;
 import com.example.earthtalk.global.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Slice;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,8 +28,9 @@ public class NotificationController {
     // 접속중인 사용자의 알림을 조회하기 위한 API.
     @Operation(summary = "알림 조회 API 입니다.", description = "userId 의 값을 받아 해당하는 알림들을 조회합니다.")
     @GetMapping("/{userId}")
-    public ResponseEntity<ApiResponse<List<NotificationListResponse>>> getNotificationList(@PathVariable Long userId) {
-        List<NotificationListResponse> responses = notificationService.getNotifications(userId);
+    public ResponseEntity<ApiResponse<Slice<NotificationListResponse>>> getNotificationList(@PathVariable Long userId,
+                                                                                            @RequestParam(value = "page", required = false, defaultValue = "1") int page) {
+        Slice<NotificationListResponse> responses = notificationService.getNotifications(userId, page);
         return ResponseEntity.ok(ApiResponse.createSuccess(responses));
     }
 
