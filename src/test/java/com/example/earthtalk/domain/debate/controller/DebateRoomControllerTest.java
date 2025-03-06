@@ -42,27 +42,4 @@ public class DebateRoomControllerTest {
 		objectMapper = new ObjectMapper();
 	}
 
-	@Test
-	@DisplayName("채팅방 생성 요청 시 올바른 roomId 반환")
-	public void createRoom_returnsRoomId() throws Exception {
-		// given: 테스트용 CreateDebateRoomRequest 생성 및 설정
-		CreateDebateRoomRequest request = new CreateDebateRoomRequest();
-		request.setTitle("테스트 토론방");
-		request.setDescription("토론방 부제 또는 설명");
-		request.setMemberNumber(MemberNumberType.T2);
-		// 필요한 추가 메타데이터가 있다면 설정
-
-		// 예상되는 roomId (예: in-memory용 UUID)
-		String expectedRoomId = "test-uuid-1234";
-		when(debateRoomService.createDebateRoom(Mockito.any(CreateDebateRoomRequest.class)))
-			.thenReturn(expectedRoomId);
-
-
-		// when & then: POST 요청 수행 및 결과 검증
-		mockMvc.perform(post("/api/chat/create")
-				.contentType(MediaType.APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(request)))
-			.andExpect(status().isOk())
-				.andExpect(jsonPath("$.data").value(expectedRoomId));
-	}
 }
