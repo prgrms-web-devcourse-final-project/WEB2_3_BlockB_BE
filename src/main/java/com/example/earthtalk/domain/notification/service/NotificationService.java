@@ -17,6 +17,7 @@ import com.example.earthtalk.domain.user.repository.UserRepository;
 import com.example.earthtalk.global.exception.ErrorCode;
 import com.example.earthtalk.global.exception.NotFoundException;
 import com.example.earthtalk.global.exception.IllegalArgumentException;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -62,6 +63,7 @@ public class NotificationService {
         return new CheckTokenResponse(isExist, isAllow);
     }
 
+    @Transactional
     // FE 에서 받은 토큰을 fcmToken 값을 redis 에 저장하는 메서드
     public void saveToken(SaveTokenRequest request) {
         if(request == null || request.token() == null) {
@@ -69,11 +71,7 @@ public class NotificationService {
         }
         userRepository.findById(request.userId()).orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
         String redisKey = NOTIFICATION_AGREE_PREFIX + request.userId();
-        if (request.isAllow().equals("true")) {
-            redisTemplate.opsForValue().set(redisKey, "true");
-        } else {
-            redisTemplate.opsForValue().set(redisKey, "false");
-        }
+        saveNotificationAllow(redisKey, request.isAllow());
         fcmTokenService.saveFcmToken(request.userId(), request.token());
     }
 
@@ -108,14 +106,21 @@ public class NotificationService {
     }
 
     // 사용자가 알림을 확인했을 때 status 를 read 로 변경시키는 메서드.
+    @Transactional
     public void readNotification(Long notificationId) {
         Notification notification = notificationRepository.findById(notificationId).orElseThrow(() -> new NotFoundException(ErrorCode.NOTIFICATION_NOT_FOUND));
         notification.read();
     }
 
+    // 알림 삭제 메서드
     public void removeNotification(Long notificationId) {
-        notificationRepository.findById(notificationId).orElseThrow(() -> new NotFoundException(ErrorCode.NOTIFICATION_NOT_FOUND));
         notificationRepository.deleteById(notificationId);
+    }
+
+    // 알림 허용에 대한 값을 redis 에 저장하는 메서드
+    private void saveNotificationAllow(String redisKey, String isAllow) {
+        String value = Boolean.parseBoolean(isAllow) ? "true" : "false";
+        redisTemplate.opsForValue().set(redisKey, value);
     }
 
     // 알림 허용에 대해 거부하는 메서드 - 마이페이지에서 알림 거부할 때 사용.
@@ -125,7 +130,7 @@ public class NotificationService {
         redisTemplate.opsForValue().set(redisKey, "false");
     }
 
-    // 알림 허용 여부를 redis 에서 가져오는 메서드 - 거부할 시 true
+    // 알림 허용 여부를 redis 에서 가져오는 메서드 - 허용하지 않을 시 true
     private boolean isNotificationNotAllowed(Long userId) {
         userRepository.findById(userId).orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
         String redisKey = NOTIFICATION_AGREE_PREFIX + userId;
