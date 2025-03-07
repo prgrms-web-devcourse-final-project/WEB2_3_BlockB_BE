@@ -8,6 +8,7 @@ import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBr
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
+import com.example.earthtalk.domain.debate.component.ContinentHandshakeInterceptor;
 import com.example.earthtalk.domain.debate.component.RoomIdInterceptor;
 import com.example.earthtalk.global.security.util.JwtTokenProvider;
 
@@ -39,6 +40,10 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 		registry.addEndpoint("/room-list")
 			.setAllowedOrigins("*");
 		log.info("Registered STOMP endpoint: /room-list");
+
+		registry.addEndpoint("/room-List/filtered")
+			.setAllowedOrigins("*")
+			.addInterceptors(new ContinentHandshakeInterceptor());
 	}
 
 }
