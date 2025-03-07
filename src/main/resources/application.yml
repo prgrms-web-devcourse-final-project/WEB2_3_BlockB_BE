@@ -6,4 +6,4 @@ spring:
     active: prod
     group:
       prod: "prod"
-      dev:  "dev"
+      dev: "dev"
