@@ -76,7 +76,7 @@ public class AdminController {
     @Operation(summary = "사용자 권한 수정 API", description = "사용자의 권한을 수정합니다.")
     @ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "성공")})
-    @PutMapping("/users/authority/{userId}")
+    @PutMapping("/authority/{userId}")
     public ResponseEntity<ApiResponse<Object>> putUserAuthority(@PathVariable("userId") Long userId,
         @RequestBody Role role) {
         userService.updateAuthority(userId, role);
