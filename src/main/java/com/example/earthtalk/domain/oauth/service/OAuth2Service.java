@@ -169,7 +169,8 @@ public class OAuth2Service {
         }
         // 신고 예외 처리
         validateUserStatus(findUser);
-        findUser.updateTokens(tokens.accessToken(), tokens.refreshToken());
+        findUser.updateLoginInfo(attributes.getOauth2UserResponse().getImageUrl(),
+            tokens.accessToken(), tokens.refreshToken());
         return userRepository.save(findUser);
     }
 
