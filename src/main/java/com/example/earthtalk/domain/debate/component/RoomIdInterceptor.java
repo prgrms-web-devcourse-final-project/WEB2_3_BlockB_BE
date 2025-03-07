@@ -9,6 +9,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.server.HandshakeInterceptor;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * WebSocket 연결 시 특정 토론방의 roomId를 추출하여 세션 속성에 저장하는 인터셉터 클래스.
  *
@@ -18,6 +20,7 @@ import org.springframework.web.socket.server.HandshakeInterceptor;
  * <p>이를 통해 이후 WebSocket 핸들러에서 `roomId` 값을 활용할 수 있음.</p>
  */
 @Component
+@Slf4j
 public class RoomIdInterceptor implements HandshakeInterceptor {
 
 	/**
@@ -33,6 +36,8 @@ public class RoomIdInterceptor implements HandshakeInterceptor {
 	@Override
 	public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response,
 		WebSocketHandler wsHandler, Map<String, Object> attributes) throws Exception {
+		log.info("beforeHandshake 진입");
+
 		if (request instanceof ServletServerHttpRequest) {
 			ServletServerHttpRequest servletRequest = (ServletServerHttpRequest) request;
 			String uri = servletRequest.getURI().toString();

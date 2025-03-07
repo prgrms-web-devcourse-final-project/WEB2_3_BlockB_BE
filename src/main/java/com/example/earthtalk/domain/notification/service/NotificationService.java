@@ -7,6 +7,7 @@ import com.example.earthtalk.domain.notification.dto.request.SaveTokenRequest;
 import com.example.earthtalk.domain.notification.dto.request.SendNotificationRequest;
 import com.example.earthtalk.domain.notification.dto.response.CheckTokenResponse;
 import com.example.earthtalk.domain.notification.dto.response.NotificationListResponse;
+import com.example.earthtalk.domain.notification.dto.response.NotificationListResponseWithUnreadCount;
 import com.example.earthtalk.domain.notification.entity.Notification;
 import com.example.earthtalk.domain.notification.entity.NotificationType;
 import com.example.earthtalk.domain.notification.repository.NotificationRepository;
@@ -20,15 +21,13 @@ import com.example.earthtalk.global.exception.IllegalArgumentException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 
 @Slf4j
@@ -47,17 +46,23 @@ public class NotificationService {
     private static final int size = 10;
     private static final String NOTIFICATION_AGREE_PREFIX = "notification_allowed:";
     private static final String FOLLOW_MESSAGE = "%s님이 당신을 팔로우했습니다.";
-    private static final String REPORT_MESSAGE = "%s(으)로 운영자에게 %s을(를) 처분받았습니다.";
+    private static final String REPORT_MESSAGE = "%s(으)로 운영자에게 %s(을)를 처분받았습니다.";
     private static final String CHAT_MESSAGE = "참가 중인 채팅방의 대기가 완료되었습니다.";
+    private static final String NOTIFICATION_STRING = "%d,%s,%d,%s,%s";
 
     // 접속중인 사용자의 id 값을 전달해주면 그와 관련된 알림을 조회하여 반환합니다.
-    public Slice<NotificationListResponse> getNotifications(Long userId, int page) {
+    public NotificationListResponseWithUnreadCount getNotifications(Long userId, int page) {
         User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
 
         Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "id"));
-        Slice<Notification> notifications = notificationRepository.getNotifications(user, pageable);
+        Page<Notification> notifications = notificationRepository.getNotifications(user, pageable);
 
-        return notifications.map(NotificationListResponse::from);
+        int unreadCount = notificationRepository.getCountUnread(user);
+
+        return new NotificationListResponseWithUnreadCount(
+                unreadCount,
+                notifications.map(NotificationListResponse::from)
+        );
     }
 
     public CheckTokenResponse checkToken(CheckTokenRequest request) {
@@ -109,8 +114,17 @@ public class NotificationService {
         }
 
         SaveNotificationRequest saveNotificationRequest = request.toSave(content);
-        notificationRepository.save(saveNotificationRequest.toEntity(user));
-        firebaseService.pushNotification(fcmTokens, content, request.userId());
+        Notification notification = saveNotificationRequest.toEntity(user);
+        notificationRepository.save(notification);
+
+        String notificationString = String.format(NOTIFICATION_STRING,
+                notification.getId(),
+                notification.getNotificationType().name(),
+                notification.getNotificationTypeId(),
+                notification.getContent(),
+                notification.getStatusType().name());
+
+        firebaseService.pushNotification(fcmTokens, content, request.userId(), notificationString);
     }
 
     // 사용자가 알림을 확인했을 때 status 를 read 로 변경시키는 메서드.

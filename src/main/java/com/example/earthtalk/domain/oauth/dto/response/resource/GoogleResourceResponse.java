@@ -20,6 +20,7 @@ public class GoogleResourceResponse extends OAuth2UserResponse {
 
     @Override
     public String getImageUrl() {
-        return (String) attributes.get("picture");
+        String originalImageUrl = (String) attributes.get("picture");
+        return originalImageUrl.replaceAll("=s\\d+-c", "=s640-c");
     }
 }

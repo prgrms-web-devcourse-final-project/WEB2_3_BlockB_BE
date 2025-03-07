@@ -1,23 +1,36 @@
 package com.example.earthtalk.domain.debate.service;
 
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 
 import lombok.RequiredArgsConstructor;
 
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import com.example.earthtalk.domain.debate.dto.DebateMessage;
+import com.example.earthtalk.domain.debate.dto.DebateResultMessage;
+import com.example.earthtalk.domain.debate.dto.ObserverMessage;
 import com.example.earthtalk.domain.debate.entity.Debate;
+import com.example.earthtalk.domain.debate.entity.DebateChat;
+import com.example.earthtalk.domain.debate.entity.FlagType;
+import com.example.earthtalk.domain.debate.entity.RoomType;
+import com.example.earthtalk.domain.debate.repository.DebateChatRepository;
 import com.example.earthtalk.domain.debate.repository.DebateRepository;
+import com.example.earthtalk.domain.debate.store.DebateMessageStore;
 import com.example.earthtalk.domain.debate.store.DebateUserStore;
 import com.example.earthtalk.domain.debate.entity.DebateParticipants;
 import com.example.earthtalk.domain.debate.repository.DebateParticipantsRepository;
-import com.example.earthtalk.domain.user.repository.UserRepository;
+import com.example.earthtalk.domain.debate.store.ObserverMessageStore;
 import com.example.earthtalk.global.exception.ErrorCode;
 import com.example.earthtalk.global.exception.ConflictException;
+import com.example.earthtalk.global.exception.SaveFailedException;
 
 /**
  * DebateUserService는 토론방 내 사용자의 입장, 퇴장 및 상태 업데이트를 관리하는 서비스 클래스입니다.
@@ -33,8 +46,6 @@ public class DebateUserService {
 
 	private final SimpMessagingTemplate messagingTemplate;
 	private final DebateManagementService debateManagementService;
-	private final DebateRoomService debateRoomService;
-	private final UserRepository userRepository;
 	private final DebateParticipantsRepository debateParticipantsRepository;
 
 	// 사용자 상태 관리를 담당하는 별도의 컴포넌트
@@ -42,8 +53,11 @@ public class DebateUserService {
 	private final DebateRepository debateRepository;
 
 	private final RedissonClient redissonClient;
-
-
+	private final DebateMessageStore debateMessageStore;
+	private final ObserverMessageStore observerMessageStore;
+	private final ObserverChatManagementService observerChatManagementService;
+	private final DebateChatRepository debateChatRepository;
+	private final DebateChatManagementService debateChatManagementService;
 
 	/**
 	 * 토론방에 사용자를 추가합니다.
@@ -105,29 +119,90 @@ public class DebateUserService {
 	 * @param userName 퇴장하는 사용자 이름
 	 */
 	public void removeUser(String roomId, String userName) {
-		boolean removed = false;
 
-		Set<String> proSet = debateUserStore.getProUsers(roomId);
-		if (proSet.contains(userName)) {
-			removed = proSet.remove(userName);
-			if (proSet.isEmpty()) {
-				debateUserStore.removeProUsers(roomId);
+		RLock lock = redissonClient.getLock("debate:lock:" + roomId);
+		lock.lock();
+		try {
+			boolean removed = false;
+
+			Debate debate = debateRepository.findByUuid(UUID.fromString(roomId))
+				.orElseThrow(() -> new IllegalArgumentException(ErrorCode.DEBATEROOM_NOT_FOUND.getMessage()));
+
+			Set<String> proSet = debateUserStore.getProUsers(roomId);
+			if (proSet.contains(userName)) {
+				removed = proSet.remove(userName);
+				if (proSet.isEmpty()) {
+					debateUserStore.removeProUsers(roomId);
+				}
 			}
-		}
 
-		Set<String> conSet = debateUserStore.getConUsers(roomId);
-		if (conSet.contains(userName)) {
-			removed = conSet.remove(userName) || removed;
-			if (conSet.isEmpty()) {
-				debateUserStore.removeConUsers(roomId);
+			Set<String> conSet = debateUserStore.getConUsers(roomId);
+			if (conSet.contains(userName)) {
+				removed = conSet.remove(userName) || removed;
+				if (conSet.isEmpty()) {
+					debateUserStore.removeConUsers(roomId);
+				}
 			}
-		}
 
-		if (removed) {
-			sendUserCountUpdate(roomId);
-			sendUserLeftMessage(roomId, userName);
+			if (removed) {
+				sendUserCountUpdate(roomId);
+				sendUserLeftMessage(roomId, userName);
+			}
+
+			if (debate.getMember().getValue() != 1
+				&& ((proSet.size() <= 1 || conSet.size() <= 1)
+				&& debate.getAgreeNumber() == 0
+				&& debate.getDisagreeNumber() == 0
+				&& debate.getNeutralNumber() == 0)) {
+				List<DebateMessage> debateMessages = debateMessageStore.removeDebateMessages(roomId);
+				List<ObserverMessage> observerMessages = observerMessageStore.removeObserverMessages(roomId);
+				if (debateMessages != null && !debateMessages.isEmpty()) {
+					try {
+						debateChatManagementService.saveChatHistory(roomId, debateMessages);
+						observerChatManagementService.saveChatHistory(roomId, observerMessages);
+						if (debate.isResultEnabled()) {
+							FlagType winningTeam = determineWinningTeam(proSet.size());
+							updateParticipantsResult(debate, winningTeam);
+
+							String victoryMsg = winningTeam == FlagType.PRO
+								? "찬성 팀이 승리했습니다."
+								: "반대 팀이 승리했습니다.";
+
+							DebateResultMessage victoryMessage = DebateResultMessage.builder()
+								.event("notification")
+								.roomId(roomId)
+								.message(victoryMsg)
+								.build();
+
+							messagingTemplate.convertAndSend("/topic/debate/" + roomId, victoryMessage);
+							messagingTemplate.convertAndSend("/topic/observer/" + roomId, victoryMessage);
+
+						}
+					} catch (Exception e) {
+						throw new SaveFailedException(ErrorCode.SAVE_FAILED);
+					}
+				}
+			}
+		} finally {
+			lock.unlock();
 		}
 	}
+
+	private FlagType determineWinningTeam(int proSize) {
+		return proSize <= 1 ? FlagType.CON : FlagType.PRO;
+	}
+
+	private void updateParticipantsResult(Debate debate, FlagType winningTeam) {
+		for (DebateParticipants participant : debate.getParticipants()) {
+			if (participant.getPosition() == winningTeam) {
+				participant.getUser().incrementWinNumber();
+			} else {
+				participant.getUser().incrementDefeatNumber();
+			}
+			debate.updateRoomType(RoomType.CLOSED);
+		}
+	}
+
 
 	/**
 	 * 주어진 토론방의 현재 사용자 수를 반환합니다.

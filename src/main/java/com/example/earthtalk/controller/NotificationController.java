@@ -6,12 +6,13 @@ import com.example.earthtalk.domain.notification.dto.request.SaveTokenRequest;
 import com.example.earthtalk.domain.notification.dto.request.SendNotificationRequest;
 import com.example.earthtalk.domain.notification.dto.response.CheckTokenResponse;
 import com.example.earthtalk.domain.notification.dto.response.NotificationListResponse;
+import com.example.earthtalk.domain.notification.dto.response.NotificationListResponseWithUnreadCount;
 import com.example.earthtalk.domain.notification.service.FcmTokenService;
 import com.example.earthtalk.domain.notification.service.NotificationService;
 import com.example.earthtalk.global.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,10 +29,10 @@ public class NotificationController {
     // 접속중인 사용자의 알림을 조회하기 위한 API.
     @Operation(summary = "알림 조회 API 입니다.", description = "userId 의 값을 받아 해당하는 알림들을 조회합니다.")
     @GetMapping("/{userId}")
-    public ResponseEntity<ApiResponse<Slice<NotificationListResponse>>> getNotificationList(@PathVariable Long userId,
-                                                                                            @RequestParam(value = "page", required = false, defaultValue = "1") int page) {
-        Slice<NotificationListResponse> responses = notificationService.getNotifications(userId, page);
-        return ResponseEntity.ok(ApiResponse.createSuccess(responses));
+    public ResponseEntity<ApiResponse<NotificationListResponseWithUnreadCount>> getNotificationList(@PathVariable Long userId,
+                                                                                                    @RequestParam(value = "page", required = false, defaultValue = "1") int page) {
+        NotificationListResponseWithUnreadCount response = notificationService.getNotifications(userId, page);
+        return ResponseEntity.ok(ApiResponse.createSuccess(response));
     }
 
     @Operation(summary = "FCM 토큰 조회 API 입니다.", description = "토큰 값과 userId 값을 통해 토큰값이 이미 존재하는지 확인합니다.")

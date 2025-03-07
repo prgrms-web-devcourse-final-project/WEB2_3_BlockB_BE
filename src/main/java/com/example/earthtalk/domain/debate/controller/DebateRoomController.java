@@ -7,6 +7,10 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -14,6 +18,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.earthtalk.domain.debate.dto.DebateRoomResponse;
@@ -24,6 +29,7 @@ import com.example.earthtalk.domain.debate.dto.WaitRoomResponse;
 import com.example.earthtalk.domain.debate.entity.Debate;
 import com.example.earthtalk.domain.debate.entity.DebateParticipants;
 import com.example.earthtalk.domain.debate.entity.FlagType;
+import com.example.earthtalk.domain.debate.entity.RoomType;
 import com.example.earthtalk.domain.debate.repository.DebateParticipantsRepository;
 import com.example.earthtalk.domain.debate.repository.DebateRepository;
 import com.example.earthtalk.domain.debate.service.DebateRoomService;
@@ -72,6 +78,16 @@ public class DebateRoomController {
 		return ResponseEntity.ok().body(ApiResponse.createSuccess(response));
 	}
 
+	@GetMapping("/debateroom/finished")
+	public ResponseEntity<ApiResponse<Object>> getFinishedDebateRoom(
+		@RequestParam(defaultValue = "0") int page,
+		@RequestParam(defaultValue = "15") int size
+	) {
+		Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
+		Page<Debate> debates = debateRepository.findByStatus(RoomType.CLOSED, pageable);
+		return ResponseEntity.ok(ApiResponse.createSuccess(debates.isEmpty() ? null : debates));
+	}
+
 	@Operation(summary = "관전자 토론방 상세 조회 API", description = "토론방의 UUID로 관전자용 상세 정보를 조회합니다.")
 	@ApiResponses(value = {
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "토론방 정보를 성공적으로 조회했습니다."),
@@ -109,9 +125,6 @@ public class DebateRoomController {
 
 
 
-
-
-
 	@Operation(summary = "투표 업데이트 API", description = "토론방의 투표 수(찬성, 반대, 중립)를 업데이트하고 업데이트 된 결과에 따라 유저의 승/패를 추가적으로 업데이트합니다.")
 	@ApiResponses(value = {
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "투표 수가 성공적으로 업데이트되었습니다."),
@@ -120,9 +133,9 @@ public class DebateRoomController {
 	})
 	@PutMapping("/vote/{roomId}")
 	public ResponseEntity<ApiResponse<Object>> putVote(
-		@PathVariable("roomId") Long roomId,
+		@PathVariable("roomId") String roomId,
 		@RequestBody VoteRequest request) {
-		Debate debate = debateRepository.findById(roomId)
+		Debate debate = debateRepository.findByUuid(UUID.fromString(roomId))
 			.orElseThrow(() -> new IllegalArgumentException(ErrorCode.DEBATEROOM_NOT_FOUND.getMessage()));
 
 		if (request.getNeutralNumber() < 0 || request.getDisagreeNumber() < 0 || request.getAgreeNumber() < 0) {

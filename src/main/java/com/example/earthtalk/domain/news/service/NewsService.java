@@ -6,6 +6,7 @@ import com.example.earthtalk.domain.news.entity.News;
 import com.example.earthtalk.domain.news.entity.NewsType;
 import com.example.earthtalk.domain.news.repository.NewsRepository;
 import com.example.earthtalk.global.constant.ContinentType;
+import io.github.bonigarcia.wdm.WebDriverManager;
 import jakarta.validation.constraints.NotNull;
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -34,9 +35,6 @@ public class NewsService {
 
     private final NewsRepository newsRepository;
     private final CrawlConfig crawlConfig;
-    public List<News> getAllNews() {
-        return newsRepository.findAll();
-    }
     private static final String WEB_DRIVER_ID = "webdriver.chrome.driver";
 
     @Value("${webdriver.chrome.path}")
@@ -68,16 +66,22 @@ public class NewsService {
     }
 
     public List<News> crawlNews(@NotNull NewsSite newsSite, ContinentType continentType) {
+        WebDriverManager.chromedriver().setup();
         // 브라우저 옵션 설정
         ChromeOptions options = new ChromeOptions();
-        options.addArguments("--headless");  // GUI 없이 실행
+        options.addArguments("--headless=new");  // GUI 없이 실행
         options.addArguments("--disable-gpu"); // 백그라운드 실행
         options.addArguments("--window-size=1920,1080");
         options.addArguments("--no-sandbox");
         options.addArguments("--disable-dev-shm-usage");
-        options.setPageLoadTimeout(Duration.ofSeconds(10));
+        options.addArguments("--disable-blink-features=AutomationControlled");
+        options.addArguments("--remote-debugging-port=9222");
+
         // 웹 드라이버 실행
         WebDriver driver = new ChromeDriver(options);
+
+        driver.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(20));
+        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(5));
 
         List<News> newsList = new ArrayList<>();
         LocalDateTime latestArticleTime = getLatestNews(newsSite.getName(), continentType);
@@ -130,6 +134,7 @@ public class NewsService {
                             .toFormatter();
                         LocalDateTime deliveryTime = LocalDateTime.parse(date, formatter);
 
+                        log.info("마지막 크롤링한 기사 시간: " + latestArticleTime + ", deliveryTime: " + deliveryTime);
                         // 이미 크롤링 한 뉴스 중복 방지
                         if(latestArticleTime != null) {
                             if (deliveryTime.isBefore(latestArticleTime) || deliveryTime.equals(
@@ -151,7 +156,7 @@ public class NewsService {
                         newsList.add(news);
                         // 크롤링한 뉴스 갯수
                         cnt++;
-                        if (cnt >= 50) {
+                        if (cnt >= 200) {
                             stopFlag = true;
                             break;
                         }

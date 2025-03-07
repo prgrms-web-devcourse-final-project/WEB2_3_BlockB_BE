@@ -2,7 +2,6 @@ package com.example.earthtalk.domain.debate.service;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -10,7 +9,10 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import com.example.earthtalk.domain.debate.dto.CreateDebateRoomRequest;
 import com.example.earthtalk.domain.debate.dto.DebateMetaDataResponse;
+import com.example.earthtalk.domain.debate.dto.DebateMetaDataRoomResponse;
+import com.example.earthtalk.domain.debate.dto.DebateUserResponse;
 import com.example.earthtalk.domain.debate.entity.Debate;
 import com.example.earthtalk.domain.debate.repository.DebateRepository;
 import com.example.earthtalk.domain.debate.store.DebateRoomStore;
@@ -83,17 +85,28 @@ public class DebateMetaDataService {
 			Set<User> proUsers = fetchUsersByNames(debateUserStore.getProUsers(roomId));
 			Set<User> conUsers = fetchUsersByNames(debateUserStore.getConUsers(roomId));
 
+			DebateMetaDataRoomResponse debateRoomResponse = DebateMetaDataRoomResponse.fromEntity(debate);
+
+			Set<DebateUserResponse> proUserResponses = proUsers.stream()
+				.map(DebateUserResponse::fromEntity)
+				.collect(Collectors.toSet());
+			Set<DebateUserResponse> conUserResponses = conUsers.stream()
+				.map(DebateUserResponse::fromEntity)
+				.collect(Collectors.toSet());
+
 			DebateMetaDataResponse response = DebateMetaDataResponse.builder()
-				.debate(debate)
+				.debateMetaDataRoomResponse(debateRoomResponse)
 				.currentCount(currentCount)
 				.maxCount(maxCount)
-				.proUsers(proUsers)
-				.conUsers(conUsers)
+				.proUsers(proUserResponses)
+				.conUsers(conUserResponses)
 				.build();
 			responses.add(response);
 		}
 		return responses;
 	}
+
+
 
 	private Set<User> fetchUsersByNames(Collection<String> userNames) {
 		return userNames.stream()

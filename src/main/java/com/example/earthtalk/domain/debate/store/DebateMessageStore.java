@@ -9,6 +9,9 @@ import org.springframework.stereotype.Component;
 
 import com.example.earthtalk.domain.debate.dto.DebateMessage;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * ChatMessageStore는 채팅방(roomId)별로 DebateMessage를 인메모리로 저장하고 관리하는 컴포넌트입니다.
  * <p>
@@ -24,6 +27,7 @@ public class DebateMessageStore {
 	 */
 	private final Map<String, List<DebateMessage>> debateMessagesMap = new ConcurrentHashMap<>();
 
+	private static final Logger logger = LoggerFactory.getLogger(DebateMessageStore.class);
 	/**
 	 * 지정된 roomId에 해당하는 DebateMessage 리스트를 반환합니다.
 	 * <p>
@@ -34,6 +38,7 @@ public class DebateMessageStore {
 	 * @return 해당 채팅방의 DebateMessage 리스트
 	 */
 	public List<DebateMessage> getOrCreateDebateMessages(String roomId) {
+		logger.debug("getOrCreateDebateMessages 호출 - roomId : {}" , roomId);
 		return debateMessagesMap.computeIfAbsent(roomId, k -> new ArrayList<>());
 	}
 
@@ -44,6 +49,7 @@ public class DebateMessageStore {
 	 * @param message 추가할 DebateMessage 객체
 	 */
 	public void addDebateMessage(String roomId, DebateMessage message) {
+		logger.debug("addDebateMessage 호출 - roomId : {} , message : {} ", roomId, message);
 		getOrCreateDebateMessages(roomId).add(message);
 	}
 

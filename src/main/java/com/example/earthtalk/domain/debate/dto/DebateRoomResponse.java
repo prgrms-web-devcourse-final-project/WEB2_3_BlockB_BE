@@ -1,8 +1,10 @@
 package com.example.earthtalk.domain.debate.dto;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.example.earthtalk.domain.debate.entity.CategoryType;
+import com.example.earthtalk.domain.debate.entity.Debate;
 import com.example.earthtalk.domain.debate.entity.RoomType;
 import com.example.earthtalk.global.constant.ContinentType;
 

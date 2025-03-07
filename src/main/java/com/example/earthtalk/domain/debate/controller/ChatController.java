@@ -13,6 +13,8 @@ import com.example.earthtalk.domain.debate.dto.ObserverMessage;
 import com.example.earthtalk.domain.debate.store.ObserverMessageStore;
 import com.example.earthtalk.global.exception.ErrorCode;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * ChatWebSocketHandler는 WebSocket을 통한 토론 및 관찰 메시지 처리를 담당하는 컨트롤러입니다.
  * <p>
@@ -21,6 +23,7 @@ import com.example.earthtalk.global.exception.ErrorCode;
  * </p>
  */
 @Controller
+@Slf4j
 public class ChatController {
 
 	private final DebateMessageStore debateMessageStore;
@@ -44,12 +47,13 @@ public class ChatController {
 	 * @return 검증 후 그대로 반환된 DebateMessage, 이는 "/topic/debate/{roomId}"로 전송됩니다.
 	 * @throws IllegalArgumentException 메시지의 필수 필드가 null 또는 공백인 경우
 	 */
-	@MessageMapping("/a/{roomId}")
+	@MessageMapping("/debate/{roomId}")
 	@SendTo("/topic/debate/{roomId}")
 	public DebateMessage sendDebateMessage(@DestinationVariable String roomId,
 		@Payload DebateMessage message,
 		SimpMessageHeaderAccessor headerAccessor
 	) {
+		log.info("new debate message : {}", message.getMessage());
 
 		if (!message.isValidMessage()) {
 			throw new IllegalArgumentException(ErrorCode.INVALID_REQUEST_BODY.getMessage());
