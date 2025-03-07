@@ -1,5 +1,8 @@
 package com.example.earthtalk.domain.debate.service;
 
+import com.example.earthtalk.domain.notification.dto.request.SendNotificationRequest;
+import com.example.earthtalk.domain.notification.entity.NotificationType;
+import com.example.earthtalk.domain.notification.service.NotificationService;
 import java.util.Set;
 
 import java.util.UUID;
@@ -40,6 +43,7 @@ public class DebateManagementService {
 	private final UserRepository userRepository;
 	private final DebateRoomService debateRoomService;
 	private final DebateTurnManagementService debateTurnManagementService;
+	private final NotificationService notificationService;
 
 	/**
 	 * 주어진 roomId에 해당하는 채팅방의 캐시 정보가 존재하고, 채팅방이 꽉 찼다면,
@@ -61,8 +65,6 @@ public class DebateManagementService {
 		}
 
 		debateRepository.save(debate);
-		debateTurnManagementService.createDebateTurn(
-			UUID.fromString(debate.getUuid().toString()),debate.getSpeakCount());
 
 		int maxMembers = debate.getMember().getValue();
 		if (proUserNames.size() == maxMembers && conUserNames.size() == maxMembers) {
@@ -77,6 +79,12 @@ public class DebateManagementService {
 					.position(FlagType.PRO)
 					.build();
 				debateParticipantsRepository.save(debateParticipants);
+				notificationService.sendNotification(new SendNotificationRequest(
+					user.getId(),
+					NotificationType.CHAT,
+					debate.getId(),
+					null
+				));
 			}
 
 			for (String username : conUserNames) {
@@ -89,8 +97,16 @@ public class DebateManagementService {
 					.position(FlagType.CON)
 					.build();
 				debateParticipantsRepository.save(debateParticipants);
+				notificationService.sendNotification(new SendNotificationRequest(
+					user.getId(),
+					NotificationType.CHAT,
+					debate.getId(),
+					null
+				));
 			}
 		}
 		debateRoomService.removeDebateRoom(debate.getUuid().toString());
+		debateTurnManagementService.createDebateTurn(
+			UUID.fromString(debate.getUuid().toString()),debate.getSpeakCount());
 	}
 }

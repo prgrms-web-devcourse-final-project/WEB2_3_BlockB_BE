@@ -56,7 +56,6 @@ public class DebateRoomService {
 	private final UserRepository userRepository;
 	private final DebateUserStore debateUserStore;
 	private final DebateParticipantsRepository debateParticipantsRepository;
-	private final DebateTurnManagementService debateTurnManagementService;
 
 	/**
 	 * 새로운 채팅방을 생성하고 저장소에 등록합니다.
@@ -94,7 +93,7 @@ public class DebateRoomService {
 				.resultEnabled(request.isResultEnabled())
 				.time(request.getTime())
 				.cachedTime(LocalDateTime.now())
-				.status(RoomType.DEBATE) // 기본 상태 설정
+				.status(RoomType.WAITING) // 기본 상태 설정
 				.agreeNumber(0L) // 초기 찬성 수
 				.disagreeNumber(0L) // 초기 반대 수
 				.neutralNumber(0L) // 초기 중립 수

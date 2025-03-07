@@ -1,6 +1,8 @@
 package com.example.earthtalk.domain.debate.service;
 
+import com.example.earthtalk.domain.debate.entity.EventType;
 import com.example.earthtalk.domain.debate.entity.FlagType;
+import com.example.earthtalk.domain.debate.entity.RoomType;
 import com.example.earthtalk.domain.debate.entity.SpeakCountType;
 import java.util.Map;
 import java.util.UUID;
@@ -21,26 +23,54 @@ public class DebateTurnManagementService {
     private final SimpMessagingTemplate messagingTemplate;
 
     public void createDebateTurn(UUID roomId, SpeakCountType speakCountType) {
-        debateTurns.put(roomId, FlagType.PRO);
+        debateTurns.put(roomId, FlagType.NO_POSITION);
         ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
         scheduler.scheduleAtFixedRate(() ->
-            switchTurn(roomId), speakCountType.getValue(), speakCountType.getValue(), TimeUnit.MINUTES);
+            switchTurn(roomId), 20, speakCountType.getValue() * 60 - 10, TimeUnit.SECONDS);
         turnScheduler.put(roomId, scheduler);
+
+        Map<String, Object> message = Map.of(
+            "event", EventType.NOTIFICATION,
+            "message", "잠시 후 토론이 시작됩니다... "
+        );
+        messagingTemplate.convertAndSend("/topic/debate" + roomId, message);
     }
 
     private void switchTurn(UUID roomId) {
+        if (debateTurns.get(roomId) == FlagType.NO_POSITION) {
+            Map<String, Object> message = Map.of(
+                "event", EventType.STATUS,
+                "status", RoomType.DEBATE,
+                "message", "토론이 시작되었습니다."
+            );
+            debateTurns.put(roomId, FlagType.PRO);
+            messagingTemplate.convertAndSend("/topic/debate" + roomId, message);
+            return;
+        }
+
+        Map<String, Object> message1 = Map.of(
+            "event", EventType.NOTIFICATION,
+            "message", "잠시 후 턴이 바뀝니다."
+        );
+        messagingTemplate.convertAndSend("/topic/debate" + roomId, message1);
+
         FlagType currentTurn = debateTurns.get(roomId);
         FlagType nextTurn = switch (currentTurn) {
             case PRO -> FlagType.CON;
             case CON -> FlagType.PRO;
             case NO_POSITION -> FlagType.NO_POSITION;
         };
-
-        Map<String, Object> message = Map.of(
-            "event", "turn_change",
-            "turn", nextTurn
-        );
-        messagingTemplate.convertAndSend("/topic/debate/" + roomId.toString(),message);
+        String turn = nextTurn == FlagType.PRO ? "찬성" : "반대";
+        ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+        scheduler.schedule(() -> {
+            Map<String, Object> message2 = Map.of(
+                "event", EventType.TURN,
+                "turn", nextTurn,
+                "message", turn + "팀 발언이 시작되었습니다."
+            );
+            messagingTemplate.convertAndSend("/topic/debate/" + roomId.toString(), message2);
+            debateTurns.put(roomId, nextTurn);
+        }, 10, TimeUnit.SECONDS);  // 10초 후에 실행
     }
 
     public void removeDebateTurn(UUID roomId) {
