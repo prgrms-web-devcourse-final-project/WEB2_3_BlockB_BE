@@ -12,6 +12,7 @@ import com.example.earthtalk.domain.debate.entity.DebateChat;
 import com.example.earthtalk.domain.debate.entity.DebateParticipants;
 import com.example.earthtalk.domain.debate.entity.FlagType;
 import com.example.earthtalk.domain.debate.repository.DebateChatRepository;
+import com.example.earthtalk.domain.debate.repository.DebateParticipantsRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -28,8 +29,8 @@ import lombok.RequiredArgsConstructor;
 public class DebateChatManagementService {
 
 	private final DebateChatRepository debateChatRepository;
-	private final DebateUserService debateUserService;
 	private final DebateService debateService;
+	private final DebateParticipantsRepository debateParticipantsRepository;
 
 	/**
 	 * 주어진 토론방(UUID)와 DebateMessage 리스트를 기반으로 채팅 로그를 데이터베이스에 저장합니다.
@@ -59,7 +60,7 @@ public class DebateChatManagementService {
 		List<DebateChat> chatList = messages.stream()
 			.filter(message -> message.getEvent().equals("chat")) //
 			.map(message -> {
-				DebateParticipants debateParticipants = debateUserService.getDebateUserByUserName(message.getUserName());
+				DebateParticipants debateParticipants = findDebateUserByUserName(message.getUserName());
 				if (debateParticipants == null) {
 					return Optional.<DebateChat>empty(); // Optional 사용하여 null 방지
 				}
@@ -84,5 +85,10 @@ public class DebateChatManagementService {
 			debateChatRepository.flush();
 		}
 
+	}
+
+	private DebateParticipants findDebateUserByUserName(String userName) {
+		return debateParticipantsRepository.findByUser_Nickname(userName)
+			.orElse(null);
 	}
 }

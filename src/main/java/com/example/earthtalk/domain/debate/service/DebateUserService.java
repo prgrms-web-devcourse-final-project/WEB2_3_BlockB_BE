@@ -1,23 +1,35 @@
 package com.example.earthtalk.domain.debate.service;
 
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 
 import lombok.RequiredArgsConstructor;
 
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import com.example.earthtalk.domain.debate.dto.DebateMessage;
+import com.example.earthtalk.domain.debate.dto.ObserverMessage;
 import com.example.earthtalk.domain.debate.entity.Debate;
+import com.example.earthtalk.domain.debate.entity.DebateChat;
+import com.example.earthtalk.domain.debate.entity.FlagType;
+import com.example.earthtalk.domain.debate.entity.RoomType;
+import com.example.earthtalk.domain.debate.repository.DebateChatRepository;
 import com.example.earthtalk.domain.debate.repository.DebateRepository;
+import com.example.earthtalk.domain.debate.store.DebateMessageStore;
 import com.example.earthtalk.domain.debate.store.DebateUserStore;
 import com.example.earthtalk.domain.debate.entity.DebateParticipants;
 import com.example.earthtalk.domain.debate.repository.DebateParticipantsRepository;
-import com.example.earthtalk.domain.user.repository.UserRepository;
+import com.example.earthtalk.domain.debate.store.ObserverMessageStore;
 import com.example.earthtalk.global.exception.ErrorCode;
 import com.example.earthtalk.global.exception.ConflictException;
+import com.example.earthtalk.global.exception.SaveFailedException;
 
 /**
  * DebateUserService는 토론방 내 사용자의 입장, 퇴장 및 상태 업데이트를 관리하는 서비스 클래스입니다.
@@ -33,8 +45,6 @@ public class DebateUserService {
 
 	private final SimpMessagingTemplate messagingTemplate;
 	private final DebateManagementService debateManagementService;
-	private final DebateRoomService debateRoomService;
-	private final UserRepository userRepository;
 	private final DebateParticipantsRepository debateParticipantsRepository;
 
 	// 사용자 상태 관리를 담당하는 별도의 컴포넌트
@@ -42,8 +52,10 @@ public class DebateUserService {
 	private final DebateRepository debateRepository;
 
 	private final RedissonClient redissonClient;
-
-
+	private final DebateMessageStore debateMessageStore;
+	private final ObserverMessageStore observerMessageStore;
+	private final ObserverChatManagementService observerChatManagementService;
+	private final DebateChatRepository debateChatRepository;
 
 	/**
 	 * 토론방에 사용자를 추가합니다.
@@ -107,6 +119,9 @@ public class DebateUserService {
 	public void removeUser(String roomId, String userName) {
 		boolean removed = false;
 
+		Debate debate = debateRepository.findByUuid(UUID.fromString(roomId))
+			.orElseThrow(() -> new IllegalArgumentException(ErrorCode.DEBATEROOM_NOT_FOUND.getMessage()));
+
 		Set<String> proSet = debateUserStore.getProUsers(roomId);
 		if (proSet.contains(userName)) {
 			removed = proSet.remove(userName);
@@ -127,7 +142,75 @@ public class DebateUserService {
 			sendUserCountUpdate(roomId);
 			sendUserLeftMessage(roomId, userName);
 		}
+
+		if (debate.getMember().getValue() != 1 && (proSet.size() <= 1 || conSet.size() <= 1)) {
+			List<DebateMessage> debateMessages = debateMessageStore.removeDebateMessages(roomId);
+			List<ObserverMessage> observerMessages = observerMessageStore.removeObserverMessages(roomId);
+			if (debateMessages != null && !debateMessages.isEmpty()) {
+				try {
+					saveChatHistory(roomId, debateMessages);
+					observerChatManagementService.saveChatHistory(roomId, observerMessages);
+					if (debate.isResultEnabled()) {
+						FlagType winningTeam = determineWinningTeam(proSet.size());
+						updateParticipantsResult(debate, winningTeam);
+					}
+				} catch (Exception e) {
+					throw new SaveFailedException(ErrorCode.SAVE_FAILED);
+				}
+			}
+		}
 	}
+
+	@Async
+	public void saveChatHistory(String uuid, List<DebateMessage> messages) {
+		Debate debate = debateRepository.findByUuid(UUID.fromString(uuid))
+			.orElseThrow(() -> new IllegalArgumentException(ErrorCode.DEBATEROOM_NOT_FOUND.getMessage()));
+
+		List<DebateChat> chatList = messages.stream()
+			.filter(message -> message.getEvent().equals("chat")) //
+			.map(message -> {
+				DebateParticipants debateParticipants = getDebateUserByUserName(message.getUserName());
+				if (debateParticipants == null) {
+					return Optional.<DebateChat>empty(); // Optional 사용하여 null 방지
+				}
+				// FlagType 변환을 Enum 메서드로 추출하여 가독성 향상
+				return Optional.of(DebateChat.builder()
+					.debate(debate)
+					.debateParticipants(debateParticipants)
+					.content(message.getMessage())
+					.time(message.getTimestamp())
+					.build());
+			})
+			.flatMap(Optional::stream) // Optional을 활용하여 null 제거
+			.toList();
+
+
+		int batchSize = 100;
+		for (int i = 0; i < chatList.size(); i += batchSize) {
+			int end = Math.min(i + batchSize, chatList.size());
+			List<DebateChat> batch = chatList.subList(i, end);
+			debateChatRepository.saveAll(batch);
+			// 필요한 경우 flush()를 호출하여 DB에 즉시 반영할 수 있습니다.
+			debateChatRepository.flush();
+		}
+
+	}
+
+	private FlagType determineWinningTeam(int proSize) {
+		return proSize <= 1 ? FlagType.CON : FlagType.PRO;
+	}
+
+	private void updateParticipantsResult(Debate debate, FlagType winningTeam) {
+		for (DebateParticipants participant : debate.getParticipants()) {
+			if (participant.getPosition() == winningTeam) {
+				participant.getUser().incrementWinNumber();
+			} else {
+				participant.getUser().incrementDefeatNumber();
+			}
+			debate.updateRoomType(RoomType.CLOSED);
+		}
+	}
+
 
 	/**
 	 * 주어진 토론방의 현재 사용자 수를 반환합니다.
