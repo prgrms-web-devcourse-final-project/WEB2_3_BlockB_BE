@@ -7,6 +7,7 @@ import com.example.earthtalk.domain.notification.dto.request.SaveTokenRequest;
 import com.example.earthtalk.domain.notification.dto.request.SendNotificationRequest;
 import com.example.earthtalk.domain.notification.dto.response.CheckTokenResponse;
 import com.example.earthtalk.domain.notification.dto.response.NotificationListResponse;
+import com.example.earthtalk.domain.notification.dto.response.NotificationListResponseWithUnreadCount;
 import com.example.earthtalk.domain.notification.entity.Notification;
 import com.example.earthtalk.domain.notification.entity.NotificationType;
 import com.example.earthtalk.domain.notification.repository.NotificationRepository;
@@ -50,13 +51,18 @@ public class NotificationService {
     private static final String NOTIFICATION_STRING = "%d,%s,%d,%s,%s";
 
     // 접속중인 사용자의 id 값을 전달해주면 그와 관련된 알림을 조회하여 반환합니다.
-    public Page<NotificationListResponse> getNotifications(Long userId, int page) {
+    public NotificationListResponseWithUnreadCount getNotifications(Long userId, int page) {
         User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
 
         Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "id"));
         Page<Notification> notifications = notificationRepository.getNotifications(user, pageable);
 
-        return notifications.map(NotificationListResponse::from);
+        int unreadCount = notificationRepository.getCountUnread(user);
+
+        return new NotificationListResponseWithUnreadCount(
+                unreadCount,
+                notifications.map(NotificationListResponse::from)
+        );
     }
 
     public CheckTokenResponse checkToken(CheckTokenRequest request) {
