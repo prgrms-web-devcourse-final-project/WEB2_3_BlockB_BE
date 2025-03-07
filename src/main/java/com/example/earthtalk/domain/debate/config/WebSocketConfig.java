@@ -41,7 +41,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 			.setAllowedOrigins("*");
 		log.info("Registered STOMP endpoint: /room-list");
 
-		registry.addEndpoint("/room-List/filtered")
+		registry.addEndpoint("/room-list/filtered")
 			.setAllowedOrigins("*")
 			.addInterceptors(new ContinentHandshakeInterceptor());
 	}
