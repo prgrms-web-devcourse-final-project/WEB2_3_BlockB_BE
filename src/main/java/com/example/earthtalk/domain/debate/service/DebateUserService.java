@@ -15,6 +15,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import com.example.earthtalk.domain.debate.dto.DebateMessage;
+import com.example.earthtalk.domain.debate.dto.DebateResultMessage;
 import com.example.earthtalk.domain.debate.dto.ObserverMessage;
 import com.example.earthtalk.domain.debate.entity.Debate;
 import com.example.earthtalk.domain.debate.entity.DebateChat;
@@ -118,47 +119,68 @@ public class DebateUserService {
 	 * @param userName 퇴장하는 사용자 이름
 	 */
 	public void removeUser(String roomId, String userName) {
-		boolean removed = false;
 
-		Debate debate = debateRepository.findByUuid(UUID.fromString(roomId))
-			.orElseThrow(() -> new IllegalArgumentException(ErrorCode.DEBATEROOM_NOT_FOUND.getMessage()));
+		RLock lock = redissonClient.getLock("debate:lock:" + roomId);
+		lock.lock();
+		try {
+			boolean removed = false;
 
-		Set<String> proSet = debateUserStore.getProUsers(roomId);
-		if (proSet.contains(userName)) {
-			removed = proSet.remove(userName);
-			if (proSet.isEmpty()) {
-				debateUserStore.removeProUsers(roomId);
-			}
-		}
+			Debate debate = debateRepository.findByUuid(UUID.fromString(roomId))
+				.orElseThrow(() -> new IllegalArgumentException(ErrorCode.DEBATEROOM_NOT_FOUND.getMessage()));
 
-		Set<String> conSet = debateUserStore.getConUsers(roomId);
-		if (conSet.contains(userName)) {
-			removed = conSet.remove(userName) || removed;
-			if (conSet.isEmpty()) {
-				debateUserStore.removeConUsers(roomId);
-			}
-		}
-
-		if (removed) {
-			sendUserCountUpdate(roomId);
-			sendUserLeftMessage(roomId, userName);
-		}
-
-		if (debate.getMember().getValue() != 1 && (proSet.size() <= 1 || conSet.size() <= 1)) {
-			List<DebateMessage> debateMessages = debateMessageStore.removeDebateMessages(roomId);
-			List<ObserverMessage> observerMessages = observerMessageStore.removeObserverMessages(roomId);
-			if (debateMessages != null && !debateMessages.isEmpty()) {
-				try {
-					debateChatManagementService.saveChatHistory(roomId, debateMessages);
-					observerChatManagementService.saveChatHistory(roomId, observerMessages);
-					if (debate.isResultEnabled()) {
-						FlagType winningTeam = determineWinningTeam(proSet.size());
-						updateParticipantsResult(debate, winningTeam);
-					}
-				} catch (Exception e) {
-					throw new SaveFailedException(ErrorCode.SAVE_FAILED);
+			Set<String> proSet = debateUserStore.getProUsers(roomId);
+			if (proSet.contains(userName)) {
+				removed = proSet.remove(userName);
+				if (proSet.isEmpty()) {
+					debateUserStore.removeProUsers(roomId);
 				}
 			}
+
+			Set<String> conSet = debateUserStore.getConUsers(roomId);
+			if (conSet.contains(userName)) {
+				removed = conSet.remove(userName) || removed;
+				if (conSet.isEmpty()) {
+					debateUserStore.removeConUsers(roomId);
+				}
+			}
+
+			if (removed) {
+				sendUserCountUpdate(roomId);
+				sendUserLeftMessage(roomId, userName);
+			}
+
+			if (debate.getMember().getValue() != 1 && (proSet.size() <= 1 || conSet.size() <= 1)) {
+				List<DebateMessage> debateMessages = debateMessageStore.removeDebateMessages(roomId);
+				List<ObserverMessage> observerMessages = observerMessageStore.removeObserverMessages(roomId);
+				if (debateMessages != null && !debateMessages.isEmpty()) {
+					try {
+						debateChatManagementService.saveChatHistory(roomId, debateMessages);
+						observerChatManagementService.saveChatHistory(roomId, observerMessages);
+						if (debate.isResultEnabled()) {
+							FlagType winningTeam = determineWinningTeam(proSet.size());
+							updateParticipantsResult(debate, winningTeam);
+
+							String victoryMsg = winningTeam == FlagType.PRO
+								? "찬성 팀이 승리했습니다."
+								: "반대 팀이 승리했습니다.";
+
+							DebateResultMessage victoryMessage = DebateResultMessage.builder()
+								.event("notification")
+								.roomId(roomId)
+								.message(victoryMsg)
+								.build();
+
+							messagingTemplate.convertAndSend("/topic/debate/" + roomId, victoryMessage);
+							messagingTemplate.convertAndSend("/topic/observer/" + roomId, victoryMessage);
+
+						}
+					} catch (Exception e) {
+						throw new SaveFailedException(ErrorCode.SAVE_FAILED);
+					}
+				}
+			}
+		} finally {
+			lock.unlock();
 		}
 	}
 
