@@ -10,7 +10,7 @@ import lombok.RequiredArgsConstructor;
 @Builder
 @RequiredArgsConstructor
 public class DebateMetaDataResponse {
-	private final CreateDebateRoomRequest debateRoomRequest;
+	private final DebateMetaDataRoomResponse debateMetaDataRoomResponse;
 	private final Long currentCount;
 	private final Long maxCount;
 	private final Set<DebateUserResponse> proUsers;
