@@ -6,7 +6,6 @@ import com.example.earthtalk.domain.oauth.repository.RefreshTokenRepository;
 import com.example.earthtalk.domain.oauth.dto.OAuthAttributes;
 import com.example.earthtalk.domain.oauth.util.OAuthClient;
 import com.example.earthtalk.domain.user.dto.request.UserInfoRequest;
-import com.example.earthtalk.domain.user.entity.AccountStatusType;
 import com.example.earthtalk.domain.user.entity.Role;
 import com.example.earthtalk.domain.user.entity.SocialType;
 import com.example.earthtalk.domain.user.entity.User;
@@ -232,7 +231,7 @@ public class OAuth2Service {
                 );
             }
             // 3일이 지나면 상태 복구
-            user.resetAccountStatusType(AccountStatusType.ACTIVE);
+            user.restoreUser();
         }
         if (user.isBanned()) {
             throw new BadRequestException(ErrorCode.REPORT_BANNED_USER);

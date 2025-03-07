@@ -126,6 +126,7 @@ public class User extends BaseTimeEntity {
 
     public void restoreUser() {
         this.accountStatusType = AccountStatusType.ACTIVE;
+        this.role = Role.ROLE_MEMBER;
     }
 
     public boolean isSuspended() {
@@ -138,11 +139,5 @@ public class User extends BaseTimeEntity {
 
     public boolean isSuspensionPeriodOver() {
         return this.suspendedAt != null && LocalDateTime.now().isAfter(this.suspendedAt.plusDays(3));
-    }
-
-    public void resetAccountStatusType(AccountStatusType accountStatusType) {
-        this.accountStatusType = accountStatusType;
-        this.suspendedAt = null;
-        this.role = Role.ROLE_MEMBER;
     }
 }
