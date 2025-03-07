@@ -56,6 +56,7 @@ public class DebateUserService {
 	private final ObserverMessageStore observerMessageStore;
 	private final ObserverChatManagementService observerChatManagementService;
 	private final DebateChatRepository debateChatRepository;
+	private final DebateChatManagementService debateChatManagementService;
 
 	/**
 	 * 토론방에 사용자를 추가합니다.
@@ -148,7 +149,7 @@ public class DebateUserService {
 			List<ObserverMessage> observerMessages = observerMessageStore.removeObserverMessages(roomId);
 			if (debateMessages != null && !debateMessages.isEmpty()) {
 				try {
-					saveChatHistory(roomId, debateMessages);
+					debateChatManagementService.saveChatHistory(roomId, debateMessages);
 					observerChatManagementService.saveChatHistory(roomId, observerMessages);
 					if (debate.isResultEnabled()) {
 						FlagType winningTeam = determineWinningTeam(proSet.size());
@@ -159,41 +160,6 @@ public class DebateUserService {
 				}
 			}
 		}
-	}
-
-	@Async
-	public void saveChatHistory(String uuid, List<DebateMessage> messages) {
-		Debate debate = debateRepository.findByUuid(UUID.fromString(uuid))
-			.orElseThrow(() -> new IllegalArgumentException(ErrorCode.DEBATEROOM_NOT_FOUND.getMessage()));
-
-		List<DebateChat> chatList = messages.stream()
-			.filter(message -> message.getEvent().equals("chat")) //
-			.map(message -> {
-				DebateParticipants debateParticipants = getDebateUserByUserName(message.getUserName());
-				if (debateParticipants == null) {
-					return Optional.<DebateChat>empty(); // Optional 사용하여 null 방지
-				}
-				// FlagType 변환을 Enum 메서드로 추출하여 가독성 향상
-				return Optional.of(DebateChat.builder()
-					.debate(debate)
-					.debateParticipants(debateParticipants)
-					.content(message.getMessage())
-					.time(message.getTimestamp())
-					.build());
-			})
-			.flatMap(Optional::stream) // Optional을 활용하여 null 제거
-			.toList();
-
-
-		int batchSize = 100;
-		for (int i = 0; i < chatList.size(); i += batchSize) {
-			int end = Math.min(i + batchSize, chatList.size());
-			List<DebateChat> batch = chatList.subList(i, end);
-			debateChatRepository.saveAll(batch);
-			// 필요한 경우 flush()를 호출하여 DB에 즉시 반영할 수 있습니다.
-			debateChatRepository.flush();
-		}
-
 	}
 
 	private FlagType determineWinningTeam(int proSize) {
