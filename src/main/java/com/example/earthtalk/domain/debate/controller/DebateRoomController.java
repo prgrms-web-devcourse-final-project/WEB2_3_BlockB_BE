@@ -3,6 +3,7 @@ package com.example.earthtalk.domain.debate.controller;
 import java.util.UUID;
 
 import com.example.earthtalk.domain.debate.entity.*;
+import com.example.earthtalk.domain.news.entity.MemberNumberType;
 import com.example.earthtalk.domain.news.entity.TimeType;
 import com.example.earthtalk.global.constant.ContinentType;
 import org.springframework.data.domain.Page;
@@ -60,12 +61,12 @@ public class DebateRoomController {
 			@RequestParam(value = "q", required = false) String q,
 			@RequestParam(value = "continent", required = false) ContinentType continent,
 			@RequestParam(value = "category", required = false)CategoryType category,
-			@RequestParam(value = "time", required = false)TimeType time,
+			@RequestParam(value = "member", required = false) MemberNumberType member,
 			@RequestParam(value = "p", required = false, defaultValue = "1") int page,
 			@RequestParam(value = "sort", required = false, defaultValue = "recent") String sort
 	) {
 		page = page <= 1 ? 0 : page - 1;
-		Page<Debate> debates = debateRoomService.getFinishDebateRooms(q, continent, category, time, page, sort);
+		Page<Debate> debates = debateRoomService.getFinishDebateRooms(q, continent, category, member, page, sort);
 		return ResponseEntity.ok(ApiResponse.createSuccess(debates));
 	}
 

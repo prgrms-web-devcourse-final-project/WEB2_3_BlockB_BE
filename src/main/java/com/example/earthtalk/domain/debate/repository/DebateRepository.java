@@ -4,6 +4,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import com.example.earthtalk.domain.debate.entity.CategoryType;
+import com.example.earthtalk.domain.news.entity.MemberNumberType;
 import com.example.earthtalk.domain.news.entity.TimeType;
 import com.example.earthtalk.global.constant.ContinentType;
 import org.springframework.data.domain.Page;
@@ -22,7 +23,7 @@ public interface DebateRepository extends JpaRepository<Debate, Long> {
 			"WHERE (:query IS NULL OR d.title LIKE CONCAT('%', :query, '%')) AND " +
 			"(:continent IS NULL OR d.continent = :continent) AND " +
 			"(:category IS NULL OR d.category = :category) AND " +
-			"(:time IS NULL OR d.time = :time) AND " +
+			"(:member IS NULL OR d.member = :member) AND " +
 			"d.status = 0" +
 			"ORDER BY CASE " +
 			"WHEN :sort = 'popular' THEN (d.agreeNumber + d.disagreeNumber + d.neutralNumber)" +
@@ -31,7 +32,7 @@ public interface DebateRepository extends JpaRepository<Debate, Long> {
 	Page<Debate> findFinishDebatesByParams(@Param("query") String query,
 										   @Param("continent")ContinentType continent,
 										   @Param("category") CategoryType category,
-										   @Param("time") TimeType time,
+										   @Param("member") MemberNumberType member,
 										   @Param("sort") String sort,
 										   Pageable pageable);
 }

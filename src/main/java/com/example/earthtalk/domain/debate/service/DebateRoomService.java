@@ -11,6 +11,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import com.example.earthtalk.domain.debate.entity.*;
+import com.example.earthtalk.domain.news.entity.MemberNumberType;
 import com.example.earthtalk.domain.news.entity.TimeType;
 import com.example.earthtalk.global.constant.ContinentType;
 import jakarta.transaction.Transactional;
@@ -140,9 +141,9 @@ public class DebateRoomService {
 			.orElseThrow(() -> new IllegalArgumentException(ErrorCode.DEBATEROOM_NOT_FOUND.getMessage()));
 	}
 
-	public Page<Debate> getFinishDebateRooms(String query, ContinentType continent, CategoryType category, TimeType time, int page, String sort) {
+	public Page<Debate> getFinishDebateRooms(String query, ContinentType continent, CategoryType category, MemberNumberType member, int page, String sort) {
 		Pageable pageable = PageRequest.of(page, 15);
-		return debateRepository.findFinishDebatesByParams(query, continent, category, time, sort, pageable);
+		return debateRepository.findFinishDebatesByParams(query, continent, category, member, sort, pageable);
 	}
 
 	/**
