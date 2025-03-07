@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import com.example.earthtalk.domain.debate.dto.CreateDebateRoomRequest;
 import com.example.earthtalk.domain.debate.dto.DebateMetaDataResponse;
+import com.example.earthtalk.domain.debate.dto.DebateMetaDataRoomResponse;
 import com.example.earthtalk.domain.debate.dto.DebateUserResponse;
 import com.example.earthtalk.domain.debate.entity.Debate;
 import com.example.earthtalk.domain.debate.repository.DebateRepository;
@@ -84,19 +85,7 @@ public class DebateMetaDataService {
 			Set<User> proUsers = fetchUsersByNames(debateUserStore.getProUsers(roomId));
 			Set<User> conUsers = fetchUsersByNames(debateUserStore.getConUsers(roomId));
 
-			// CreateDebateRoomRequest를 builder를 통해 생성
-			CreateDebateRoomRequest debateRoomRequest = CreateDebateRoomRequest.builder()
-				.newsId(debate.getNews() != null ? debate.getNews().getId() : null)
-				.title(debate.getTitle())
-				.newsUrl(debate.getNews() != null ? debate.getNews().getLink() : "")
-				.description(debate.getDescription())
-				.memberNumber(debate.getMember())
-				.continent(debate.getContinent())
-				.category(debate.getCategory())
-				.time(debate.getTime())
-				.speakCount(debate.getSpeakCount())
-				.resultEnabled(debate.isResultEnabled())
-				.build();
+			DebateMetaDataRoomResponse debateRoomResponse = DebateMetaDataRoomResponse.fromEntity(debate);
 
 			Set<DebateUserResponse> proUserResponses = proUsers.stream()
 				.map(DebateUserResponse::fromEntity)
@@ -106,7 +95,7 @@ public class DebateMetaDataService {
 				.collect(Collectors.toSet());
 
 			DebateMetaDataResponse response = DebateMetaDataResponse.builder()
-				.debateRoomRequest(debateRoomRequest)
+				.debateMetaDataRoomResponse(debateRoomResponse)
 				.currentCount(currentCount)
 				.maxCount(maxCount)
 				.proUsers(proUserResponses)
