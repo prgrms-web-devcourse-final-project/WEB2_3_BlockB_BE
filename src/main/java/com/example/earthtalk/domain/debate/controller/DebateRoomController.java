@@ -1,20 +1,14 @@
 package com.example.earthtalk.domain.debate.controller;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
+import com.example.earthtalk.domain.debate.entity.*;
+import com.example.earthtalk.domain.news.entity.TimeType;
+import com.example.earthtalk.global.constant.ContinentType;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,23 +16,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.earthtalk.domain.debate.dto.DebateRoomResponse;
-import com.example.earthtalk.domain.debate.dto.DebateUserResponse;
 import com.example.earthtalk.domain.debate.dto.VoteRequest;
 import com.example.earthtalk.domain.debate.dto.VoteResponse;
 import com.example.earthtalk.domain.debate.dto.WaitRoomResponse;
-import com.example.earthtalk.domain.debate.entity.Debate;
-import com.example.earthtalk.domain.debate.entity.DebateParticipants;
-import com.example.earthtalk.domain.debate.entity.FlagType;
-import com.example.earthtalk.domain.debate.entity.RoomType;
-import com.example.earthtalk.domain.debate.repository.DebateParticipantsRepository;
 import com.example.earthtalk.domain.debate.repository.DebateRepository;
 import com.example.earthtalk.domain.debate.service.DebateRoomService;
-import com.example.earthtalk.domain.debate.service.DebateUserService;
-import com.example.earthtalk.domain.debate.store.DebateUserStore;
-import com.example.earthtalk.domain.report.dto.request.InsertReportRequest;
-import com.example.earthtalk.domain.report.service.ReportService;
-import com.example.earthtalk.domain.user.entity.User;
-import com.example.earthtalk.domain.user.repository.UserRepository;
 import com.example.earthtalk.global.exception.ErrorCode;
 import com.example.earthtalk.global.response.ApiResponse;
 
@@ -54,12 +36,7 @@ import lombok.RequiredArgsConstructor;
 public class DebateRoomController {
 
 	private final DebateRepository debateRepository;
-	private final DebateParticipantsRepository debateParticipantsRepository;
-	private final UserRepository userRepository;
-	private final ReportService reportService;
 	private final DebateRoomService debateRoomService;
-	private final DebateUserService debateUserService;
-	private final DebateUserStore debateUserStore;
 
 	@Operation(summary = "토론방 상세 조회 API", description = "토론방의 UUID로 상세 정보를 조회합니다.")
 	@ApiResponses(value = {
@@ -67,7 +44,7 @@ public class DebateRoomController {
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 토론방을 찾을 수 없습니다.")
 	})
 	@GetMapping("/{uuid}")
-	public ResponseEntity<ApiResponse<Object>> getDebateRoom(
+	public ResponseEntity<ApiResponse<DebateRoomResponse>> getDebateRoom(
 		@PathVariable("uuid") String uuid
 	) {
 		UUID roomId = UUID.fromString(uuid);
@@ -78,14 +55,18 @@ public class DebateRoomController {
 		return ResponseEntity.ok().body(ApiResponse.createSuccess(response));
 	}
 
-	@GetMapping("/debateroom/finished")
-	public ResponseEntity<ApiResponse<Object>> getFinishedDebateRoom(
-		@RequestParam(defaultValue = "0") int page,
-		@RequestParam(defaultValue = "15") int size
+	@GetMapping("/debateRoom/finished")
+	public ResponseEntity<ApiResponse<Page<Debate>>> getFinishedDebateRoom(
+			@RequestParam(value = "q", required = false) String q,
+			@RequestParam(value = "continent", required = false) ContinentType continent,
+			@RequestParam(value = "category", required = false)CategoryType category,
+			@RequestParam(value = "time", required = false)TimeType time,
+			@RequestParam(value = "p", required = false, defaultValue = "1") int page,
+			@RequestParam(value = "sort", required = false, defaultValue = "recent") String sort
 	) {
-		Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
-		Page<Debate> debates = debateRepository.findByStatus(RoomType.CLOSED, pageable);
-		return ResponseEntity.ok(ApiResponse.createSuccess(debates.isEmpty() ? null : debates));
+		page = page <= 1 ? 0 : page - 1;
+		Page<Debate> debates = debateRoomService.getFinishDebateRooms(q, continent, category, time, page, sort);
+		return ResponseEntity.ok(ApiResponse.createSuccess(debates));
 	}
 
 	@Operation(summary = "관전자 토론방 상세 조회 API", description = "토론방의 UUID로 관전자용 상세 정보를 조회합니다.")
@@ -94,7 +75,7 @@ public class DebateRoomController {
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 토론방을 찾을 수 없습니다.")
 	})
 	@GetMapping("/observer/{uuid}")
-	public ResponseEntity<ApiResponse<Object>> getObserverDebateRoom(
+	public ResponseEntity<ApiResponse<DebateRoomResponse>> getObserverDebateRoom(
 		@PathVariable("uuid") String uuid
 	) {
 		UUID roomId = UUID.fromString(uuid);
@@ -111,7 +92,7 @@ public class DebateRoomController {
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 토론방을 찾을 수 없습니다.")
 	})
 	@GetMapping("/waitroom/{uuid}")
-	public ResponseEntity<ApiResponse<Object>> getObserverWaitRoom(
+	public ResponseEntity<ApiResponse<WaitRoomResponse>> getObserverWaitRoom(
 		@PathVariable("uuid") String uuid
 	) {
 		UUID roomId = UUID.fromString(uuid);
@@ -132,7 +113,7 @@ public class DebateRoomController {
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 토론방을 찾을 수 없습니다."),
 	})
 	@PutMapping("/vote/{roomId}")
-	public ResponseEntity<ApiResponse<Object>> putVote(
+	public ResponseEntity<ApiResponse<Void>> putVote(
 		@PathVariable("roomId") String roomId,
 		@RequestBody VoteRequest request) {
 		Debate debate = debateRepository.findByUuid(UUID.fromString(roomId))
@@ -150,7 +131,7 @@ public class DebateRoomController {
 
 		debateRepository.save(debate);
 
-		return ResponseEntity.ok(ApiResponse.createSuccessWithNoData());
+		return ResponseEntity.ok(ApiResponse.createSuccess(null));
 
 	}
 
@@ -160,7 +141,7 @@ public class DebateRoomController {
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 토론방을 찾을 수 없습니다."),
 	})
 	@GetMapping("/vote/{roomId}")
-	public ResponseEntity<ApiResponse<Object>> getVote(
+	public ResponseEntity<ApiResponse<VoteResponse>> getVote(
 		@PathVariable("roomId") Long roomId
 	) {
 		Debate debate = debateRepository.findById(roomId)
