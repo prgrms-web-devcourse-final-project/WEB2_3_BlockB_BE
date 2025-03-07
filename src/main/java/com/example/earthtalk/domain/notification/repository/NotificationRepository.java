@@ -18,5 +18,8 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     @Query("UPDATE notifications n SET n.statusType = 'READ' WHERE n.user = :user")
     void markAllAsReadByUserId(@Param("user") User user);
 
+    @Query("SELECT COUNT(*) FROM notifications n WHERE n.user = :user AND n.statusType = 'UNREAD'")
+    int getCountUnread(@Param("user") User user);
+
     void deleteAllByUserId(Long id);
 }
