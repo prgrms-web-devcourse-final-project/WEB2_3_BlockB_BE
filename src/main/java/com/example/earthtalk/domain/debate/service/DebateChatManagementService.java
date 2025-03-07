@@ -58,7 +58,7 @@ public class DebateChatManagementService {
 		Debate debate = debateService.getDebateByRoomId(uuid);
 
 		List<DebateChat> chatList = messages.stream()
-			.filter(message -> message.getEvent().equals("chat")) //
+			.filter(message -> "chat".equals(message.getEvent())) //
 			.map(message -> {
 				DebateParticipants debateParticipants = findDebateUserByUserName(message.getUserName());
 				if (debateParticipants == null) {

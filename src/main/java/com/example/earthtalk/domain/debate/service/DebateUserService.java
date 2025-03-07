@@ -149,7 +149,11 @@ public class DebateUserService {
 				sendUserLeftMessage(roomId, userName);
 			}
 
-			if (debate.getMember().getValue() != 1 && (proSet.size() <= 1 || conSet.size() <= 1)) {
+			if (debate.getMember().getValue() != 1
+				&& ((proSet.size() <= 1 || conSet.size() <= 1)
+				&& debate.getAgreeNumber() == 0
+				&& debate.getDisagreeNumber() == 0
+				&& debate.getNeutralNumber() == 0)) {
 				List<DebateMessage> debateMessages = debateMessageStore.removeDebateMessages(roomId);
 				List<ObserverMessage> observerMessages = observerMessageStore.removeObserverMessages(roomId);
 				if (debateMessages != null && !debateMessages.isEmpty()) {
