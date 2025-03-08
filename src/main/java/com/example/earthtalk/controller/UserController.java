@@ -3,7 +3,6 @@ package com.example.earthtalk.controller;
 import com.example.earthtalk.domain.news.service.NewsDataService;
 import com.example.earthtalk.domain.oauth.dto.CustomOAuth2User;
 import com.example.earthtalk.domain.user.dto.response.UserBookmarksResponse;
-import com.example.earthtalk.domain.user.dto.response.UserDebateChatsResponse;
 import com.example.earthtalk.domain.user.dto.response.UserDebateDetailsResponse;
 import com.example.earthtalk.domain.user.dto.response.UserDebatesResponse;
 import com.example.earthtalk.domain.user.dto.response.UserFolloweesResponse;
@@ -21,6 +20,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -138,18 +138,17 @@ public class UserController {
     @ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "성공")})
     @GetMapping("/mypage/{debatesId}/debateChats")
-    public ResponseEntity<ApiResponse<List<UserDebateChatsResponse>>> getUserDebateChats(
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getUserDebateChats(
         @PathVariable("debatesId") Long debatesId) throws JsonProcessingException {
         List<UserDebateDetailsResponse> responseHeader = userService.getDebateDetails( debatesId );
 
         String headerData = new ObjectMapper().writeValueAsString(responseHeader);
 
-        List<UserDebateChatsResponse> response = userService.getUserDebateChats( debatesId );
+        Map<String, Object> response = userService.getUserDebateChats( debatesId );
         return ResponseEntity.ok()
-            .header("X-Debate-Details", headerData)  // 헤더에 데이터 추가
-            .body(ApiResponse.createSuccess(response)); // 본문 데이터 설정
+            .header("X-Debate-Details", headerData)
+            .body(ApiResponse.createSuccess(response));
     }
-
 
     @Operation(summary = "사용자 팔로잉 목록 API", description = "사용자가 팔로우하고 있는 사용자 목록을 조회합니다.")
     @ApiResponses(value = {
@@ -169,7 +168,6 @@ public class UserController {
         return ResponseEntity.ok().body(ApiResponse.createSuccess(response));
     }
 
-    // 팔로워 추가
     @Operation(summary = "사용자 팔로워 추가 API", description = "사용자의 팔로워를 추가합니다.")
     @ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "성공")})
@@ -179,7 +177,6 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.createSuccessWithNoData());
     }
 
-    // followee 추가
     @Operation(summary = "사용자 팔로잉 추가 API", description = "팔로우하는 사용자를 추가합니다.")
     @ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "성공")})

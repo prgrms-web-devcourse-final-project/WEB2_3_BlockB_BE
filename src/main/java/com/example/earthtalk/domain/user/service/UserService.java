@@ -25,11 +25,13 @@ import com.example.earthtalk.domain.report.repository.ReportRepository;
 import com.example.earthtalk.domain.user.dto.response.UserBookmarksResponse;
 import com.example.earthtalk.domain.user.dto.response.UserDebateChatsResponse;
 import com.example.earthtalk.domain.user.dto.response.UserDebateDetailsResponse;
+import com.example.earthtalk.domain.user.dto.response.UserDebateRoomInfoResponse;
 import com.example.earthtalk.domain.user.dto.response.UserDebatesResponse;
 import com.example.earthtalk.domain.user.dto.response.UserFolloweesResponse;
 import com.example.earthtalk.domain.user.dto.response.UserFollowersResponse;
 import com.example.earthtalk.domain.user.dto.response.UserLikesResponse;
 import com.example.earthtalk.domain.user.entity.Follow;
+import com.example.earthtalk.domain.user.entity.Role;
 import com.example.earthtalk.domain.user.entity.User;
 import com.example.earthtalk.domain.user.repository.FollowRepository;
 import com.example.earthtalk.domain.user.repository.UserRepository;
@@ -43,7 +45,9 @@ import com.querydsl.core.Tuple;
 import jakarta.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -211,15 +215,17 @@ public class UserService {
 
             userDebateDetailsDTOList.add(UserDebateDetailsResponse.from(debate, link));
         }
-        System.out.println(userDebateDetailsDTOList);
+
         return userDebateDetailsDTOList;
     }
 
     // 유저가 참여/참관한 토론방 상세 조회 - body
-    public List<UserDebateChatsResponse> getUserDebateChats(Long debatesId) {
+    public Map<String, Object> getUserDebateChats(Long debatesId) {
         List<Tuple> userDebateChatsData = userRepository.findAllWithDebateChats(debatesId);
 
         List<UserDebateChatsResponse> userDebateChatsDTOList = new ArrayList<>();
+        List<UserDebateRoomInfoResponse> pros = new ArrayList<>();
+        List<UserDebateRoomInfoResponse> cons = new ArrayList<>();
 
         for ( Tuple data : userDebateChatsData ) {
             Long userId = data.get(0, Long.class);
@@ -229,13 +235,30 @@ public class UserService {
                 String.valueOf(data.get(2, FlagType.class)));
             String debateContent = data.get(3, String.class);
             LocalDateTime createdAt = data.get(4, LocalDateTime.class);
-
+            String nickname = data.get(5, String.class);
+            String profileImg = data.get(6, String.class);
+            Long winNumber = data.get(7, Long.class);
+            Long defeatNumber = data.get(8, Long.class);
+            Long drawNumber = data.get(9, Long.class);
 
             userDebateChatsDTOList.add(new UserDebateChatsResponse(
                 userId, role, position, debateContent, createdAt));
+
+            UserDebateRoomInfoResponse userInfo = new UserDebateRoomInfoResponse(userId, nickname, profileImg, winNumber, defeatNumber, drawNumber);
+            if (position == FlagType.PRO) {
+                pros.add(userInfo);
+            } else if (position == FlagType.CON) {
+                cons.add(userInfo);
+            }
         }
 
-        return userDebateChatsDTOList;
+        Map<String, Object> result = new HashMap<>();
+
+        result.put("찬성", pros);
+        result.put("반대", cons);
+        result.put("chats", userDebateChatsDTOList);
+
+        return result;
     }
 
 
@@ -343,5 +366,12 @@ public class UserService {
         observerChatRepository.deleteAllByUserId(user.getId());
         debateParticipantsRepository.deleteAllByUserId(user.getId());
         userRepository.deleteById(user.getId());
+    }
+
+    @Transactional
+    public void updateAuthority(Long userId, Role role) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
+        user.updateRole(role);
     }
 }

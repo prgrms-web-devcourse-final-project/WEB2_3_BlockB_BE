@@ -12,27 +12,28 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import com.example.earthtalk.domain.debate.entity.*;
+import com.example.earthtalk.domain.news.entity.MemberNumberType;
+import com.example.earthtalk.domain.news.entity.TimeType;
+import com.example.earthtalk.global.constant.ContinentType;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.example.earthtalk.domain.debate.dto.CreateDebateRoomRequest;
-import com.example.earthtalk.domain.debate.dto.DebateRoomRedisDto;
 import com.example.earthtalk.domain.debate.dto.DebateRoomResponse;
 import com.example.earthtalk.domain.debate.dto.DebateUserResponse;
 import com.example.earthtalk.domain.debate.dto.VoteRequest;
 import com.example.earthtalk.domain.debate.dto.WaitRoomResponse;
-import com.example.earthtalk.domain.debate.entity.Debate;
-import com.example.earthtalk.domain.debate.entity.DebateParticipants;
-import com.example.earthtalk.domain.debate.entity.FlagType;
-import com.example.earthtalk.domain.debate.entity.RoomType;
 import com.example.earthtalk.domain.debate.repository.DebateParticipantsRepository;
 import com.example.earthtalk.domain.debate.repository.DebateRepository;
 import com.example.earthtalk.domain.debate.store.DebateRoomStore;
 import com.example.earthtalk.domain.debate.store.DebateUserStore;
-import com.example.earthtalk.domain.news.entity.MemberNumberType;
 import com.example.earthtalk.domain.news.entity.News;
 import com.example.earthtalk.domain.news.repository.NewsRepository;
 import com.example.earthtalk.domain.user.entity.User;
@@ -137,6 +138,11 @@ public class DebateRoomService {
 	public Debate getDebate(String roomId) {
 		return debateRepository.findByUuid(UUID.fromString(roomId))
 			.orElseThrow(() -> new IllegalArgumentException(ErrorCode.DEBATEROOM_NOT_FOUND.getMessage()));
+	}
+
+	public Page<Debate> getFinishDebateRooms(String query, ContinentType continent, CategoryType category, MemberNumberType member, int page, String sort) {
+		Pageable pageable = PageRequest.of(page, 15);
+		return debateRepository.findFinishDebatesByParams(query, continent, category, member, sort, pageable);
 	}
 
 	/**
