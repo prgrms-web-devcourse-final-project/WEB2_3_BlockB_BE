@@ -1,5 +1,6 @@
 package com.example.earthtalk.domain.debate.service;
 
+import com.example.earthtalk.domain.debate.entity.RoomType;
 import com.example.earthtalk.domain.notification.dto.request.SendNotificationRequest;
 import com.example.earthtalk.domain.notification.entity.NotificationType;
 import com.example.earthtalk.domain.notification.service.NotificationService;
@@ -42,7 +43,7 @@ public class DebateManagementService {
 	private final DebateRepository debateRepository;
 	private final UserRepository userRepository;
 	private final DebateRoomService debateRoomService;
-	private final DebateTurnManagementService debateTurnManagementService;
+	private final DebateTimerService debateTimerService;
 	private final NotificationService notificationService;
 
 	/**
@@ -60,10 +61,11 @@ public class DebateManagementService {
 	 */
 	@Transactional
 	public void persistChatRoomIfFull(Debate debate, Set<String> proUserNames, Set<String> conUserNames) {
-		if (debate == null)	{
+		if (debate == null) {
 			throw new IllegalArgumentException(ErrorCode.DEBATEROOM_NOT_FOUND);
 		}
 
+		debate.updateRoomType(RoomType.DEBATE);
 		debateRepository.save(debate);
 
 		int maxMembers = debate.getMember().getValue();
@@ -106,7 +108,6 @@ public class DebateManagementService {
 			}
 		}
 		debateRoomService.removeDebateRoom(debate.getUuid().toString());
-		debateTurnManagementService.createDebateTurn(
-			UUID.fromString(debate.getUuid().toString()),debate.getSpeakCount());
+		debateTimerService.startDebateTimer(debate.getUuid(), debate.getTime(), debate.getSpeakCount());
 	}
 }

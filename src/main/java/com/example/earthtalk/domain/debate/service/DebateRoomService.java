@@ -1,5 +1,7 @@
 package com.example.earthtalk.domain.debate.service;
 
+import com.example.earthtalk.domain.debate.dto.VoteResponse;
+import com.example.earthtalk.domain.debate.entity.VoteStatus;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.time.LocalDateTime;
@@ -56,7 +58,6 @@ public class DebateRoomService {
 	private final UserRepository userRepository;
 	private final DebateUserStore debateUserStore;
 	private final DebateParticipantsRepository debateParticipantsRepository;
-
 	/**
 	 * 새로운 채팅방을 생성하고 저장소에 등록합니다.
 	 * <p>
@@ -148,11 +149,14 @@ public class DebateRoomService {
 	}
 
 	@Transactional
-	public void processDebateResult(Debate debate, VoteRequest request) {
+	public FlagType processDebateResult(UUID roomId, VoteStatus voteStatus) {
+		Debate debate = debateRepository.findByUuid(roomId)
+			.orElseThrow(() -> new IllegalArgumentException(ErrorCode.DEBATEROOM_NOT_FOUND.getMessage()));
 		Set<User> modifiedUsers = new HashSet<>();
+		boolean proWins = true, draw = false;
 		if (debate.isResultEnabled()) {
-			boolean proWins = request.getAgreeNumber() > request.getDisagreeNumber();
-			boolean draw = request.getAgreeNumber().equals(request.getDisagreeNumber());
+			proWins = voteStatus.getPro() > voteStatus.getCon();
+			draw = voteStatus.getPro().equals(voteStatus.getCon());
 
 			for (DebateParticipants participants : debate.getParticipants()) {
 				User user = participants.getUser();
@@ -171,8 +175,9 @@ public class DebateRoomService {
 		}
 		userRepository.saveAll(modifiedUsers);
 
-		debate.updateVoteCounts(request.getAgreeNumber(), request.getDisagreeNumber(), request.getNeutralNumber());
+		debate.updateVoteCounts(voteStatus.getPro(), voteStatus.getCon(), voteStatus.getNeutral());
 		debateRepository.save(debate);
+		return draw ? FlagType.NO_POSITION : (proWins ? FlagType.PRO : FlagType.CON);
 	}
 
 	public void updateStatus(String roomId) {

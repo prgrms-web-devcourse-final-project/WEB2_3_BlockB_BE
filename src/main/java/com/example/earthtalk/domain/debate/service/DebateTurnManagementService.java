@@ -20,20 +20,15 @@ public class DebateTurnManagementService {
 
     private final Map<UUID, ScheduledExecutorService> turnScheduler = new ConcurrentHashMap<>();
     private final Map<UUID, FlagType> debateTurns = new ConcurrentHashMap<>();
+    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(100);
     private final SimpMessagingTemplate messagingTemplate;
 
     public void createDebateTurn(UUID roomId, SpeakCountType speakCountType) {
         debateTurns.put(roomId, FlagType.NO_POSITION);
-        ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
         scheduler.scheduleAtFixedRate(() ->
             switchTurn(roomId), 20, speakCountType.getValue() * 60 - 10, TimeUnit.SECONDS);
         turnScheduler.put(roomId, scheduler);
-
-        Map<String, Object> message = Map.of(
-            "event", EventType.NOTIFICATION,
-            "message", "잠시 후 토론이 시작됩니다... "
-        );
-        messagingTemplate.convertAndSend("/topic/debate" + roomId, message);
+        System.out.println("Create debate turn for " + roomId);
     }
 
     private void switchTurn(UUID roomId) {
@@ -45,14 +40,16 @@ public class DebateTurnManagementService {
             );
             debateTurns.put(roomId, FlagType.PRO);
             messagingTemplate.convertAndSend("/topic/debate" + roomId, message);
+            System.out.println("Debate Started for " + roomId);
             return;
         }
 
         Map<String, Object> message1 = Map.of(
             "event", EventType.NOTIFICATION,
-            "message", "잠시 후 턴이 바뀝니다."
+            "message", "10초 후 턴이 바뀝니다..."
         );
         messagingTemplate.convertAndSend("/topic/debate" + roomId, message1);
+        System.out.println("10 Seconds to change turn.... for " + roomId);
 
         FlagType currentTurn = debateTurns.get(roomId);
         FlagType nextTurn = switch (currentTurn) {
@@ -61,7 +58,6 @@ public class DebateTurnManagementService {
             case NO_POSITION -> FlagType.NO_POSITION;
         };
         String turn = nextTurn == FlagType.PRO ? "찬성" : "반대";
-        ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
         scheduler.schedule(() -> {
             Map<String, Object> message2 = Map.of(
                 "event", EventType.TURN,
@@ -70,15 +66,14 @@ public class DebateTurnManagementService {
             );
             messagingTemplate.convertAndSend("/topic/debate/" + roomId.toString(), message2);
             debateTurns.put(roomId, nextTurn);
+            System.out.println("Turn changed for " + roomId);
         }, 10, TimeUnit.SECONDS);  // 10초 후에 실행
     }
 
     public void removeDebateTurn(UUID roomId) {
         debateTurns.remove(roomId);
-        ScheduledExecutorService scheduler = turnScheduler.remove(roomId);
-        if (scheduler != null) {
-            scheduler.shutdown(); // 스케줄러 종료
-        }
+        System.out.println("Remove debate turn for " + roomId);
+
     }
 
 }

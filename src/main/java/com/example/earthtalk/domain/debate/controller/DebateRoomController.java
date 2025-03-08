@@ -1,5 +1,6 @@
 package com.example.earthtalk.domain.debate.controller;
 
+import com.example.earthtalk.domain.debate.store.VoteStore;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -60,6 +61,7 @@ public class DebateRoomController {
 	private final DebateRoomService debateRoomService;
 	private final DebateUserService debateUserService;
 	private final DebateUserStore debateUserStore;
+	private final VoteStore voteStore;
 
 	@Operation(summary = "토론방 상세 조회 API", description = "토론방의 UUID로 상세 정보를 조회합니다.")
 	@ApiResponses(value = {
@@ -135,23 +137,8 @@ public class DebateRoomController {
 	public ResponseEntity<ApiResponse<Object>> putVote(
 		@PathVariable("roomId") String roomId,
 		@RequestBody VoteRequest request) {
-		Debate debate = debateRepository.findByUuid(UUID.fromString(roomId))
-			.orElseThrow(() -> new IllegalArgumentException(ErrorCode.DEBATEROOM_NOT_FOUND.getMessage()));
-
-		if (request.getNeutralNumber() < 0 || request.getDisagreeNumber() < 0 || request.getAgreeNumber() < 0) {
-			throw new IllegalArgumentException(ErrorCode.INVALID_REQUEST_BODY.getMessage());
-		}
-
-		if (debate.getParticipants() == null || debate.getParticipants().isEmpty()) {
-			throw new IllegalArgumentException(ErrorCode.DEBATE_NO_PARTICIPANTS.getMessage());
-		}
-
-		debateRoomService.processDebateResult(debate, request);
-
-		debateRepository.save(debate);
-
+		voteStore.processVote(UUID.fromString(roomId), request);
 		return ResponseEntity.ok(ApiResponse.createSuccessWithNoData());
-
 	}
 
 	@Operation(summary = "투표 조회 API", description = "토론방의 현재 투표 수(찬성, 반대, 중립)를 조회합니다.")

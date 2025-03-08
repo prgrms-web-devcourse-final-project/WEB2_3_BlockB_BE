@@ -141,7 +141,6 @@ public class WebSocketEventListener {
 							debateChatManagementService.saveChatHistory(debateRoomId, debateMessages);
 							observerChatManagementService.saveChatHistory(debateRoomId, observerMessages);
 							debateRoomService.updateStatus(debateRoomId);
-							debateTurnManagementService.removeDebateTurn(UUID.fromString(debateRoomId));
 						} catch(Exception e) {
 							throw new SaveFailedException(ErrorCode.SAVE_FAILED);
 						}
