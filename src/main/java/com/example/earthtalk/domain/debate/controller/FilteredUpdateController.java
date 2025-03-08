@@ -9,6 +9,7 @@ import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.stereotype.Controller;
 
+import com.example.earthtalk.domain.debate.component.WebSocketIdleSessionMonitor;
 import com.example.earthtalk.domain.debate.dto.DebateMetaDataResponse;
 import com.example.earthtalk.domain.debate.dto.RoomStatusUpdate;
 import com.example.earthtalk.domain.debate.entity.CategoryType;
@@ -24,9 +25,14 @@ public class FilteredUpdateController {
 
 	private final DebateMetaDataService debateMetaDataService;
 
+	private final WebSocketIdleSessionMonitor webSocketIdleSessionMonitor;
+
 	@MessageMapping("/filteredUpdate")
 	@SendTo("/topic/filteredStatus")
 	public RoomStatusUpdate sendRoomStatusUpdate(SimpMessageHeaderAccessor headerAccessor) {
+		String sessionId = headerAccessor.getSessionId();
+		webSocketIdleSessionMonitor.updateSessionActivity(sessionId);
+
 		ContinentType continentType = (ContinentType) headerAccessor.getSessionAttributes().get("continentType");
 		CategoryType categoryType = (CategoryType) headerAccessor.getSessionAttributes().get("categoryType");
 		MemberNumberType memberNumberType = (MemberNumberType) headerAccessor.getSessionAttributes().get("memberNumberType");
