@@ -31,6 +31,7 @@ import com.example.earthtalk.domain.user.dto.response.UserFolloweesResponse;
 import com.example.earthtalk.domain.user.dto.response.UserFollowersResponse;
 import com.example.earthtalk.domain.user.dto.response.UserLikesResponse;
 import com.example.earthtalk.domain.user.entity.Follow;
+import com.example.earthtalk.domain.user.entity.Role;
 import com.example.earthtalk.domain.user.entity.User;
 import com.example.earthtalk.domain.user.repository.FollowRepository;
 import com.example.earthtalk.domain.user.repository.UserRepository;
@@ -365,5 +366,12 @@ public class UserService {
         observerChatRepository.deleteAllByUserId(user.getId());
         debateParticipantsRepository.deleteAllByUserId(user.getId());
         userRepository.deleteById(user.getId());
+    }
+
+    @Transactional
+    public void updateAuthority(Long userId, Role role) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
+        user.updateRole(role);
     }
 }

@@ -24,7 +24,7 @@ public class KakaoResourceResponse extends OAuth2UserResponse {
     @Override
     public String getImageUrl() {
         Map<String, Object> profile = getOAuthInformation();
-        return (String) profile.get("thumbnail_image_url");
+        return (String) profile.get("profile_image_url");
     }
 
     private Map<String, Object> getOAuthInformation() {
