@@ -101,8 +101,8 @@ public class DebateRoomService {
 				.neutralNumber(0L) // 초기 중립 수
 				.build();
 
-			debateRoomStore.put(debate);
 			debateRepository.save(debate);
+			debateRoomStore.put(debate);
 
 		} catch (Exception e) {
 			log.error("토론방 생성 중 오류 발생: {}", e.getMessage(), e);
