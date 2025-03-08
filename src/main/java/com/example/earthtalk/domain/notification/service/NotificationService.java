@@ -5,7 +5,9 @@ import com.example.earthtalk.domain.notification.dto.request.CheckTokenRequest;
 import com.example.earthtalk.domain.notification.dto.request.SaveNotificationRequest;
 import com.example.earthtalk.domain.notification.dto.request.SaveTokenRequest;
 import com.example.earthtalk.domain.notification.dto.request.SendNotificationRequest;
+import com.example.earthtalk.domain.notification.dto.response.CheckTokenResponse;
 import com.example.earthtalk.domain.notification.dto.response.NotificationListResponse;
+import com.example.earthtalk.domain.notification.dto.response.NotificationListResponseWithUnreadCount;
 import com.example.earthtalk.domain.notification.entity.Notification;
 import com.example.earthtalk.domain.notification.entity.NotificationType;
 import com.example.earthtalk.domain.notification.repository.NotificationRepository;
@@ -16,14 +18,19 @@ import com.example.earthtalk.domain.user.repository.UserRepository;
 import com.example.earthtalk.global.exception.ErrorCode;
 import com.example.earthtalk.global.exception.NotFoundException;
 import com.example.earthtalk.global.exception.IllegalArgumentException;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class NotificationService {
@@ -36,32 +43,36 @@ public class NotificationService {
     private final DebateRepository debateRepository;
     private final RedisTemplate<String, Object> redisTemplate;
 
+    private static final int size = 10;
     private static final String NOTIFICATION_AGREE_PREFIX = "notification_allowed:";
     private static final String FOLLOW_MESSAGE = "%s님이 당신을 팔로우했습니다.";
-    private static final String REPORT_MESSAGE = "%s(으)로 운영자에게 %s을(를) 처분받았습니다.";
+    private static final String REPORT_MESSAGE = "%s(으)로 운영자에게 %s(을)를 처분받았습니다.";
     private static final String CHAT_MESSAGE = "참가 중인 채팅방의 대기가 완료되었습니다.";
+    private static final String NOTIFICATION_STRING = "%d,%s,%d,%s,%s";
 
     // 접속중인 사용자의 id 값을 전달해주면 그와 관련된 알림을 조회하여 반환합니다.
-    public List<NotificationListResponse> getNotifications(Long userId) {
+    public NotificationListResponseWithUnreadCount getNotifications(Long userId, int page) {
         User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
 
-        List<Notification> notifications = notificationRepository.getNotifications(user);
-        List<NotificationListResponse> responses = new ArrayList<>();
-        for (Notification notification : notifications) {
-            NotificationListResponse response = NotificationListResponse.from(notification);
-            responses.add(response);
-        }
-        return responses;
+        Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "id"));
+        Page<Notification> notifications = notificationRepository.getNotifications(user, pageable);
+
+        int unreadCount = notificationRepository.getCountUnread(user);
+
+        return new NotificationListResponseWithUnreadCount(
+                unreadCount,
+                notifications.map(NotificationListResponse::from)
+        );
     }
 
-    public boolean checkToken(CheckTokenRequest request) {
+    public CheckTokenResponse checkToken(CheckTokenRequest request) {
         userRepository.findById(request.userId()).orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
-        if(request.token() == null) {
-            return false;
-        }
-        return fcmTokenService.checkFcmToken(request.userId(), request.token());
+        boolean isAllow = !isNotificationNotAllowed(request.userId());
+        boolean isExist = fcmTokenService.checkFcmToken(request.userId(), request.token());
+        return new CheckTokenResponse(isExist, isAllow);
     }
 
+    @Transactional
     // FE 에서 받은 토큰을 fcmToken 값을 redis 에 저장하는 메서드
     public void saveToken(SaveTokenRequest request) {
         if(request == null || request.token() == null) {
@@ -69,10 +80,7 @@ public class NotificationService {
         }
         userRepository.findById(request.userId()).orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
         String redisKey = NOTIFICATION_AGREE_PREFIX + request.userId();
-
-        if(isNotificationNotAllowed(request.userId())) {
-            redisTemplate.opsForValue().set(redisKey, "true");
-        }
+        saveNotificationAllow(redisKey, request.isAllow());
         fcmTokenService.saveFcmToken(request.userId(), request.token());
     }
 
@@ -100,21 +108,58 @@ public class NotificationService {
             return;
         }
 
-        String content = request.content() == null ? getContent(request) : request.content();
+        String content = request.content();
+        if (content == null) {
+            content = getContent(request);
+        }
+
         SaveNotificationRequest saveNotificationRequest = request.toSave(content);
-        notificationRepository.save(saveNotificationRequest.toEntity(user));
-        firebaseService.pushNotification(fcmTokens, content);
+        Notification notification = saveNotificationRequest.toEntity(user);
+        notificationRepository.save(notification);
+
+        String notificationString = String.format(NOTIFICATION_STRING,
+                notification.getId(),
+                notification.getNotificationType().name(),
+                notification.getNotificationTypeId(),
+                notification.getContent(),
+                notification.getStatusType().name());
+
+        firebaseService.pushNotification(fcmTokens, content, request.userId(), notificationString);
     }
 
     // 사용자가 알림을 확인했을 때 status 를 read 로 변경시키는 메서드.
+    @Transactional
     public void readNotification(Long notificationId) {
         Notification notification = notificationRepository.findById(notificationId).orElseThrow(() -> new NotFoundException(ErrorCode.NOTIFICATION_NOT_FOUND));
         notification.read();
     }
 
+    @Transactional
+    public void readAllNotifications(Long userId) {
+        if (userId == null) {
+            throw new IllegalArgumentException(ErrorCode.INVALID_REQUEST_BODY);
+        }
+        User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
+        notificationRepository.markAllAsReadByUserId(user);
+    }
+
+    // 알림 삭제 메서드
     public void removeNotification(Long notificationId) {
-        notificationRepository.findById(notificationId).orElseThrow(() -> new NotFoundException(ErrorCode.NOTIFICATION_NOT_FOUND));
         notificationRepository.deleteById(notificationId);
+    }
+
+    @Transactional
+    public void removeAllNotifications(Long userId) {
+        if (userId == null) {
+            throw new IllegalArgumentException(ErrorCode.INVALID_REQUEST_BODY);
+        }
+        notificationRepository.deleteAllByUserId(userId);
+    }
+
+    // 알림 허용에 대한 값을 redis 에 저장하는 메서드
+    private void saveNotificationAllow(String redisKey, String isAllow) {
+        String value = Boolean.parseBoolean(isAllow) ? "true" : "false";
+        redisTemplate.opsForValue().set(redisKey, value);
     }
 
     // 알림 허용에 대해 거부하는 메서드 - 마이페이지에서 알림 거부할 때 사용.
@@ -124,7 +169,7 @@ public class NotificationService {
         redisTemplate.opsForValue().set(redisKey, "false");
     }
 
-    // 알림 허용 여부를 redis 에서 가져오는 메서드 - 허용한 적이 없으면 true
+    // 알림 허용 여부를 redis 에서 가져오는 메서드 - 허용하지 않을 시 true
     private boolean isNotificationNotAllowed(Long userId) {
         userRepository.findById(userId).orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
         String redisKey = NOTIFICATION_AGREE_PREFIX + userId;

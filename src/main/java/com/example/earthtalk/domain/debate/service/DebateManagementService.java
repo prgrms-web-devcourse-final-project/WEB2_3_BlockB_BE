@@ -1,8 +1,12 @@
 package com.example.earthtalk.domain.debate.service;
 
+import com.example.earthtalk.domain.debate.entity.RoomType;
+import com.example.earthtalk.domain.notification.dto.request.SendNotificationRequest;
+import com.example.earthtalk.domain.notification.entity.NotificationType;
+import com.example.earthtalk.domain.notification.service.NotificationService;
 import java.util.Set;
-import java.util.UUID;
 
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -39,6 +43,8 @@ public class DebateManagementService {
 	private final DebateRepository debateRepository;
 	private final UserRepository userRepository;
 	private final DebateRoomService debateRoomService;
+	private final DebateTimerService debateTimerService;
+	private final NotificationService notificationService;
 
 	/**
 	 * 주어진 roomId에 해당하는 채팅방의 캐시 정보가 존재하고, 채팅방이 꽉 찼다면,
@@ -55,10 +61,11 @@ public class DebateManagementService {
 	 */
 	@Transactional
 	public void persistChatRoomIfFull(Debate debate, Set<String> proUserNames, Set<String> conUserNames) {
-		if (debate == null)	{
+		if (debate == null) {
 			throw new IllegalArgumentException(ErrorCode.DEBATEROOM_NOT_FOUND);
 		}
 
+		debate.updateRoomType(RoomType.DEBATE);
 		debateRepository.save(debate);
 
 		int maxMembers = debate.getMember().getValue();
@@ -74,6 +81,12 @@ public class DebateManagementService {
 					.position(FlagType.PRO)
 					.build();
 				debateParticipantsRepository.save(debateParticipants);
+				notificationService.sendNotification(new SendNotificationRequest(
+					user.getId(),
+					NotificationType.CHAT,
+					debate.getId(),
+					null
+				));
 			}
 
 			for (String username : conUserNames) {
@@ -86,10 +99,15 @@ public class DebateManagementService {
 					.position(FlagType.CON)
 					.build();
 				debateParticipantsRepository.save(debateParticipants);
+				notificationService.sendNotification(new SendNotificationRequest(
+					user.getId(),
+					NotificationType.CHAT,
+					debate.getId(),
+					null
+				));
 			}
 		}
 		debateRoomService.removeDebateRoom(debate.getUuid().toString());
-
+		debateTimerService.startDebateTimer(debate.getUuid(), debate.getTime(), debate.getSpeakCount());
 	}
-
 }

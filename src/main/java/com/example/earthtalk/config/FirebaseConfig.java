@@ -8,6 +8,7 @@ import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import java.io.InputStream;
 import com.google.firebase.messaging.FirebaseMessaging;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -16,6 +17,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import org.springframework.core.io.ClassPathResource;
 
+@Slf4j
 @Configuration
 public class FirebaseConfig {
 
@@ -31,6 +33,7 @@ public class FirebaseConfig {
             if(FirebaseApp.getApps().isEmpty()) {
                 FirebaseApp.initializeApp(options);
             }
+            log.info("Firebase Setting Complete");
         } catch (FileNotFoundException e) {
             throw new NotFoundException(ErrorCode.NOT_FOUND);
         } catch (IOException e) {

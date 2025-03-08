@@ -44,7 +44,9 @@ public enum ErrorCode { // 예외 발생시, body에 실어 날려줄 상태, co
     SAVE_FAILED(500, -5004, "토론방 저장에 실패했습니다."),
     CHAT_NOT_FOUND(404, -5004, "조회된 채팅이 존재하지 않습니다."),
     SESSION_DISCONNECT_FAILED(500, -5005, "세션 연결 해제에 실패했습니다."),
-
+    VOTE_NOT_STARTED(400, -5006, "아직 투표가 시작되지 않았습니다."),
+    VOTE_DUPLICATED(400, -5007, "이미 투표한 유저입니다."),
+  
     //-6000 OAUTH
     OAUTH_NOT_FOUND(404, -6000, "소셜로그인 계정 정보가 존재하지 않습니다."),
     KAKAO_PROFILE_NOT_FOUND(404, -6001, "카카오 프로필 정보가 존재하지 않습니다."),
@@ -65,7 +67,11 @@ public enum ErrorCode { // 예외 발생시, body에 실어 날려줄 상태, co
     BOOKMARK_NOT_FOUND(404, -7006, "북마크 내역을 찾을 수 없습니다."),
 
     //-8000: NOTIFICATIONS
-    NOTIFICATION_NOT_FOUND(404, -8001, "조회된 알림이 존재하지 않습니다.");
+    NOTIFICATION_NOT_FOUND(404, -8001, "조회된 알림이 존재하지 않습니다."),
+
+    //-9000: REPORT
+    REPORT_BANNED_USER(403, -9000, "영구 사용 정지된 계정입니다."),
+    REPORT_SUSPENDED_USER(403, -9001, "계정이 정지 상태입니다. 남은 정지 기간: %d일 입니다.");
 
 
     // 1. status = 날려줄 상태코드

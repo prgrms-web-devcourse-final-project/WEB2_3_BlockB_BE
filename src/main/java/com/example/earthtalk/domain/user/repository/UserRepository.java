@@ -17,7 +17,11 @@ public interface UserRepository extends JpaRepository<User, Long>, UserRepositor
 
     @Modifying
     @Transactional
-    @Query("UPDATE users u SET u.nickname = :nickname, u.introduction = :introduction, u.profileUrl = :profile WHERE u.id = :userId")
+    @Query("UPDATE users u " +
+        "SET u.nickname = COALESCE(:nickname, u.nickname), " +
+        "    u.introduction = COALESCE(:introduction, u.introduction), " +
+        "    u.profileUrl = COALESCE(:profile, u.profileUrl) " +
+        "WHERE u.id = :userId")
     void updateUserById(@Param("nickname") String nickname,
         @Param("introduction") String introduction,
         @Param("profile") String profile,

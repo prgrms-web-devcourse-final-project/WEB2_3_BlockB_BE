@@ -6,6 +6,8 @@ import com.example.earthtalk.domain.report.dto.response.ReportListResponse;
 import com.example.earthtalk.domain.report.entity.ReportType;
 import com.example.earthtalk.domain.report.entity.ResultType;
 import com.example.earthtalk.domain.report.service.ReportService;
+import com.example.earthtalk.domain.user.entity.Role;
+import com.example.earthtalk.domain.user.service.UserService;
 import com.example.earthtalk.global.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -23,18 +25,20 @@ import org.springframework.web.bind.annotation.*;
 public class AdminController {
 
     private final ReportService reportService;
+    private final UserService userService;
 
     @Operation(summary = "신고 목록 조회&검색 API", description = "신고 목록을 queryString에 따라 조회 및 검색합니다.")
     @ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "성공")})
     @GetMapping("/reports")
     public ResponseEntity<ApiResponse<Page<ReportListResponse>>> getReports(
-            @RequestParam(value = "q", required = false) String q,
-            @RequestParam(value = "type", required = false) ReportType reportType,
-            @RequestParam(value = "result", required = false) ResultType resultType,
-            @RequestParam(value = "p", required = false, defaultValue = "1") int page) {
+        @RequestParam(value = "q", required = false) String q,
+        @RequestParam(value = "type", required = false) ReportType reportType,
+        @RequestParam(value = "result", required = false) ResultType resultType,
+        @RequestParam(value = "p", required = false, defaultValue = "1") int page) {
         page = page <= 1 ? 0 : page - 1;
-        Page<ReportListResponse> reports = reportService.getReports(q, reportType, resultType, page);
+        Page<ReportListResponse> reports = reportService.getReports(q, reportType, resultType,
+            page);
         return ResponseEntity.ok(ApiResponse.createSuccess(reports));
     }
 
@@ -54,7 +58,7 @@ public class AdminController {
     @PutMapping("/reports/{reportId}")
     public ResponseEntity<ApiResponse<Long>> putReportById(
             @PathVariable("reportId") Long reportId,
-            @RequestBody UpdateReportRequest request ) throws Exception {
+            @RequestBody UpdateReportRequest request ) {
         Long id = reportService.updateReport(reportId, request);
         return ResponseEntity.ok(ApiResponse.createSuccess(id));
     }
@@ -67,5 +71,15 @@ public class AdminController {
         @PathVariable("reportId") Long reportId) {
         Long id = reportService.restoreReport(reportId);
         return ResponseEntity.ok(ApiResponse.createSuccess(id));
+    }
+
+    @Operation(summary = "사용자 권한 수정 API", description = "사용자의 권한을 수정합니다.")
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "성공")})
+    @PutMapping("/authority/{userId}")
+    public ResponseEntity<ApiResponse<Object>> putUserAuthority(@PathVariable("userId") Long userId,
+        @RequestBody Role role) {
+        userService.updateAuthority(userId, role);
+        return ResponseEntity.ok(ApiResponse.createSuccessWithNoData());
     }
 }

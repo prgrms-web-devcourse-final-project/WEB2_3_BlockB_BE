@@ -68,10 +68,18 @@ public class GlobalExceptionHandler {
             .body(ApiResponse.createError(e.getErrorCode().getMessage()));
     }
 
+    // UserLockedException
+    @ExceptionHandler(UserLockedException.class)
+    public ResponseEntity<ApiResponse<Object>> handleNotFoundException(UserLockedException e) {
+        log.error("[UserLockedException] message: {}", e.getCustomMessage());
+        return ResponseEntity.status(e.getErrorCode().getStatus())
+            .body(ApiResponse.createError(e.getCustomMessage()));
+    }
+
     // 각종 400 에러
     @ExceptionHandler(BadRequestException.class)
     public ResponseEntity<ApiResponse<Object>> handleBadRequestException(BadRequestException e) {
-        log.error("[BadRequestException] message: {}", e.getMessage());
+        log.error("[BadRequestException] message: {}", e.getErrorCode().getMessage());
         return ResponseEntity.status(e.getErrorCode().getStatus())
             .body(ApiResponse.createError(e.getErrorCode().getMessage()));
     }

@@ -28,9 +28,13 @@ public class FcmTokenService {
         redisTemplate.opsForSet().add(redisKey, token);
     }
 
+    // 해당 유저 ID 에 토큰값이 존재하면 true
     public boolean checkFcmToken(Long userId, String token) {
         String redisKey = FCM_TOKEN_PREFIX + userId;
         Boolean result = null;
+        if (token == null) {
+            return false;
+        }
         try {
             result = redisTemplate.opsForSet().isMember(redisKey, token);
         } catch (Exception e) {

@@ -2,7 +2,6 @@ package com.example.earthtalk.domain.user.repository;
 
 import static com.example.earthtalk.domain.debate.entity.DebateRole.OBSERVER;
 import static com.example.earthtalk.domain.debate.entity.DebateRole.PARTICIPANT;
-
 import com.example.earthtalk.domain.debate.entity.QDebate;
 import com.example.earthtalk.domain.debate.entity.QDebateChat;
 import com.example.earthtalk.domain.debate.entity.QDebateParticipants;
@@ -138,10 +137,11 @@ public class UserRepositoryImpl implements UserRepositoryCustom {
     }
 
 
-    // 유저가 참관/참여한 토론방 상세 조회
+    // 유저가 참관/참여한 토론방 상세 조회 - body
     public List<Tuple> findAllWithDebateChats(Long debatesId) {
         QDebateChat dc = QDebateChat.debateChat;
         QDebateParticipants dp = QDebateParticipants.debateParticipants;
+        QUser user = QUser.user;
 
         List<Tuple> result = jpaQueryFactory
             .select(
@@ -149,10 +149,17 @@ public class UserRepositoryImpl implements UserRepositoryCustom {
                 dp.role,
                 dp.position,
                 dc.content.as("debateContent"),
-                dc.createdAt.as("chatCreatedAt"))
+                dc.createdAt.as("chatCreatedAt"),
+                user.nickname,
+                user.profileUrl,
+                user.winNumber,
+                user.defeatNumber,
+                user.drawNumber
+            )
             .from(dc)
             .join(dp).on(dc.debate.id.eq(dp.debate.id)
                 .and(dc.debateParticipants.id.eq(dp.user.id)))
+            .join(user).on(dp.user.id.eq(user.id))
             .where(dc.debate.id.eq(debatesId))
             .orderBy(dc.createdAt.asc())
             .fetch();

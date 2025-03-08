@@ -1,5 +1,7 @@
 package com.example.earthtalk.domain.debate.service;
 
+import com.example.earthtalk.domain.debate.dto.VoteResponse;
+import com.example.earthtalk.domain.debate.entity.VoteStatus;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.time.LocalDateTime;
@@ -10,27 +12,28 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import com.example.earthtalk.domain.debate.entity.*;
+import com.example.earthtalk.domain.news.entity.MemberNumberType;
+import com.example.earthtalk.domain.news.entity.TimeType;
+import com.example.earthtalk.global.constant.ContinentType;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.example.earthtalk.domain.debate.dto.CreateDebateRoomRequest;
-import com.example.earthtalk.domain.debate.dto.DebateRoomRedisDto;
 import com.example.earthtalk.domain.debate.dto.DebateRoomResponse;
 import com.example.earthtalk.domain.debate.dto.DebateUserResponse;
 import com.example.earthtalk.domain.debate.dto.VoteRequest;
 import com.example.earthtalk.domain.debate.dto.WaitRoomResponse;
-import com.example.earthtalk.domain.debate.entity.Debate;
-import com.example.earthtalk.domain.debate.entity.DebateParticipants;
-import com.example.earthtalk.domain.debate.entity.FlagType;
-import com.example.earthtalk.domain.debate.entity.RoomType;
 import com.example.earthtalk.domain.debate.repository.DebateParticipantsRepository;
 import com.example.earthtalk.domain.debate.repository.DebateRepository;
 import com.example.earthtalk.domain.debate.store.DebateRoomStore;
 import com.example.earthtalk.domain.debate.store.DebateUserStore;
-import com.example.earthtalk.domain.news.entity.MemberNumberType;
 import com.example.earthtalk.domain.news.entity.News;
 import com.example.earthtalk.domain.news.repository.NewsRepository;
 import com.example.earthtalk.domain.user.entity.User;
@@ -56,7 +59,6 @@ public class DebateRoomService {
 	private final UserRepository userRepository;
 	private final DebateUserStore debateUserStore;
 	private final DebateParticipantsRepository debateParticipantsRepository;
-
 	/**
 	 * 새로운 채팅방을 생성하고 저장소에 등록합니다.
 	 * <p>
@@ -93,7 +95,7 @@ public class DebateRoomService {
 				.resultEnabled(request.isResultEnabled())
 				.time(request.getTime())
 				.cachedTime(LocalDateTime.now())
-				.status(RoomType.DEBATE) // 기본 상태 설정
+				.status(RoomType.WAITING) // 기본 상태 설정
 				.agreeNumber(0L) // 초기 찬성 수
 				.disagreeNumber(0L) // 초기 반대 수
 				.neutralNumber(0L) // 초기 중립 수
@@ -101,7 +103,6 @@ public class DebateRoomService {
 
 			debateRoomStore.put(debate);
 			debateRepository.save(debate);
-
 
 		} catch (Exception e) {
 			log.error("토론방 생성 중 오류 발생: {}", e.getMessage(), e);
@@ -139,6 +140,11 @@ public class DebateRoomService {
 			.orElseThrow(() -> new IllegalArgumentException(ErrorCode.DEBATEROOM_NOT_FOUND.getMessage()));
 	}
 
+	public Page<Debate> getFinishDebateRooms(String query, ContinentType continent, CategoryType category, MemberNumberType member, int page, String sort) {
+		Pageable pageable = PageRequest.of(page, 15);
+		return debateRepository.findFinishDebatesByParams(query, continent, category, member, sort, pageable);
+	}
+
 	/**
 	 * 주어진 roomId에 해당하는 채팅방 정보를 저장소에서 제거합니다.
 	 *
@@ -149,11 +155,14 @@ public class DebateRoomService {
 	}
 
 	@Transactional
-	public void processDebateResult(Debate debate, VoteRequest request) {
+	public FlagType processDebateResult(UUID roomId, VoteStatus voteStatus) {
+		Debate debate = debateRepository.findByUuid(roomId)
+			.orElseThrow(() -> new IllegalArgumentException(ErrorCode.DEBATEROOM_NOT_FOUND.getMessage()));
 		Set<User> modifiedUsers = new HashSet<>();
+		boolean proWins = true, draw = false;
 		if (debate.isResultEnabled()) {
-			boolean proWins = request.getAgreeNumber() > request.getDisagreeNumber();
-			boolean draw = request.getAgreeNumber().equals(request.getDisagreeNumber());
+			proWins = voteStatus.getPro() > voteStatus.getCon();
+			draw = voteStatus.getPro().equals(voteStatus.getCon());
 
 			for (DebateParticipants participants : debate.getParticipants()) {
 				User user = participants.getUser();
@@ -172,8 +181,9 @@ public class DebateRoomService {
 		}
 		userRepository.saveAll(modifiedUsers);
 
-		debate.updateVoteCounts(request.getAgreeNumber(), request.getDisagreeNumber(), request.getNeutralNumber());
+		debate.updateVoteCounts(voteStatus.getPro(), voteStatus.getCon(), voteStatus.getNeutral());
 		debateRepository.save(debate);
+		return draw ? FlagType.NO_POSITION : (proWins ? FlagType.PRO : FlagType.CON);
 	}
 
 	public void updateStatus(String roomId) {

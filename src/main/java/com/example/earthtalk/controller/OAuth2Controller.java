@@ -29,9 +29,9 @@ public class OAuth2Controller {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "성공")
     })
     @PostMapping("/login/oauth2/callback")
-    public ResponseEntity<ApiResponse<TokenResponse.GetOauth>> getAuthorizationCode(HttpServletRequest request, HttpServletResponse response,
+    public ResponseEntity<ApiResponse<TokenResponse.GetOauth>> getAuthorizationCode(
         @RequestParam("code") String code, @RequestParam("provider") String provider) {
         return ResponseEntity.status(HttpStatus.CREATED)
-            .body(ApiResponse.createSuccess(oAuth2Service.getResource(request, response, provider, code)));
+            .body(ApiResponse.createSuccess(oAuth2Service.getResource(provider, code)));
     }
 }

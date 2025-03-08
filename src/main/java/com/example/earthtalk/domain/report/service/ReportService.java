@@ -17,7 +17,9 @@ import com.example.earthtalk.domain.user.entity.User;
 import com.example.earthtalk.domain.user.repository.UserRepository;
 import com.example.earthtalk.global.exception.ErrorCode;
 import com.example.earthtalk.global.exception.NotFoundException;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -27,6 +29,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ReportService {
@@ -82,9 +85,11 @@ public class ReportService {
     }
 
     // 신고를 처리하는 메서드 - 알림 추가
-    public Long updateReport(Long id, UpdateReportRequest request) throws Exception {
+    @Transactional
+    public Long updateReport(Long reportId, UpdateReportRequest request) {
+
         // 받은 id 값으로 report 조회
-        Report report = reportRepository.findById(id).orElseThrow(() -> new NotFoundException(ErrorCode.REPORT_NOT_FOUND));
+        Report report = reportRepository.findById(reportId).orElseThrow(() -> new NotFoundException(ErrorCode.REPORT_NOT_FOUND));
 
         // 신고 처리 담당자 조회
         User assignedUser = userRepository.findById(request.assignedUserId()).orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
@@ -95,17 +100,21 @@ public class ReportService {
         // 유저에 관한 정보 업데이트
         User user = userRepository.findById(report.getTargetUser().getId()).orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
         user.reportUser(report.getResultType());
-        userRepository.save(user);
 
-        // 알림 전송에 관한 내용
-        SendNotificationRequest sendNotificationRequest = new SendNotificationRequest(report.getTargetUser().getId(), NotificationType.REPORT, report.getTargetRoomId(), null);
-        notificationService.sendNotification(sendNotificationRequest);
+        // 알림 전송
+        notificationService.sendNotification(new SendNotificationRequest(
+                report.getTargetUser().getId(),
+                NotificationType.REPORT,
+                report.getId(),
+                null
+        ));
 
         // 신고에 관한 내용 업데이트
-        return reportRepository.save(report).getId();
+        return report.getId();
     }
 
     // 이미 처리된 신고를 복구하는 메서드
+    @Transactional
     public Long restoreReport(Long id) {
         // 신고에 관한 내용 조회 및 복구
         Report report = reportRepository.findById(id).orElseThrow(() -> new NotFoundException(ErrorCode.REPORT_NOT_FOUND));
@@ -114,9 +123,8 @@ public class ReportService {
         // 유저에 관한 내용 조회 및 업데이트
         User user = userRepository.findById(report.getTargetUser().getId()).orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
         user.restoreUser();
-        userRepository.save(user);
 
         // 신고에 관한 내용 업데이트
-        return reportRepository.save(report).getId();
+        return report.getId();
     }
 }

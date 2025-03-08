@@ -6,5 +6,6 @@ package com.example.earthtalk.domain.user.entity;
 public enum Role {
     ROLE_GUEST,
     ROLE_MEMBER,
-    ROLE_ADMIN;
+    ROLE_ADMIN,
+    ROLE_BANNED
 }
