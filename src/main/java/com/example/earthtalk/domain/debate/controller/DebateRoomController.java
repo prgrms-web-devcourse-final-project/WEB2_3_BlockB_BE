@@ -1,5 +1,10 @@
 package com.example.earthtalk.domain.debate.controller;
 
+import com.example.earthtalk.domain.debate.store.VoteStore;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import com.example.earthtalk.domain.debate.entity.*;
@@ -7,6 +12,9 @@ import com.example.earthtalk.domain.news.entity.MemberNumberType;
 import com.example.earthtalk.domain.news.entity.TimeType;
 import com.example.earthtalk.global.constant.ContinentType;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,8 +28,19 @@ import com.example.earthtalk.domain.debate.dto.DebateRoomResponse;
 import com.example.earthtalk.domain.debate.dto.VoteRequest;
 import com.example.earthtalk.domain.debate.dto.VoteResponse;
 import com.example.earthtalk.domain.debate.dto.WaitRoomResponse;
+import com.example.earthtalk.domain.debate.entity.Debate;
+import com.example.earthtalk.domain.debate.entity.DebateParticipants;
+import com.example.earthtalk.domain.debate.entity.FlagType;
+import com.example.earthtalk.domain.debate.entity.RoomType;
+import com.example.earthtalk.domain.debate.repository.DebateParticipantsRepository;
 import com.example.earthtalk.domain.debate.repository.DebateRepository;
 import com.example.earthtalk.domain.debate.service.DebateRoomService;
+import com.example.earthtalk.domain.debate.service.DebateUserService;
+import com.example.earthtalk.domain.debate.store.DebateUserStore;
+import com.example.earthtalk.domain.report.dto.request.InsertReportRequest;
+import com.example.earthtalk.domain.report.service.ReportService;
+import com.example.earthtalk.domain.user.entity.User;
+import com.example.earthtalk.domain.user.repository.UserRepository;
 import com.example.earthtalk.global.exception.ErrorCode;
 import com.example.earthtalk.global.response.ApiResponse;
 
@@ -38,6 +57,9 @@ public class DebateRoomController {
 
 	private final DebateRepository debateRepository;
 	private final DebateRoomService debateRoomService;
+	private final DebateUserService debateUserService;
+	private final DebateUserStore debateUserStore;
+	private final VoteStore voteStore;
 
 	@Operation(summary = "토론방 상세 조회 API", description = "토론방의 UUID로 상세 정보를 조회합니다.")
 	@ApiResponses(value = {
@@ -114,26 +136,11 @@ public class DebateRoomController {
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 토론방을 찾을 수 없습니다."),
 	})
 	@PutMapping("/vote/{roomId}")
-	public ResponseEntity<ApiResponse<Void>> putVote(
+	public ResponseEntity<ApiResponse<Object>> putVote(
 		@PathVariable("roomId") String roomId,
 		@RequestBody VoteRequest request) {
-		Debate debate = debateRepository.findByUuid(UUID.fromString(roomId))
-			.orElseThrow(() -> new IllegalArgumentException(ErrorCode.DEBATEROOM_NOT_FOUND.getMessage()));
-
-		if (request.getNeutralNumber() < 0 || request.getDisagreeNumber() < 0 || request.getAgreeNumber() < 0) {
-			throw new IllegalArgumentException(ErrorCode.INVALID_REQUEST_BODY.getMessage());
-		}
-
-		if (debate.getParticipants() == null || debate.getParticipants().isEmpty()) {
-			throw new IllegalArgumentException(ErrorCode.DEBATE_NO_PARTICIPANTS.getMessage());
-		}
-
-		debateRoomService.processDebateResult(debate, request);
-
-		debateRepository.save(debate);
-
-		return ResponseEntity.ok(ApiResponse.createSuccess(null));
-
+		voteStore.processVote(UUID.fromString(roomId), request);
+		return ResponseEntity.ok(ApiResponse.createSuccessWithNoData());
 	}
 
 	@Operation(summary = "투표 조회 API", description = "토론방의 현재 투표 수(찬성, 반대, 중립)를 조회합니다.")

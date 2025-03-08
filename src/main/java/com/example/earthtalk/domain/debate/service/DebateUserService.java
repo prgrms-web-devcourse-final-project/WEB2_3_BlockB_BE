@@ -1,5 +1,6 @@
 package com.example.earthtalk.domain.debate.service;
 
+import com.example.earthtalk.domain.debate.entity.EventType;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -169,7 +170,7 @@ public class DebateUserService {
 								: "반대 팀이 승리했습니다.";
 
 							DebateResultMessage victoryMessage = DebateResultMessage.builder()
-								.event("notification")
+								.event(EventType.NOTIFICATION)
 								.roomId(roomId)
 								.message(victoryMsg)
 								.build();

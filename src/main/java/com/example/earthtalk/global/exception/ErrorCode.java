@@ -43,6 +43,8 @@ public enum ErrorCode { // 예외 발생시, body에 실어 날려줄 상태, co
     DEBATE_NO_PARTICIPANTS(400, -5003, "토론방에 인원이 없습니다."),
     SAVE_FAILED(500, -5004, "토론방 저장에 실패했습니다."),
     CHAT_NOT_FOUND(404, -5004, "조회된 채팅이 존재하지 않습니다."),
+    VOTE_NOT_STARTED(400, -5005, "아직 투표가 시작되지 않았습니다."),
+    VOTE_DUPLICATED(400, -5006, "이미 투표한 유저입니다."),
 
     //-6000 OAUTH
     OAUTH_NOT_FOUND(404, -6000, "소셜로그인 계정 정보가 존재하지 않습니다."),

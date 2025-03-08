@@ -1,5 +1,7 @@
 package com.example.earthtalk.domain.debate.component;
 
+import com.example.earthtalk.domain.debate.service.DebateTurnManagementService;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -41,6 +43,7 @@ public class WebSocketEventListener {
 
 	private final DebateUserService debateUserService;
 	private final DebateRoomService debateRoomService;
+	private final DebateTurnManagementService debateTurnManagementService;
 
 	private final DebateChatManagementService debateChatManagementService;
 	private final ObserverChatManagementService observerChatManagementService;
