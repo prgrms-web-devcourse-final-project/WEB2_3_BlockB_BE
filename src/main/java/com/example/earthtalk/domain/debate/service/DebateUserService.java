@@ -12,17 +12,14 @@ import lombok.RequiredArgsConstructor;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import com.example.earthtalk.domain.debate.dto.DebateMessage;
 import com.example.earthtalk.domain.debate.dto.DebateResultMessage;
 import com.example.earthtalk.domain.debate.dto.ObserverMessage;
 import com.example.earthtalk.domain.debate.entity.Debate;
-import com.example.earthtalk.domain.debate.entity.DebateChat;
 import com.example.earthtalk.domain.debate.entity.FlagType;
 import com.example.earthtalk.domain.debate.entity.RoomType;
-import com.example.earthtalk.domain.debate.repository.DebateChatRepository;
 import com.example.earthtalk.domain.debate.repository.DebateRepository;
 import com.example.earthtalk.domain.debate.store.DebateMessageStore;
 import com.example.earthtalk.domain.debate.store.DebateUserStore;
@@ -57,7 +54,6 @@ public class DebateUserService {
 	private final DebateMessageStore debateMessageStore;
 	private final ObserverMessageStore observerMessageStore;
 	private final ObserverChatManagementService observerChatManagementService;
-	private final DebateChatRepository debateChatRepository;
 	private final DebateChatManagementService debateChatManagementService;
 
 	/**
@@ -89,6 +85,7 @@ public class DebateUserService {
 					Map<String, String> errorMessage = Map.of(
 						"event", "error",
 						"roomId", roomId,
+						"kickedUserName", userName,
 						"message", ErrorCode.TOO_MANY_PARTICIPANTS.getMessage()
 					);
 					messagingTemplate.convertAndSend("/topic/debate/" + roomId, errorMessage);
@@ -100,6 +97,7 @@ public class DebateUserService {
 					Map<String, String> errorMessage = Map.of(
 						"event", "error",
 						"roomId", roomId,
+						"kickedUserName", userName,
 						"message", ErrorCode.TOO_MANY_PARTICIPANTS.getMessage()
 					);
 					messagingTemplate.convertAndSend("/topic/debate/" + roomId, errorMessage);
