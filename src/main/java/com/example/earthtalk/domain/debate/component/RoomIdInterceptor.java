@@ -45,6 +45,7 @@ public class RoomIdInterceptor implements HandshakeInterceptor {
 			String roomId = uri.substring(uri.lastIndexOf("/") + 1);
 			attributes.put("roomId", roomId);
 		}
+
 		return true;
 	}
 

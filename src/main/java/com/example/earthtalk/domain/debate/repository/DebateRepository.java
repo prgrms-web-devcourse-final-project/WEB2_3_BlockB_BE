@@ -26,7 +26,7 @@ public interface DebateRepository extends JpaRepository<Debate, Long> {
 			"(:continent IS NULL OR d.continent = :continent) AND " +
 			"(:category IS NULL OR d.category = :category) AND " +
 			"(:member IS NULL OR d.member = :member) AND " +
-			"d.status = 0" +
+			"d.status = 'closed'" +
 			"ORDER BY CASE " +
 			"WHEN :sort = 'popular' THEN (d.agreeNumber + d.disagreeNumber + d.neutralNumber)" +
 			"ELSE d.updatedAt " +

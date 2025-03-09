@@ -10,6 +10,7 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.messaging.SessionConnectedEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
+import org.springframework.web.socket.messaging.SessionSubscribeEvent;
 
 import java.util.List;
 import java.util.Map;
@@ -49,6 +50,8 @@ public class WebSocketEventListener {
 	private final ObserverChatManagementService observerChatManagementService;
 	private final ObserverUserService observerUserService;
 
+	private final WebSocketIdleSessionMonitor webSocketIdleSessionMonitor;
+
 	// 여러 개의 맵 대신 세션 ID와 관련된 정보를 하나의 객체(SessionInfo)로 관리
 	private final Map<String, SessionInfo> sessionInfoMap = new ConcurrentHashMap<>();
 
@@ -66,38 +69,66 @@ public class WebSocketEventListener {
 	 */
 	@EventListener
 	public void handleWebSocketConnectListener(SessionConnectedEvent event) {
-		log.info("새로운 WebSocket 연결 수신: sessionId={}", StompHeaderAccessor.wrap(event.getMessage()).getSessionId());
+		StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
+		String sessionId = headerAccessor.getSessionId();
+		webSocketIdleSessionMonitor.registerSession(sessionId);
+		log.info("새로운 WebSocket 연결 수신: sessionId={}", sessionId);
+	}
+
+	@EventListener
+	public void handleSessionSubscribeEvent(SessionSubscribeEvent event) {
 		StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
 		String destination = headerAccessor.getDestination();
+		log.info("SUBSCRIBE 프레임 수신 - destination: {}", destination);
+
+		// destination이 null이 아니고 "/room-list"로 시작하지 않는 경우 처리
 		if (destination != null && !destination.startsWith("/room-list")) {
-			String roomId = (String)headerAccessor.getSessionAttributes().get("roomId");
-			String userName = (String)headerAccessor.getSessionAttributes().get("userName");
+			// HandshakeInterceptor에서 저장한 세션 속성에서 값 조회
+			Map<String, Object> sessionAttributes = headerAccessor.getSessionAttributes();
+			String roomId = sessionAttributes != null ? (String) sessionAttributes.get("roomId") : null;
+			String userName = sessionAttributes != null ? (String) sessionAttributes.get("userName") : null;
+			String position = sessionAttributes != null ? (String) sessionAttributes.get("position") : null;
+
+			log.info("세션 속성 - roomId: {}, userName: {}, position: {}", roomId, userName, position);
+
+			// Debate 관련 구독 처리
 			if (destination.startsWith("/topic/debate/")) {
-				String sessionId = headerAccessor.getSessionId();
-				String position = (String)headerAccessor.getSessionAttributes().get("position");
 				if (roomId != null && userName != null && position != null) {
 					Debate debate = debateRoomService.getDebateRoom(roomId);
+					log.info("Debate room 조회 결과 - debate: {}", debate);
 					if (debate == null) {
+						log.error("Debate room을 찾을 수 없음 - roomId: {}", roomId);
 						throw new IllegalArgumentException(ErrorCode.CHAT_NOT_FOUND);
 					}
-
 					SessionInfo sessionInfo = new SessionInfo(roomId, userName, position);
+					String sessionId = headerAccessor.getSessionId();
 					sessionInfoMap.put(sessionId, sessionInfo);
+					log.info("세션 정보 저장 완료 - sessionInfo: {}", sessionInfo);
 					try {
 						debateUserService.addUser(debate, userName, position);
-					} catch(Exception e) {
-						sessionInfoMap.remove(sessionId);
+						log.info("Debate 참여 성공 - roomId: {}, userName: {}, position: {}", roomId, userName, position);
+					} catch (Exception e) {
+						sessionInfoMap.remove(headerAccessor.getSessionId());
+						log.error("Debate 사용자 추가 실패 - roomId: {}, userName: {}. 예외 메시지: {}", roomId, userName, e.getMessage(), e);
 						throw new IllegalArgumentException(ErrorCode.CHAT_NOT_FOUND);
 					}
-				}
-			} else if (destination.startsWith("/topic/observer/")) {
-				String sessionId = headerAccessor.getSessionId();
-				if (roomId != null && userName != null) {
-					observerSessionMap.put(sessionId, roomId);
-					observerUserService.addUser(roomId, userName);
+				} else {
+					log.warn("Debate 참여 필수 속성이 누락됨 - roomId: {}, userName: {}, position: {}", roomId, userName, position);
 				}
 			}
-
+			// Observer 관련 구독 처리
+			else if (destination.startsWith("/topic/observer/")) {
+				log.debug("Observer 엔드포인트 처리 시작");
+				if (roomId != null && userName != null) {
+					String sessionId = headerAccessor.getSessionId();
+					observerSessionMap.put(sessionId, roomId);
+					log.info("Observer 세션 저장 완료 - sessionId: {}, roomId: {}", sessionId, roomId);
+					observerUserService.addUser(roomId, userName);
+					log.info("Observer 참여 성공 - roomId: {}, userName: {}", roomId, userName);
+				} else {
+					log.warn("Observer 참여 필수 속성이 누락됨 - roomId: {}, userName: {}", roomId, userName);
+				}
+			}
 		}
 	}
 
@@ -156,6 +187,8 @@ public class WebSocketEventListener {
 				observerUserService.removeUser(observerRoomId, userNameAttr);
 			}
 		}
+
+		webSocketIdleSessionMonitor.unregisterSession(sessionId);
 
 	}
 }
