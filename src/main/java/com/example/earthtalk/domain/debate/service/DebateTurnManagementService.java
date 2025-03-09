@@ -4,6 +4,7 @@ import com.example.earthtalk.domain.debate.entity.EventType;
 import com.example.earthtalk.domain.debate.entity.FlagType;
 import com.example.earthtalk.domain.debate.entity.RoomType;
 import com.example.earthtalk.domain.debate.entity.SpeakCountType;
+import com.example.earthtalk.domain.news.entity.TimeType;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -23,10 +24,10 @@ public class DebateTurnManagementService {
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(100);
     private final SimpMessagingTemplate messagingTemplate;
 
-    public void createDebateTurn(UUID roomId, SpeakCountType speakCountType) {
+    public void createDebateTurn(UUID roomId, TimeType timeType) {
         debateTurns.put(roomId, FlagType.NO_POSITION);
         scheduler.scheduleAtFixedRate(() ->
-            switchTurn(roomId), 20, speakCountType.getValue() * 60 - 10, TimeUnit.SECONDS);
+            switchTurn(roomId), 20, timeType.getValue()- 10, TimeUnit.SECONDS);
         turnScheduler.put(roomId, scheduler);
         System.out.println("Create debate turn for " + roomId);
     }
