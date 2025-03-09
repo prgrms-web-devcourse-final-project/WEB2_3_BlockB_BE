@@ -49,6 +49,8 @@ public class WebSocketEventListener {
 	private final ObserverChatManagementService observerChatManagementService;
 	private final ObserverUserService observerUserService;
 
+	private final WebSocketIdleSessionMonitor webSocketIdleSessionMonitor;
+
 	// 여러 개의 맵 대신 세션 ID와 관련된 정보를 하나의 객체(SessionInfo)로 관리
 	private final Map<String, SessionInfo> sessionInfoMap = new ConcurrentHashMap<>();
 
@@ -68,6 +70,8 @@ public class WebSocketEventListener {
 	public void handleWebSocketConnectListener(SessionConnectedEvent event) {
 		log.info("새로운 WebSocket 연결 수신: sessionId={}", StompHeaderAccessor.wrap(event.getMessage()).getSessionId());
 		StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
+		String sessionId = headerAccessor.getSessionId();
+		webSocketIdleSessionMonitor.registerSession(sessionId);
 		String destination = headerAccessor.getDestination();
 		log.debug("STOMP 메시지 수신 - destination: {}", destination);
 
@@ -80,7 +84,6 @@ public class WebSocketEventListener {
 				String sessionId = headerAccessor.getSessionId();
 				String position = (String) headerAccessor.getSessionAttributes().get("position");
 				log.debug("Debate 엔드포인트 - sessionId: {}, position: {}", sessionId, position);
-
 				if (roomId != null && userName != null && position != null) {
 					Debate debate = debateRoomService.getDebateRoom(roomId);
 					log.debug("Debate room 조회 결과 - debate: {}", debate);
@@ -174,6 +177,8 @@ public class WebSocketEventListener {
 				observerUserService.removeUser(observerRoomId, userNameAttr);
 			}
 		}
+
+		webSocketIdleSessionMonitor.unregisterSession(sessionId);
 
 	}
 }

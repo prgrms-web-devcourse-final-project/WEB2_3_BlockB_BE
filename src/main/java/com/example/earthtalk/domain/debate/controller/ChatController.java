@@ -7,12 +7,14 @@ import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.stereotype.Controller;
 
+import com.example.earthtalk.domain.debate.component.WebSocketIdleSessionMonitor;
 import com.example.earthtalk.domain.debate.store.DebateMessageStore;
 import com.example.earthtalk.domain.debate.dto.DebateMessage;
 import com.example.earthtalk.domain.debate.dto.ObserverMessage;
 import com.example.earthtalk.domain.debate.store.ObserverMessageStore;
 import com.example.earthtalk.global.exception.ErrorCode;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -23,16 +25,13 @@ import lombok.extern.slf4j.Slf4j;
  * </p>
  */
 @Controller
+@RequiredArgsConstructor
 @Slf4j
 public class ChatController {
 
 	private final DebateMessageStore debateMessageStore;
 	private final ObserverMessageStore observerMessageStore;
-
-	public ChatController(DebateMessageStore debateMessageStore, ObserverMessageStore observerMessageStore) {
-		this.debateMessageStore = debateMessageStore;
-		this.observerMessageStore = observerMessageStore;
-	}
+	private final WebSocketIdleSessionMonitor webSocketIdleSessionMonitor;
 
 	/**
 	 * 토론 메시지를 처리하여 검증된 DebateMessage를 브로드캐스트합니다.
@@ -53,6 +52,9 @@ public class ChatController {
 		@Payload DebateMessage message,
 		SimpMessageHeaderAccessor headerAccessor
 	) {
+
+		String sessionId = headerAccessor.getSessionId();
+		webSocketIdleSessionMonitor.updateSessionActivity(sessionId);
 		log.info("new debate message : {}", message.getMessage());
 
 		if (!message.isValidMessage()) {
@@ -80,7 +82,12 @@ public class ChatController {
 	 */
 	@MessageMapping("/observer/{roomId}")
 	@SendTo("/topic/observer/{roomId}")
-	public ObserverMessage sendObserverMessage(@DestinationVariable String roomId, @Payload ObserverMessage message) {
+	public ObserverMessage sendObserverMessage(@DestinationVariable String roomId, @Payload ObserverMessage message,
+		SimpMessageHeaderAccessor headerAccessor
+	) {
+
+		String sessionId = headerAccessor.getSessionId();
+		webSocketIdleSessionMonitor.updateSessionActivity(sessionId);
 		if (message.getEvent() == null || message.getEvent().trim().isEmpty() ||
 		message.getUserName() == null || message.getUserName().trim().isEmpty() ||
 		message.getMessage() == null || message.getMessage().trim().isEmpty()) {
