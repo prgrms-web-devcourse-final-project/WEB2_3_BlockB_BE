@@ -54,17 +54,20 @@ public class DebateManagementService {
 	 * 모든 사용자(찬성, 반대)가 최대 인원수에 도달하면 캐시에서 해당 채팅방 정보를 제거합니다.
 	 * </p>
 	 *
-	 * @param debate         토론방의 고유 식별자
+	 * @param tmp         토론방의 고유 식별자
 	 * @param proUserNames   찬성 사용자들의 닉네임을 포함하는 Set
 	 * @param conUserNames   반대 사용자들의 닉네임을 포함하는 Set
 	 * @throws BadRequestException  사용자 정보를 조회할 때 해당 닉네임에 해당하는 사용자가 없으면 발생
 	 */
 	@Transactional
-	public void persistChatRoomIfFull(Debate debate, Set<String> proUserNames, Set<String> conUserNames) {
-		if (debate == null) {
+	public void persistChatRoomIfFull(Debate tmp, Set<String> proUserNames, Set<String> conUserNames) {
+		if (tmp == null) {
 			throw new IllegalArgumentException(ErrorCode.DEBATEROOM_NOT_FOUND);
 		}
-		debateRepository.updateStatusByUuid(RoomType.DEBATE, debate.getUuid());
+		Debate debate = debateRepository.findByUuid(tmp.getUuid())
+			.orElseThrow(() -> new IllegalArgumentException(ErrorCode.DEBATEROOM_NOT_FOUND));
+		debate.updateRoomType(RoomType.DEBATE);
+		debateRepository.save(debate);
 
 		int maxMembers = debate.getMember().getValue();
 		if (proUserNames.size() == maxMembers && conUserNames.size() == maxMembers) {
