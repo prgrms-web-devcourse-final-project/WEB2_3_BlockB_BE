@@ -1,5 +1,7 @@
 package com.example.earthtalk.domain.debate.dto;
 
+import java.util.UUID;
+
 import com.example.earthtalk.domain.debate.entity.CategoryType;
 import com.example.earthtalk.domain.debate.entity.Debate;
 import com.example.earthtalk.domain.debate.entity.SpeakCountType;
@@ -14,6 +16,7 @@ import org.hibernate.Hibernate;
 @Getter
 @Builder
 public class DebateMetaDataRoomResponse {
+	private UUID uuid;
 	private String title;
 	private String description;
 	private MemberNumberType memberNumber;
@@ -26,6 +29,7 @@ public class DebateMetaDataRoomResponse {
 	public static DebateMetaDataRoomResponse fromEntity(Debate debate) {
 
 		return DebateMetaDataRoomResponse.builder()
+			.uuid(debate.getUuid())
 			.title(debate.getTitle())
 			.description(debate.getDescription())
 			.memberNumber(debate.getMember())
