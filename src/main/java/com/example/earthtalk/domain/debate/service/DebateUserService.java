@@ -93,6 +93,7 @@ public class DebateUserService {
 			}
 
 			sendUserCountUpdate(roomId);
+			sendUserJoinMessage(roomId, userName);
 
 			if (debateUserStore.getProUsers(roomId).size() == maxMembers &&
 				debateUserStore.getConUsers(roomId).size() == maxMembers) {
