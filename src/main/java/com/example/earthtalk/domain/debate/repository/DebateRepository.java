@@ -1,5 +1,6 @@
 package com.example.earthtalk.domain.debate.repository;
 
+import com.example.earthtalk.domain.debate.entity.RoomType;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -12,6 +13,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.example.earthtalk.domain.debate.entity.Debate;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -35,4 +37,8 @@ public interface DebateRepository extends JpaRepository<Debate, Long> {
 										   @Param("member") MemberNumberType member,
 										   @Param("sort") String sort,
 										   Pageable pageable);
+
+	@Query("update debates d set d.status = :status where d.uuid = :uuid")
+	@Modifying
+	void updateStatusByUuid(RoomType status, UUID uuid);
 }

@@ -64,9 +64,7 @@ public class DebateManagementService {
 		if (debate == null) {
 			throw new IllegalArgumentException(ErrorCode.DEBATEROOM_NOT_FOUND);
 		}
-
-		debate.updateRoomType(RoomType.DEBATE);
-		debateRepository.save(debate);
+		debateRepository.updateStatusByUuid(RoomType.DEBATE, debate.getUuid());
 
 		int maxMembers = debate.getMember().getValue();
 		if (proUserNames.size() == maxMembers && conUserNames.size() == maxMembers) {
