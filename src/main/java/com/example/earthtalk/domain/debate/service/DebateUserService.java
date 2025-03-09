@@ -85,11 +85,17 @@ public class DebateUserService {
 		lock.lock();
 		try {
 			if ("pro".equalsIgnoreCase(position)) {
+				if (debateUserStore.getProUserCounts().getOrDefault(roomId, 0) >= maxMembers) {
+					throw new IllegalArgumentException(ErrorCode.TOO_MANY_PARTICIPANTS.getMessage());
+				}
 				debateUserStore.addProUser(roomId, userName);
 			} else if ("con".equalsIgnoreCase(position)) {
+				if (debateUserStore.getProUserCounts().getOrDefault(roomId, 0) >= maxMembers) {
+					throw new IllegalArgumentException(ErrorCode.TOO_MANY_PARTICIPANTS.getMessage());
+				}
 				debateUserStore.addConUser(roomId, userName);
 			} else {
-				throw new IllegalArgumentException("Invalid position: " + position);
+				throw new IllegalArgumentException(ErrorCode.METHOD_NOT_ALLOWED.getMessage());
 			}
 
 			sendUserCountUpdate(roomId);
