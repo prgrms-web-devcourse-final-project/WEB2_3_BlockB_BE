@@ -81,7 +81,6 @@ public class WebSocketEventListener {
 			log.debug("세션 속성 - roomId: {}, userName: {}", roomId, userName);
 
 			if (destination.startsWith("/topic/debate/")) {
-				String sessionId = headerAccessor.getSessionId();
 				String position = (String) headerAccessor.getSessionAttributes().get("position");
 				log.debug("Debate 엔드포인트 - sessionId: {}, position: {}", sessionId, position);
 				if (roomId != null && userName != null && position != null) {
@@ -107,7 +106,6 @@ public class WebSocketEventListener {
 					log.warn("Debate 참여 필수 속성이 누락됨 - roomId: {}, userName: {}, position: {}", roomId, userName, position);
 				}
 			} else if (destination.startsWith("/topic/observer/")) {
-				String sessionId = headerAccessor.getSessionId();
 				log.debug("Observer 엔드포인트 - sessionId: {}", sessionId);
 				if (roomId != null && userName != null) {
 					observerSessionMap.put(sessionId, roomId);
