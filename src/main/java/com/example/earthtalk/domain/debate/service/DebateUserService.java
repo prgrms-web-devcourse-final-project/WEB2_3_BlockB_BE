@@ -86,11 +86,23 @@ public class DebateUserService {
 		try {
 			if ("pro".equalsIgnoreCase(position)) {
 				if (debateUserStore.getProUserCounts().getOrDefault(roomId, 0) >= maxMembers) {
+					Map<String, String> errorMessage = Map.of(
+						"event", "error",
+						"roomId", roomId,
+						"message", ErrorCode.TOO_MANY_PARTICIPANTS.getMessage()
+					);
+					messagingTemplate.convertAndSend("/topic/debate/" + roomId, errorMessage);
 					throw new IllegalArgumentException(ErrorCode.TOO_MANY_PARTICIPANTS.getMessage());
 				}
 				debateUserStore.addProUser(roomId, userName);
 			} else if ("con".equalsIgnoreCase(position)) {
-				if (debateUserStore.getProUserCounts().getOrDefault(roomId, 0) >= maxMembers) {
+				if (debateUserStore.getConUserCounts().getOrDefault(roomId, 0) >= maxMembers) {
+					Map<String, String> errorMessage = Map.of(
+						"event", "error",
+						"roomId", roomId,
+						"message", ErrorCode.TOO_MANY_PARTICIPANTS.getMessage()
+					);
+					messagingTemplate.convertAndSend("/topic/debate/" + roomId, errorMessage);
 					throw new IllegalArgumentException(ErrorCode.TOO_MANY_PARTICIPANTS.getMessage());
 				}
 				debateUserStore.addConUser(roomId, userName);
