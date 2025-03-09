@@ -102,8 +102,7 @@ public class DebateUserStore {
 		Set<String> keys = redisTemplate.keys(PRO_KEY_PREFIX + "*");
 		if (keys != null) {
 			for (String key : keys) {
-				Long size = redisTemplate.opsForSet().size(PRO_KEY_PREFIX + key);
-
+				Long size = redisTemplate.opsForSet().size(key);
 				String roomId = key.substring(PRO_KEY_PREFIX.length());
 				counts.put(roomId, size != null ? size.intValue() : 0);
 			}
