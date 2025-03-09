@@ -81,15 +81,18 @@ public class WebSocketEventListener {
 		String destination = headerAccessor.getDestination();
 		log.info("SUBSCRIBE 프레임 수신 - destination: {}", destination);
 
-		// 구독 프레임에서는 destination 헤더가 반드시 존재해야 함
+		// destination이 null이 아니고 "/room-list"로 시작하지 않는 경우 처리
 		if (destination != null && !destination.startsWith("/room-list")) {
-			String roomId = (String) headerAccessor.getSessionAttributes().get("roomId");
-			String userName = (String) headerAccessor.getSessionAttributes().get("userName");
-			log.info("세션 속성 - roomId: {}, userName: {}", roomId, userName);
+			// HandshakeInterceptor에서 저장한 세션 속성에서 값 조회
+			Map<String, Object> sessionAttributes = headerAccessor.getSessionAttributes();
+			String roomId = sessionAttributes != null ? (String) sessionAttributes.get("roomId") : null;
+			String userName = sessionAttributes != null ? (String) sessionAttributes.get("userName") : null;
+			String position = sessionAttributes != null ? (String) sessionAttributes.get("position") : null;
 
+			log.info("세션 속성 - roomId: {}, userName: {}, position: {}", roomId, userName, position);
+
+			// Debate 관련 구독 처리
 			if (destination.startsWith("/topic/debate/")) {
-				String position = (String) headerAccessor.getSessionAttributes().get("position");
-				log.info("Debate 엔드포인트 - position: {}", position);
 				if (roomId != null && userName != null && position != null) {
 					Debate debate = debateRoomService.getDebateRoom(roomId);
 					log.info("Debate room 조회 결과 - debate: {}", debate);
@@ -105,14 +108,16 @@ public class WebSocketEventListener {
 						debateUserService.addUser(debate, userName, position);
 						log.info("Debate 참여 성공 - roomId: {}, userName: {}, position: {}", roomId, userName, position);
 					} catch (Exception e) {
-						sessionInfoMap.remove(sessionId);
+						sessionInfoMap.remove(headerAccessor.getSessionId());
 						log.error("Debate 사용자 추가 실패 - roomId: {}, userName: {}. 예외 메시지: {}", roomId, userName, e.getMessage(), e);
 						throw new IllegalArgumentException(ErrorCode.CHAT_NOT_FOUND);
 					}
 				} else {
-					log.warn("Debate 참여 필수 속성이 누락됨 - roomId: {}, userName: {}, position: {}", roomId, userName, headerAccessor.getSessionAttributes().get("position"));
+					log.warn("Debate 참여 필수 속성이 누락됨 - roomId: {}, userName: {}, position: {}", roomId, userName, position);
 				}
-			} else if (destination.startsWith("/topic/observer/")) {
+			}
+			// Observer 관련 구독 처리
+			else if (destination.startsWith("/topic/observer/")) {
 				log.debug("Observer 엔드포인트 처리 시작");
 				if (roomId != null && userName != null) {
 					String sessionId = headerAccessor.getSessionId();
