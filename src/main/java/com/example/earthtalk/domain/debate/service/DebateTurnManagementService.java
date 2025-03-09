@@ -39,7 +39,7 @@ public class DebateTurnManagementService {
                 "message", "토론이 시작되었습니다."
             );
             debateTurns.put(roomId, FlagType.PRO);
-            messagingTemplate.convertAndSend("/topic/debate" + roomId, message);
+            messagingTemplate.convertAndSend("/topic/debate/" + roomId.toString(), message);
             System.out.println("Debate Started for " + roomId);
             return;
         }
@@ -48,7 +48,7 @@ public class DebateTurnManagementService {
             "event", EventType.NOTIFICATION,
             "message", "10초 후 턴이 바뀝니다..."
         );
-        messagingTemplate.convertAndSend("/topic/debate" + roomId, message1);
+        messagingTemplate.convertAndSend("/topic/debate/" + roomId.toString(), message1);
         System.out.println("10 Seconds to change turn.... for " + roomId);
 
         FlagType currentTurn = debateTurns.get(roomId);
@@ -72,6 +72,10 @@ public class DebateTurnManagementService {
 
     public void removeDebateTurn(UUID roomId) {
         debateTurns.remove(roomId);
+        ScheduledExecutorService removed = turnScheduler.remove(roomId);
+        if(removed != null) {
+            removed.shutdown();
+        }
         System.out.println("Remove debate turn for " + roomId);
 
     }
