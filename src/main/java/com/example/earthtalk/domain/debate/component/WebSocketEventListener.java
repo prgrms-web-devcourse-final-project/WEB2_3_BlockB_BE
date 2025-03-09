@@ -69,36 +69,54 @@ public class WebSocketEventListener {
 		log.info("새로운 WebSocket 연결 수신: sessionId={}", StompHeaderAccessor.wrap(event.getMessage()).getSessionId());
 		StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
 		String destination = headerAccessor.getDestination();
+		log.debug("STOMP 메시지 수신 - destination: {}", destination);
+
 		if (destination != null && !destination.startsWith("/room-list")) {
-			String roomId = (String)headerAccessor.getSessionAttributes().get("roomId");
-			String userName = (String)headerAccessor.getSessionAttributes().get("userName");
+			String roomId = (String) headerAccessor.getSessionAttributes().get("roomId");
+			String userName = (String) headerAccessor.getSessionAttributes().get("userName");
+			log.debug("세션 속성 - roomId: {}, userName: {}", roomId, userName);
+
 			if (destination.startsWith("/topic/debate/")) {
 				String sessionId = headerAccessor.getSessionId();
-				String position = (String)headerAccessor.getSessionAttributes().get("position");
+				String position = (String) headerAccessor.getSessionAttributes().get("position");
+				log.debug("Debate 엔드포인트 - sessionId: {}, position: {}", sessionId, position);
+
 				if (roomId != null && userName != null && position != null) {
 					Debate debate = debateRoomService.getDebateRoom(roomId);
+					log.debug("Debate room 조회 결과 - debate: {}", debate);
 					if (debate == null) {
+						log.error("Debate room을 찾을 수 없음 - roomId: {}", roomId);
 						throw new IllegalArgumentException(ErrorCode.CHAT_NOT_FOUND);
 					}
 
 					SessionInfo sessionInfo = new SessionInfo(roomId, userName, position);
 					sessionInfoMap.put(sessionId, sessionInfo);
+					log.debug("세션 정보 저장 완료 - sessionInfo: {}", sessionInfo);
 					try {
 						debateUserService.addUser(debate, userName, position);
-					} catch(Exception e) {
+						log.info("Debate 참여 성공 - roomId: {}, userName: {}, position: {}", roomId, userName, position);
+					} catch (Exception e) {
 						sessionInfoMap.remove(sessionId);
+						log.error("Debate 사용자 추가 실패 - roomId: {}, userName: {}. 예외 메시지: {}", roomId, userName, e.getMessage(), e);
 						throw new IllegalArgumentException(ErrorCode.CHAT_NOT_FOUND);
 					}
+				} else {
+					log.warn("Debate 참여 필수 속성이 누락됨 - roomId: {}, userName: {}, position: {}", roomId, userName, position);
 				}
 			} else if (destination.startsWith("/topic/observer/")) {
 				String sessionId = headerAccessor.getSessionId();
+				log.debug("Observer 엔드포인트 - sessionId: {}", sessionId);
 				if (roomId != null && userName != null) {
 					observerSessionMap.put(sessionId, roomId);
+					log.debug("Observer 세션 저장 완료 - sessionId: {}, roomId: {}", sessionId, roomId);
 					observerUserService.addUser(roomId, userName);
+					log.info("Observer 참여 성공 - roomId: {}, userName: {}", roomId, userName);
+				} else {
+					log.warn("Observer 참여 필수 속성이 누락됨 - roomId: {}, userName: {}", roomId, userName);
 				}
 			}
-
 		}
+
 	}
 
 	/**
