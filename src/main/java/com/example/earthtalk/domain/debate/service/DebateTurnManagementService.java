@@ -10,6 +10,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import lombok.AllArgsConstructor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -19,16 +20,16 @@ import org.springframework.stereotype.Service;
 @AllArgsConstructor
 public class DebateTurnManagementService {
 
-    private final Map<UUID, ScheduledExecutorService> turnScheduler = new ConcurrentHashMap<>();
+    private final Map<UUID, ScheduledFuture<?>> turnScheduler = new ConcurrentHashMap<>();
     private final Map<UUID, FlagType> debateTurns = new ConcurrentHashMap<>();
-    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(100);
+    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(50);
     private final SimpMessagingTemplate messagingTemplate;
 
     public void createDebateTurn(UUID roomId, TimeType timeType) {
         debateTurns.put(roomId, FlagType.NO_POSITION);
-        scheduler.scheduleAtFixedRate(() ->
-            switchTurn(roomId), 20, timeType.getValue()- 10, TimeUnit.SECONDS);
-        turnScheduler.put(roomId, scheduler);
+        ScheduledFuture<?> debateTurnThread = scheduler.scheduleAtFixedRate(() ->
+            switchTurn(roomId), 20, timeType.getValue() - 10, TimeUnit.SECONDS);
+        turnScheduler.put(roomId, debateTurnThread);
         System.out.println("Create debate turn for " + roomId);
     }
 
@@ -63,7 +64,7 @@ public class DebateTurnManagementService {
             Map<String, Object> message2 = Map.of(
                 "event", EventType.TURN,
                 "turn", nextTurn,
-                "message", turn + "팀 발언이 시작되었습니다."
+                "message", "'" + turn + "'팀 발언이 시작되었습니다."
             );
             messagingTemplate.convertAndSend("/topic/debate/" + roomId.toString(), message2);
             debateTurns.put(roomId, nextTurn);
@@ -73,9 +74,9 @@ public class DebateTurnManagementService {
 
     public void removeDebateTurn(UUID roomId) {
         debateTurns.remove(roomId);
-        ScheduledExecutorService removed = turnScheduler.remove(roomId);
+        ScheduledFuture<?> removed = turnScheduler.remove(roomId);
         if(removed != null) {
-            removed.shutdown();
+            removed.cancel(true);
         }
         System.out.println("Remove debate turn for " + roomId);
 
