@@ -23,9 +23,15 @@ public class StompConnectInterceptor implements ChannelInterceptor {
 
 			// 추출한 값을 세션 속성에 저장
 			if (accessor.getSessionAttributes() != null) {
-				accessor.getSessionAttributes().put("userName", userName);
-				accessor.getSessionAttributes().put("position", position);
-				accessor.getSessionAttributes().put("roomId", roomId);
+				if (userName != null && !userName.isEmpty()) {
+					accessor.getSessionAttributes().put("userName", userName);
+				}
+				if (position != null && !position.isEmpty()) {
+					accessor.getSessionAttributes().put("position", position);
+				}
+				if (roomId != null && !roomId.isEmpty()) {
+					accessor.getSessionAttributes().put("roomId", roomId);
+				}
 			}
 		}
 		return message;
