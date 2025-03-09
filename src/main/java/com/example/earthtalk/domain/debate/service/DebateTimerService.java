@@ -44,7 +44,7 @@ public class DebateTimerService {
             "event", EventType.NOTIFICATION,
             "message", "잠시 후 토론이 시작됩니다... "
         );
-        messagingTemplate.convertAndSend("/topic/debate" + roomId, message);
+        messagingTemplate.convertAndSend("/topic/debate/" + roomId.toString(), message);
         debateTurnManagementService.createDebateTurn(roomId,speakCountType);
         System.out.println("Debate started for " + roomId);
     }
@@ -54,7 +54,7 @@ public class DebateTimerService {
             "event", EventType.NOTIFICATION,
             "message", "잠시 후 투표가 시작됩니다."
         );
-        messagingTemplate.convertAndSend("/topic/debate" + roomId, message1);
+        messagingTemplate.convertAndSend("/topic/debate/" + roomId.toString(), message1);
 
         scheduler.schedule(()-> {
 
@@ -73,7 +73,7 @@ public class DebateTimerService {
                 "status", RoomType.VOTING,
                 "message", "투표가 시작되었습니다."
             );
-            messagingTemplate.convertAndSend("/topic/debate" + roomId, message);
+            messagingTemplate.convertAndSend("/topic/debate/" + roomId.toString(), message);
             System.out.println("vote started for " + roomId);
         }, 10, TimeUnit.SECONDS);
     }
@@ -83,7 +83,7 @@ public class DebateTimerService {
             "event", EventType.NOTIFICATION,
             "message", "30초 후 토론이 종료됩니다."
         );
-        messagingTemplate.convertAndSend("/topic/debate" + roomId, message1);
+        messagingTemplate.convertAndSend("/topic/debate/" + roomId.toString(), message1);
         System.out.println("Debate ended in 30 seconds for " + roomId);
         scheduler.schedule(() -> {
 
@@ -92,7 +92,7 @@ public class DebateTimerService {
                 "event", EventType.NOTIFICATION,
                 "message", "토론이 종료되었습니다."
             );
-            messagingTemplate.convertAndSend("/topic/debate" + roomId, message2);
+            messagingTemplate.convertAndSend("/topic/debate/" + roomId.toString(), message2);
             Debate debate = debateRepository.findByUuid(roomId)
                     .orElseThrow(() -> new IllegalArgumentException(ErrorCode.DEBATEROOM_NOT_FOUND));
             if(debate.isResultEnabled()) {
@@ -109,7 +109,7 @@ public class DebateTimerService {
             "event", EventType.NOTIFICATION,
             "message", "투표 종료 10초 전입니다."
         );
-        messagingTemplate.convertAndSend("/topic/debate" + roomId, message);
+        messagingTemplate.convertAndSend("/topic/debate/" + roomId.toString(), message);
         System.out.println("10 seconds left to end vote for " + roomId);
 
         scheduler.schedule(() -> {
@@ -117,7 +117,7 @@ public class DebateTimerService {
                     "event", EventType.NOTIFICATION,
                     "message", "투표가 종료되었습니다. 투표 결과 집계중..."
                 );
-                messagingTemplate.convertAndSend("/topic/debate" + roomId, message2);
+                messagingTemplate.convertAndSend("/topic/debate/" + roomId.toString(), message2);
                 closeDebate(roomId);
                 System.out.println("vote ended for " + roomId);
             }, 10, TimeUnit.SECONDS);
@@ -142,14 +142,14 @@ public class DebateTimerService {
                 "status", RoomType.CLOSED,
                 "message", "토론이 모두 종료되었습니다." + reuslt
             );
-            messagingTemplate.convertAndSend("/topic/debate" + roomId, message);
+            messagingTemplate.convertAndSend("/topic/debate/" + roomId.toString(), message);
         }else{
             Map<String, Object> message = Map.of(
                 "event", EventType.STATUS,
                 "status", RoomType.CLOSED,
                 "message", "토론이 모두 종료되었습니다."
             );
-            messagingTemplate.convertAndSend("/topic/debate" + roomId, message);
+            messagingTemplate.convertAndSend("/topic/debate/" + roomId.toString(), message);
         }
         System.out.println("Debate Finished for " + roomId);
         debateTimers.remove(roomId);
