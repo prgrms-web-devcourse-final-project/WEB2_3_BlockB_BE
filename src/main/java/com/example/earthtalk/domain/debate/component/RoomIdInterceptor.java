@@ -45,6 +45,24 @@ public class RoomIdInterceptor implements HandshakeInterceptor {
 			String roomId = uri.substring(uri.lastIndexOf("/") + 1);
 			attributes.put("roomId", roomId);
 		}
+
+		String userName = request.getHeaders().getFirst("userName");
+		String position = request.getHeaders().getFirst("position");
+
+		if (userName != null && !userName.isEmpty()) {
+			attributes.put("userName", userName);
+			log.info("추출된 userName: {}", userName);
+		} else {
+			log.warn("userName 헤더가 존재하지 않음");
+		}
+
+		if (position != null && !position.isEmpty()) {
+			attributes.put("position", position);
+			log.info("추출된 position: {}", position);
+		} else {
+			log.warn("position 헤더가 존재하지 않음");
+		}
+
 		return true;
 	}
 
