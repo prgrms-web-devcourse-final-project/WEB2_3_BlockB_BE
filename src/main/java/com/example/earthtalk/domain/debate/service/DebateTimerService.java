@@ -38,14 +38,15 @@ public class DebateTimerService {
 
     public void startDebateTimer(UUID roomId, TimeType timeType, SpeakCountType speakCountType) {
         debateTimers.put(roomId,
-            scheduler.schedule(() -> endDebate(roomId),timeType.getValue()*60-30, TimeUnit.SECONDS));
+            scheduler.schedule(() -> endDebate(roomId),
+                (long) timeType.getValue() * speakCountType.getValue() * 2 - 30, TimeUnit.SECONDS));
 
         Map<String, Object> message = Map.of(
             "event", EventType.NOTIFICATION,
             "message", "잠시 후 토론이 시작됩니다... "
         );
         messagingTemplate.convertAndSend("/topic/debate/" + roomId.toString(), message);
-        debateTurnManagementService.createDebateTurn(roomId,speakCountType);
+        debateTurnManagementService.createDebateTurn(roomId,timeType);
         System.out.println("Debate started for " + roomId);
     }
 
