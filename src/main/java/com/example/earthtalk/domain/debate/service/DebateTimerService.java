@@ -32,7 +32,7 @@ public class DebateTimerService {
     private final DebateRepository debateRepository;
     private final VoteStore voteStore;
 
-    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(100);
+    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(50);
     private final Map<UUID, ScheduledFuture<?>> debateTimers = new ConcurrentHashMap<>();
     private final Map<UUID, ScheduledFuture<?>> voteTimers = new ConcurrentHashMap<>();
 
