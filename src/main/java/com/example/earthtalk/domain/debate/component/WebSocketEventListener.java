@@ -73,19 +73,19 @@ public class WebSocketEventListener {
 		String sessionId = headerAccessor.getSessionId();
 		webSocketIdleSessionMonitor.registerSession(sessionId);
 		String destination = headerAccessor.getDestination();
-		log.debug("STOMP 메시지 수신 - destination: {}", destination);
+		log.info("STOMP 메시지 수신 - destination: {}", destination);
 
 		if (destination != null && !destination.startsWith("/room-list")) {
 			String roomId = (String) headerAccessor.getSessionAttributes().get("roomId");
 			String userName = (String) headerAccessor.getSessionAttributes().get("userName");
-			log.debug("세션 속성 - roomId: {}, userName: {}", roomId, userName);
+			log.info("세션 속성 - roomId: {}, userName: {}", roomId, userName);
 
 			if (destination.startsWith("/topic/debate/")) {
 				String position = (String) headerAccessor.getSessionAttributes().get("position");
-				log.debug("Debate 엔드포인트 - sessionId: {}, position: {}", sessionId, position);
+				log.info("Debate 엔드포인트 - sessionId: {}, position: {}", sessionId, position);
 				if (roomId != null && userName != null && position != null) {
 					Debate debate = debateRoomService.getDebateRoom(roomId);
-					log.debug("Debate room 조회 결과 - debate: {}", debate);
+					log.info("Debate room 조회 결과 - debate: {}", debate);
 					if (debate == null) {
 						log.error("Debate room을 찾을 수 없음 - roomId: {}", roomId);
 						throw new IllegalArgumentException(ErrorCode.CHAT_NOT_FOUND);
@@ -93,7 +93,7 @@ public class WebSocketEventListener {
 
 					SessionInfo sessionInfo = new SessionInfo(roomId, userName, position);
 					sessionInfoMap.put(sessionId, sessionInfo);
-					log.debug("세션 정보 저장 완료 - sessionInfo: {}", sessionInfo);
+					log.info("세션 정보 저장 완료 - sessionInfo: {}", sessionInfo);
 					try {
 						debateUserService.addUser(debate, userName, position);
 						log.info("Debate 참여 성공 - roomId: {}, userName: {}, position: {}", roomId, userName, position);
@@ -109,7 +109,7 @@ public class WebSocketEventListener {
 				log.debug("Observer 엔드포인트 - sessionId: {}", sessionId);
 				if (roomId != null && userName != null) {
 					observerSessionMap.put(sessionId, roomId);
-					log.debug("Observer 세션 저장 완료 - sessionId: {}, roomId: {}", sessionId, roomId);
+					log.info("Observer 세션 저장 완료 - sessionId: {}, roomId: {}", sessionId, roomId);
 					observerUserService.addUser(roomId, userName);
 					log.info("Observer 참여 성공 - roomId: {}, userName: {}", roomId, userName);
 				} else {
