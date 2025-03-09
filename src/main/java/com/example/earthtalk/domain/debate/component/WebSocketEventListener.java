@@ -10,6 +10,7 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.messaging.SessionConnectedEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
+import org.springframework.web.socket.messaging.SessionSubscribeEvent;
 
 import java.util.List;
 import java.util.Map;
@@ -68,13 +69,19 @@ public class WebSocketEventListener {
 	 */
 	@EventListener
 	public void handleWebSocketConnectListener(SessionConnectedEvent event) {
-		log.info("새로운 WebSocket 연결 수신: sessionId={}", StompHeaderAccessor.wrap(event.getMessage()).getSessionId());
 		StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
 		String sessionId = headerAccessor.getSessionId();
 		webSocketIdleSessionMonitor.registerSession(sessionId);
-		String destination = headerAccessor.getDestination();
-		log.info("STOMP 메시지 수신 - destination: {}", destination);
+		log.info("새로운 WebSocket 연결 수신: sessionId={}", sessionId);
+	}
 
+	@EventListener
+	public void handleSessionSubscribeEvent(SessionSubscribeEvent event) {
+		StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
+		String destination = headerAccessor.getDestination();
+		log.info("SUBSCRIBE 프레임 수신 - destination: {}", destination);
+
+		// 구독 프레임에서는 destination 헤더가 반드시 존재해야 함
 		if (destination != null && !destination.startsWith("/room-list")) {
 			String roomId = (String) headerAccessor.getSessionAttributes().get("roomId");
 			String userName = (String) headerAccessor.getSessionAttributes().get("userName");
@@ -82,7 +89,7 @@ public class WebSocketEventListener {
 
 			if (destination.startsWith("/topic/debate/")) {
 				String position = (String) headerAccessor.getSessionAttributes().get("position");
-				log.info("Debate 엔드포인트 - sessionId: {}, position: {}", sessionId, position);
+				log.info("Debate 엔드포인트 - position: {}", position);
 				if (roomId != null && userName != null && position != null) {
 					Debate debate = debateRoomService.getDebateRoom(roomId);
 					log.info("Debate room 조회 결과 - debate: {}", debate);
@@ -90,8 +97,8 @@ public class WebSocketEventListener {
 						log.error("Debate room을 찾을 수 없음 - roomId: {}", roomId);
 						throw new IllegalArgumentException(ErrorCode.CHAT_NOT_FOUND);
 					}
-
 					SessionInfo sessionInfo = new SessionInfo(roomId, userName, position);
+					String sessionId = headerAccessor.getSessionId();
 					sessionInfoMap.put(sessionId, sessionInfo);
 					log.info("세션 정보 저장 완료 - sessionInfo: {}", sessionInfo);
 					try {
@@ -103,11 +110,12 @@ public class WebSocketEventListener {
 						throw new IllegalArgumentException(ErrorCode.CHAT_NOT_FOUND);
 					}
 				} else {
-					log.warn("Debate 참여 필수 속성이 누락됨 - roomId: {}, userName: {}, position: {}", roomId, userName, position);
+					log.warn("Debate 참여 필수 속성이 누락됨 - roomId: {}, userName: {}, position: {}", roomId, userName, headerAccessor.getSessionAttributes().get("position"));
 				}
 			} else if (destination.startsWith("/topic/observer/")) {
-				log.debug("Observer 엔드포인트 - sessionId: {}", sessionId);
+				log.debug("Observer 엔드포인트 처리 시작");
 				if (roomId != null && userName != null) {
+					String sessionId = headerAccessor.getSessionId();
 					observerSessionMap.put(sessionId, roomId);
 					log.info("Observer 세션 저장 완료 - sessionId: {}, roomId: {}", sessionId, roomId);
 					observerUserService.addUser(roomId, userName);
@@ -117,7 +125,6 @@ public class WebSocketEventListener {
 				}
 			}
 		}
-
 	}
 
 	/**
