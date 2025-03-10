@@ -27,6 +27,8 @@ public class DebateUserResponse {
 
 	private Long defeatNumber = 0L;
 
+	private FlagType position;
+
 	public static DebateUserResponse fromEntity(User user) {
 		return DebateUserResponse.builder()
 			.id(user.getId())

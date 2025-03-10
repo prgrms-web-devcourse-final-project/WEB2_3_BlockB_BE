@@ -23,7 +23,9 @@ import com.example.earthtalk.domain.user.repository.UserRepository;
 import com.example.earthtalk.global.exception.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class DebateMetaDataService {
@@ -43,6 +45,7 @@ public class DebateMetaDataService {
 		for (Debate debate : sortedDebates) {
 			roomIds.add(debate.getUuid().toString());
 		}
+		log.info("getSortByTime - roomIds: {}", roomIds);
 		return buildResponseList(roomIds);
 	}
 
@@ -51,6 +54,7 @@ public class DebateMetaDataService {
 	 */
 	public List<DebateMetaDataResponse> getSortByDebaterScore() {
 		List<String> sortedRoomIds = debateUserStore.getSortedRoomIdsByScoreDesc();
+		log.info("getSortByDebaterScore - sortedRoomIds: {}", sortedRoomIds);
 		return buildResponseList(sortedRoomIds);
 	}
 
@@ -59,6 +63,7 @@ public class DebateMetaDataService {
 	 */
 	public List<DebateMetaDataResponse> getSortByCurrentCount() {
 		List<String> sortedRoomIds = observerRoomStore.getSortedRoomIdsByCurrentViewer();
+		log.info("getSortByCurrentCount - sortedRoomIds: {}", sortedRoomIds);
 		return buildResponseList(sortedRoomIds);
 	}
 
@@ -67,6 +72,7 @@ public class DebateMetaDataService {
 	 */
 	public List<DebateMetaDataResponse> getSortByMaxCount() {
 		List<String> sortedRoomIds = observerRoomStore.getSortedRoomIdsByMaxViewer();
+		log.info("getSortByMaxCount - sortedRoomIds: {}", sortedRoomIds);
 		return buildResponseList(sortedRoomIds);
 	}
 
@@ -77,6 +83,7 @@ public class DebateMetaDataService {
 	private List<DebateMetaDataResponse> buildResponseList(List<String> sortedRoomIds) {
 		List<DebateMetaDataResponse> responses = new ArrayList<>();
 		for (String roomId : sortedRoomIds) {
+			log.info("Processing roomId: {}", roomId);
 			Debate debate = debateRepository.findByUuid(UUID.fromString(roomId))
 				.orElseThrow(() -> new IllegalArgumentException(ErrorCode.DEBATEROOM_NOT_FOUND.getMessage()));
 			Long currentCount = observerRoomStore.getObserverCount(roomId);

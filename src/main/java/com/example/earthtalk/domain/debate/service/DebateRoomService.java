@@ -5,22 +5,21 @@ import com.example.earthtalk.domain.debate.entity.VoteStatus;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import com.example.earthtalk.domain.debate.entity.*;
+import com.example.earthtalk.domain.debate.store.ObserverRoomStore;
 import com.example.earthtalk.domain.news.entity.MemberNumberType;
 import com.example.earthtalk.domain.news.entity.TimeType;
 import com.example.earthtalk.global.constant.ContinentType;
+import com.example.earthtalk.global.exception.NotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -59,6 +58,8 @@ public class DebateRoomService {
 	private final UserRepository userRepository;
 	private final DebateUserStore debateUserStore;
 	private final DebateParticipantsRepository debateParticipantsRepository;
+	private final ObserverRoomStore observerRoomStore;
+
 	/**
 	 * 새로운 채팅방을 생성하고 저장소에 등록합니다.
 	 * <p>
@@ -104,6 +105,8 @@ public class DebateRoomService {
 			debateRepository.save(debate);
 			debateRoomStore.put(debate);
 
+			observerRoomStore.initializeRoom(roomId);
+
 		} catch (Exception e) {
 			log.error("토론방 생성 중 오류 발생: {}", e.getMessage(), e);
 
@@ -140,9 +143,17 @@ public class DebateRoomService {
 			.orElseThrow(() -> new IllegalArgumentException(ErrorCode.DEBATEROOM_NOT_FOUND.getMessage()));
 	}
 
-	public Page<Debate> getFinishDebateRooms(String query, ContinentType continent, CategoryType category, MemberNumberType member, int page, String sort) {
+	public Page<DebateRoomResponse> getFinishDebateRooms(String query, ContinentType continent, CategoryType category, MemberNumberType member, int page, String sort) {
 		Pageable pageable = PageRequest.of(page, 15);
-		return debateRepository.findFinishDebatesByParams(query, continent, category, member, sort, pageable);
+		Page<Debate> debatePage = debateRepository.findFinishDebatesByParams(query, continent, category, member, sort, pageable);
+		List<DebateRoomResponse> responses = new ArrayList<>();
+		for(Debate debate : debatePage.getContent()) {
+			if (debate == null) {
+				throw new NotFoundException(ErrorCode.DEBATEROOM_NOT_FOUND);
+			}
+			responses.add(buildDebateRoomResponse(debate, debate.getUuid(), false));
+		}
+		return new PageImpl<>(responses, pageable, debatePage.getTotalElements());
 	}
 
 	/**
@@ -244,27 +255,29 @@ public class DebateRoomService {
 			.newsUrl(debate.getNews() != null ? debate.getNews().getLink() : null)
 			.status(debate.getStatus())
 			.timeType(debate.getTime().getValue())
-			.speakCountType(debate.getSpeakCount().getValue());
+			.speakCountType(debate.getSpeakCount().getValue())
+			.resultEnabled(debate.isResultEnabled());
 
 		if (includeParticipants) {
-			List<DebateUserResponse> participants = debateParticipantsRepository.findByDebate_Uuid(roomId)
-				.stream()
-				.map(dp -> new DebateUserResponse(
-					dp.getUser().getId(),
-					dp.getUser().getEmail(),
-					dp.getUser().getNickname(),
-					dp.getUser().getIntroduction(),
-					dp.getUser().getProfileUrl(),
-					dp.getUser().getWinNumber(),
-					dp.getUser().getDefeatNumber(),
-					dp.getUser().getDrawNumber()
-				))
-				.toList();
-			builder.participants(participants);
+			List<DebateUserResponse> responses = new ArrayList<>();
+			List<DebateParticipants> participants = debateParticipantsRepository.findByDebate_Uuid(roomId);
+			for (DebateParticipants participant : participants) {
+				User user = participant.getUser();
+				responses.add(DebateUserResponse.builder()
+								.id(user.getId())
+								.email(user.getEmail())
+								.nickname(user.getNickname())
+								.profileUrl(user.getProfileUrl())
+								.introduction(user.getIntroduction())
+								.winNumber(user.getWinNumber())
+								.drawNumber(user.getDrawNumber())
+								.defeatNumber(user.getDefeatNumber())
+								.position(participant.getPosition())
+								.build());
+			}
+			builder.participants(responses);
 		}
 
 		return builder.build();
 	}
-
-
 }

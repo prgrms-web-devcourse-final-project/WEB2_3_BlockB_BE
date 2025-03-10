@@ -102,8 +102,7 @@ public class DebateUserStore {
 		Set<String> keys = redisTemplate.keys(PRO_KEY_PREFIX + "*");
 		if (keys != null) {
 			for (String key : keys) {
-				Long size = redisTemplate.opsForSet().size(PRO_KEY_PREFIX + key);
-
+				Long size = redisTemplate.opsForSet().size(key);
 				String roomId = key.substring(PRO_KEY_PREFIX.length());
 				counts.put(roomId, size != null ? size.intValue() : 0);
 			}
@@ -165,5 +164,14 @@ public class DebateUserStore {
 			roomKeys.addAll(sortedKeys);
 		}
 		return roomKeys;
+	}
+
+	public void removeDebateRoom(String roomId) {
+		// pro, con 관련 키 삭제
+		redisTemplate.delete(PRO_KEY_PREFIX + roomId);
+		redisTemplate.delete(CON_KEY_PREFIX + roomId);
+
+		// score ZSet에서 roomId 제거
+		redisTemplate.opsForZSet().remove(SCORE_ZSET_KEY, roomId);
 	}
 }

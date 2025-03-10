@@ -95,6 +95,11 @@ public class ObserverRoomStore {
 		redisTemplate.opsForZSet().add(OBSERVER_MAX_ZSET_KEY, roomId, maxCount);
 	}
 
+	public void initializeRoom(String roomId) {
+		redisTemplate.opsForZSet().add(OBSERVER_CURRENT_ZSET_KEY, roomId, 0);
+		redisTemplate.opsForZSet().add(OBSERVER_MAX_ZSET_KEY, roomId, 0);
+	}
+
 
 	private void validateRoomIdAndUserId(String roomId, String userName) {
 		if (roomId == null || roomId.trim().isEmpty()) {
