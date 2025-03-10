@@ -28,23 +28,23 @@ public class DebateTurnManagementService {
     public void createDebateTurn(UUID roomId, TimeType timeType) {
         debateTurns.put(roomId, FlagType.NO_POSITION);
         scheduler.schedule(()-> {
+            Map<String, Object> message = Map.of(
+                "event", EventType.STATUS,
+                "status", RoomType.DEBATE,
+                "message", "토론이 시작되었습니다."
+            );
+            messagingTemplate.convertAndSend("/topic/debate/" + roomId.toString(), message);
             ScheduledFuture<?> debateTurnThread = scheduler.scheduleAtFixedRate(() ->
                 switchTurn(roomId), 20, timeType.getValue(), TimeUnit.SECONDS);
             turnScheduler.put(roomId, debateTurnThread);
-        }, 20, TimeUnit.SECONDS);
+        }, 5, TimeUnit.SECONDS);
 
         System.out.println("Create debate turn for " + roomId);
     }
 
     private void switchTurn(UUID roomId) {
         if (debateTurns.get(roomId) == FlagType.NO_POSITION) {
-            Map<String, Object> message = Map.of(
-                "event", EventType.STATUS,
-                "status", RoomType.DEBATE,
-                "message", "토론이 시작되었습니다."
-            );
             debateTurns.put(roomId, FlagType.PRO);
-            messagingTemplate.convertAndSend("/topic/debate/" + roomId.toString(), message);
             System.out.println("Debate Started for " + roomId);
             return;
         }
