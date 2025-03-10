@@ -78,7 +78,7 @@ public class DebateTimerService {
             );
             messagingTemplate.convertAndSend("/topic/debate/" + roomId.toString(), message);
             System.out.println("vote started for " + roomId);
-        }, 10, TimeUnit.SECONDS);
+        }, 3, TimeUnit.SECONDS);
     }
 
     private void endDebate(UUID roomId) {
