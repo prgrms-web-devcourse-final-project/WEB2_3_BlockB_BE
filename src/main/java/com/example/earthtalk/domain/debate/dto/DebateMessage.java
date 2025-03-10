@@ -19,6 +19,8 @@ public class DebateMessage {
 
 	private String position;
 
+	private String imageUrl;
+
 	private String message;
 
 	private LocalDateTime timestamp;

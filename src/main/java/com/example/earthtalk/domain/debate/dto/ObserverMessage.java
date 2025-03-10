@@ -14,6 +14,8 @@ public class ObserverMessage {
 
 	private String userName;
 
+	private String ImageUrl;
+
 	private String message;
 
 	private LocalDateTime timestamp;
