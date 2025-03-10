@@ -20,11 +20,13 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 @Service
 @AllArgsConstructor
+@Slf4j
 public class DebateTimerService {
 
     private final DebateTurnManagementService debateTurnManagementService;
@@ -60,7 +62,7 @@ public class DebateTimerService {
         scheduler.schedule(()-> {
 
             voteTimers.put(roomId,
-                scheduler.schedule(() -> endVote(roomId), 90, TimeUnit.SECONDS));
+                scheduler.schedule(() -> endVote(roomId), 20, TimeUnit.SECONDS));
 
             Debate debate = debateRepository.findByUuid(roomId)
                 .orElseThrow(() -> new IllegalArgumentException(ErrorCode.DEBATEROOM_NOT_FOUND));
@@ -130,8 +132,10 @@ public class DebateTimerService {
         debate.updateRoomType(RoomType.CLOSED);
         debateRepository.save(debate);
 
+        log.info("Vote resultEnabled for {} : {}", roomId, debate.isResultEnabled());
         if(debate.isResultEnabled()) {
             FlagType flag = voteStore.getVoteResult(roomId);
+            log.info("Vote result flag for " + roomId+ " : " + flag);
             String reuslt = "";
             switch(flag) {
                 case PRO -> reuslt = "찬성 팀이 승리했습니다!!";
