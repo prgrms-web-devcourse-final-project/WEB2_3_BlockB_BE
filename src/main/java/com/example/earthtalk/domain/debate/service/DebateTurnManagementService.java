@@ -27,9 +27,12 @@ public class DebateTurnManagementService {
 
     public void createDebateTurn(UUID roomId, TimeType timeType) {
         debateTurns.put(roomId, FlagType.NO_POSITION);
-        ScheduledFuture<?> debateTurnThread = scheduler.scheduleAtFixedRate(() ->
-            switchTurn(roomId), 20, timeType.getValue() - 10, TimeUnit.SECONDS);
-        turnScheduler.put(roomId, debateTurnThread);
+        scheduler.schedule(()-> {
+            ScheduledFuture<?> debateTurnThread = scheduler.scheduleAtFixedRate(() ->
+                switchTurn(roomId), 20, timeType.getValue(), TimeUnit.SECONDS);
+            turnScheduler.put(roomId, debateTurnThread);
+        }, 20, TimeUnit.SECONDS);
+
         System.out.println("Create debate turn for " + roomId);
     }
 
