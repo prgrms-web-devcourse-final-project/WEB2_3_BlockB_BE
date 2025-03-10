@@ -151,7 +151,7 @@ public class DebateRoomService {
 			if (debate == null) {
 				throw new NotFoundException(ErrorCode.DEBATEROOM_NOT_FOUND);
 			}
-			responses.add(buildDebateRoomResponse(debate, debate.getUuid(), false));
+			responses.add(buildDebateRoomResponse(debate, debate.getUuid()));
 		}
 		return new PageImpl<>(responses, pageable, debatePage.getTotalElements());
 	}
@@ -264,7 +264,7 @@ public class DebateRoomService {
 			.speakCountType(debate.getSpeakCount().getValue())
 			.proUsers(proResponse)
 			.conUsers(conResponse)
-			.resultEnabled(debate.isResultEnabled());
-      .build();
+			.resultEnabled(debate.isResultEnabled())
+      		.build();
 	}
 }
