@@ -151,7 +151,7 @@ public class DebateRoomService {
 			if (debate == null) {
 				throw new NotFoundException(ErrorCode.DEBATEROOM_NOT_FOUND);
 			}
-			responses.add(buildDebateRoomResponse(debate, debate.getUuid(), true));
+			responses.add(buildDebateRoomResponse(debate, debate.getUuid(), false));
 		}
 		return new PageImpl<>(responses, pageable, debatePage.getTotalElements());
 	}
@@ -259,24 +259,24 @@ public class DebateRoomService {
 			.resultEnabled(debate.isResultEnabled());
 
 		if (includeParticipants) {
-			List<DebateUserResponse> participants = debateParticipantsRepository.findByDebate_Uuid(roomId)
-				.stream()
-				.map(dp -> new DebateUserResponse(
-					dp.getUser().getId(),
-					dp.getUser().getEmail(),
-					dp.getUser().getNickname(),
-					dp.getUser().getIntroduction(),
-					dp.getUser().getProfileUrl(),
-					dp.getUser().getWinNumber(),
-					dp.getUser().getDefeatNumber(),
-					dp.getUser().getDrawNumber()
-				))
-				.toList();
-			builder.participants(participants);
+			List<DebateUserResponse> responses = new ArrayList<>();
+			List<DebateParticipants> participants = debateParticipantsRepository.findByDebate_Uuid(roomId);
+			for (DebateParticipants participant : participants) {
+				User user = participant.getUser();
+				responses.add(DebateUserResponse.builder()
+								.id(user.getId())
+								.email(user.getEmail())
+								.nickname(user.getNickname())
+								.profileUrl(user.getProfileUrl())
+								.introduction(user.getIntroduction())
+								.winNumber(user.getWinNumber())
+								.drawNumber(user.getDrawNumber())
+								.defeatNumber(user.getDefeatNumber())
+								.build());
+			}
+			builder.participants(responses);
 		}
 
 		return builder.build();
 	}
-
-
 }
