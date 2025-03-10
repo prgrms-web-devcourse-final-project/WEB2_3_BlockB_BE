@@ -1,6 +1,7 @@
 package com.example.earthtalk.domain.debate.service;
 
 import com.example.earthtalk.domain.debate.entity.RoomType;
+import com.example.earthtalk.domain.debate.store.DebateUserStore;
 import com.example.earthtalk.domain.notification.dto.request.SendNotificationRequest;
 import com.example.earthtalk.domain.notification.entity.NotificationType;
 import com.example.earthtalk.domain.notification.service.NotificationService;
@@ -45,6 +46,7 @@ public class DebateManagementService {
 	private final DebateRoomService debateRoomService;
 	private final DebateTimerService debateTimerService;
 	private final NotificationService notificationService;
+	private final DebateUserStore debateUserStore;
 
 	/**
 	 * 주어진 roomId에 해당하는 채팅방의 캐시 정보가 존재하고, 채팅방이 꽉 찼다면,
@@ -109,6 +111,8 @@ public class DebateManagementService {
 			}
 		}
 		debateRoomService.removeDebateRoom(debate.getUuid().toString());
+		debateUserStore.removeDebateRoom(debate.getUuid().toString());
+
 		debateTimerService.startDebateTimer(debate.getUuid(), debate.getTime(), debate.getSpeakCount());
 	}
 }

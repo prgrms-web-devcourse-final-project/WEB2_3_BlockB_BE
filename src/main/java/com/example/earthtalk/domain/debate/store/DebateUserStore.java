@@ -165,4 +165,13 @@ public class DebateUserStore {
 		}
 		return roomKeys;
 	}
+
+	public void removeDebateRoom(String roomId) {
+		// pro, con 관련 키 삭제
+		redisTemplate.delete(PRO_KEY_PREFIX + roomId);
+		redisTemplate.delete(CON_KEY_PREFIX + roomId);
+
+		// score ZSet에서 roomId 제거
+		redisTemplate.opsForZSet().remove(SCORE_ZSET_KEY, roomId);
+	}
 }
