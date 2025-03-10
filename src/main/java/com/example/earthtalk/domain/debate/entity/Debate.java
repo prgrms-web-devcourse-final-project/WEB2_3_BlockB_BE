@@ -90,7 +90,7 @@ public class Debate extends BaseTimeEntity {
     @Column(nullable = false)
     private Long neutralNumber;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "TINYINT(1)")
     private boolean resultEnabled;
 
     @Column(nullable = false)
