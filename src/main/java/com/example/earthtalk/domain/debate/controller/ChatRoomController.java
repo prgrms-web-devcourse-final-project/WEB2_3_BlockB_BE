@@ -5,6 +5,7 @@ import com.example.earthtalk.global.response.ApiResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -20,6 +21,7 @@ import com.example.earthtalk.domain.debate.dto.CreateDebateRoomRequest;
  * 생성된 채팅방의 고유 식별자(roomId)를 응답으로 반환합니다.
  * </p>
  */
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/chat")
@@ -44,6 +46,7 @@ public class ChatRoomController {
 	@PostMapping("/create")
 	public ResponseEntity<ApiResponse<String>> createRoom(@RequestBody CreateDebateRoomRequest request) {
 		String roomId = debateRoomService.createDebateRoom(request);
+        log.info("Controller - createRoom : resultEnabled = {}", request.isResultEnabled());
 		return ResponseEntity.ok(ApiResponse.createSuccess(roomId));
 	}
 

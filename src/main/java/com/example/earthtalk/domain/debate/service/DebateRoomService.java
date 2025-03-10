@@ -5,11 +5,7 @@ import com.example.earthtalk.domain.debate.entity.VoteStatus;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import com.example.earthtalk.domain.debate.entity.*;
@@ -17,11 +13,13 @@ import com.example.earthtalk.domain.debate.store.ObserverRoomStore;
 import com.example.earthtalk.domain.news.entity.MemberNumberType;
 import com.example.earthtalk.domain.news.entity.TimeType;
 import com.example.earthtalk.global.constant.ContinentType;
+import com.example.earthtalk.global.exception.NotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -74,7 +72,7 @@ public class DebateRoomService {
 	 */
 	public String createDebateRoom(CreateDebateRoomRequest request) {
 		String roomId = UUID.randomUUID().toString();
-
+		log.info("Service - createDebateRoom : resultEnabled = {}", request.isResultEnabled());
 		News news = null;
 		if (request.getNewsId() != null) {
 			Long newsId = Long.valueOf(request.getNewsId().toString());
@@ -145,9 +143,17 @@ public class DebateRoomService {
 			.orElseThrow(() -> new IllegalArgumentException(ErrorCode.DEBATEROOM_NOT_FOUND.getMessage()));
 	}
 
-	public Page<Debate> getFinishDebateRooms(String query, ContinentType continent, CategoryType category, MemberNumberType member, int page, String sort) {
+	public Page<DebateRoomResponse> getFinishDebateRooms(String query, ContinentType continent, CategoryType category, MemberNumberType member, int page, String sort) {
 		Pageable pageable = PageRequest.of(page, 15);
-		return debateRepository.findFinishDebatesByParams(query, continent, category, member, sort, pageable);
+		Page<Debate> debatePage = debateRepository.findFinishDebatesByParams(query, continent, category, member, sort, pageable);
+		List<DebateRoomResponse> responses = new ArrayList<>();
+		for(Debate debate : debatePage.getContent()) {
+			if (debate == null) {
+				throw new NotFoundException(ErrorCode.DEBATEROOM_NOT_FOUND);
+			}
+			responses.add(buildDebateRoomResponse(debate, debate.getUuid(), false));
+		}
+		return new PageImpl<>(responses, pageable, debatePage.getTotalElements());
 	}
 
 	/**
@@ -258,8 +264,7 @@ public class DebateRoomService {
 			.speakCountType(debate.getSpeakCount().getValue())
 			.proUsers(proResponse)
 			.conUsers(conResponse)
-			.build();
+			.resultEnabled(debate.isResultEnabled());
+      .build();
 	}
-
-
 }

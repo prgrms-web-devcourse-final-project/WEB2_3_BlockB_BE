@@ -19,14 +19,16 @@ public class VoteStore {
     private final Map<UUID, VoteStatus> votes = new ConcurrentHashMap<>();
 
     public void startVote(UUID roomId){
-        votes.put(roomId,new VoteStatus());
+        if(!votes.containsKey(roomId)) {
+            votes.put(roomId, new VoteStatus());
+        }
     }
 
     public void processVote(UUID roomId, VoteRequest voteRequest) {
         if (!votes.containsKey(roomId)) {
             throw new IllegalArgumentException(ErrorCode.VOTE_NOT_STARTED);
         }
-        if (!votes.get(roomId).getUsers().contains(voteRequest.getUserId())) {
+        if (votes.get(roomId).getUsers().contains(voteRequest.getUserId())) {
             throw new IllegalArgumentException(ErrorCode.VOTE_DUPLICATED);
         }
 

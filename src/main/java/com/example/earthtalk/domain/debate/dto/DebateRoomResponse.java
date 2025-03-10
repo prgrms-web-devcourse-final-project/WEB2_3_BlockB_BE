@@ -29,4 +29,5 @@ public class DebateRoomResponse {
 	private final int speakCountType;
 	private final Set<DebateUserResponse> proUsers;
 	private final Set<DebateUserResponse> conUsers;
+	private final boolean resultEnabled;
 }
