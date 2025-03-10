@@ -53,7 +53,7 @@ public class DebateRoomController {
 		UUID roomId = UUID.fromString(uuid);
 		Debate debate = debateRepository.findByUuid(roomId)
 			.orElseThrow(() -> new IllegalArgumentException(ErrorCode.DEBATEROOM_NOT_FOUND.getMessage()));
-		DebateRoomResponse response = debateRoomService.buildDebateRoomResponse(debate, roomId, true);
+		DebateRoomResponse response = debateRoomService.buildDebateRoomResponse(debate, roomId);
 
 		return ResponseEntity.ok().body(ApiResponse.createSuccess(response));
 	}
@@ -85,7 +85,7 @@ public class DebateRoomController {
 		UUID roomId = UUID.fromString(uuid);
 		Debate debate = debateRepository.findByUuid(roomId)
 			.orElseThrow(() -> new IllegalArgumentException(ErrorCode.DEBATEROOM_NOT_FOUND.getMessage()));
-		DebateRoomResponse response = debateRoomService.buildDebateRoomResponse(debate, roomId, true);
+		DebateRoomResponse response = debateRoomService.buildDebateRoomResponse(debate, roomId);
 		return ResponseEntity.ok().body(ApiResponse.createSuccess(response));
 
 	}

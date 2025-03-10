@@ -116,6 +116,7 @@ public class DebateMetaDataService {
 
 
 	private Set<User> fetchUsersByNames(Collection<String> userNames) {
+		log.info("userNames: {}", userNames);
 		return userNames.stream()
 			.map(userName -> userRepository.findByNickname(userName)
 				.orElseThrow(() -> new IllegalArgumentException(ErrorCode.USER_NOT_FOUND.getMessage())))

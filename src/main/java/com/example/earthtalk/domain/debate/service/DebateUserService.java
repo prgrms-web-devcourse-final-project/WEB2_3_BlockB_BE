@@ -291,17 +291,4 @@ public class DebateUserService {
 		);
 		messagingTemplate.convertAndSend("/topic/debate/" + roomId, message);
 	}
-
-	/**
-	 * 주어진 사용자 이름에 해당하는 DebateParticipants 객체를 반환합니다.
-	 * 만약 DebateUser를 찾을 수 없으면, USER_NOT_FOUND 오류 메시지와 함께 예외를 발생시킵니다.
-	 *
-	 * @param userName 사용자 id
-	 * @return DebateParticipants 객체
-	 * @throws IllegalArgumentException DebateUser가 존재하지 않을 경우
-	 */
-	protected DebateParticipants getDebateUserByUserName(String userName) {
-		return debateParticipantsRepository.findByUser_Nickname(userName)
-			.orElseThrow(() -> new IllegalArgumentException(ErrorCode.USER_NOT_FOUND.getMessage()));
-	}
 }

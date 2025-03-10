@@ -1,6 +1,7 @@
 package com.example.earthtalk.domain.debate.dto;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.example.earthtalk.domain.debate.entity.CategoryType;
@@ -26,6 +27,7 @@ public class DebateRoomResponse {
 	private final RoomType status;
 	private final int timeType;
 	private final int speakCountType;
+	private final Set<DebateUserResponse> proUsers;
+	private final Set<DebateUserResponse> conUsers;
 	private final boolean resultEnabled;
-	private final List<DebateUserResponse> participants;
 }

@@ -2,6 +2,7 @@ package com.example.earthtalk.domain.debate.service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -13,6 +14,7 @@ import com.example.earthtalk.domain.debate.entity.DebateParticipants;
 import com.example.earthtalk.domain.debate.entity.FlagType;
 import com.example.earthtalk.domain.debate.repository.DebateChatRepository;
 import com.example.earthtalk.domain.debate.repository.DebateParticipantsRepository;
+import com.example.earthtalk.global.exception.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
 
@@ -60,7 +62,7 @@ public class DebateChatManagementService {
 		List<DebateChat> chatList = messages.stream()
 			.filter(message -> "chat".equals(message.getEvent())) //
 			.map(message -> {
-				DebateParticipants debateParticipants = findDebateUserByUserName(message.getUserName());
+				DebateParticipants debateParticipants = findDebateUserByUserName(UUID.fromString(uuid), message.getUserName());
 				if (debateParticipants == null) {
 					return Optional.<DebateChat>empty(); // Optional 사용하여 null 방지
 				}
@@ -87,8 +89,8 @@ public class DebateChatManagementService {
 
 	}
 
-	private DebateParticipants findDebateUserByUserName(String userName) {
-		return debateParticipantsRepository.findByUser_Nickname(userName)
-			.orElse(null);
+	private DebateParticipants findDebateUserByUserName(UUID uuid, String userName) {
+		return debateParticipantsRepository.findByDebate_UuidAndUser_Nickname(uuid, userName)
+			.orElseThrow(() -> new IllegalArgumentException(ErrorCode.USER_NOT_FOUND.getMessage()));
 	}
 }

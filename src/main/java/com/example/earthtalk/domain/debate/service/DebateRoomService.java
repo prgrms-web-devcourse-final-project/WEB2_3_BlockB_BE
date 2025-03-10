@@ -207,7 +207,7 @@ public class DebateRoomService {
 		Set<String> proUsers = debateUserStore.getProUsers(roomId.toString());
 		Set<DebateUserResponse> proResponse = convertUsernamesToUserResponses(proUsers);
 
-		Set<String> conUsers  =debateUserStore.getConUsers(roomId.toString());
+		Set<String> conUsers  = debateUserStore.getConUsers(roomId.toString());
 		Set<DebateUserResponse> conResponse = convertUsernamesToUserResponses(conUsers);
 
 		return WaitRoomResponse.builder()
@@ -244,8 +244,14 @@ public class DebateRoomService {
 			.collect(Collectors.toSet());
 	}
 
-	public DebateRoomResponse buildDebateRoomResponse(Debate debate, UUID roomId, boolean includeParticipants) {
-		DebateRoomResponse.DebateRoomResponseBuilder builder = DebateRoomResponse.builder()
+	public DebateRoomResponse buildDebateRoomResponse(Debate debate, UUID roomId) {
+		Set<String> proUsers = debateUserStore.getProUsers(roomId.toString());
+		Set<DebateUserResponse> proResponse = convertUsernamesToUserResponses(proUsers);
+
+		Set<String> conUsers  = debateUserStore.getConUsers(roomId.toString());
+		Set<DebateUserResponse> conResponse = convertUsernamesToUserResponses(conUsers);
+
+		return DebateRoomResponse.builder()
 			.roomId(debate.getId())
 			.title(debate.getTitle())
 			.description(debate.getDescription())
@@ -256,28 +262,9 @@ public class DebateRoomService {
 			.status(debate.getStatus())
 			.timeType(debate.getTime().getValue())
 			.speakCountType(debate.getSpeakCount().getValue())
+			.proUsers(proResponse)
+			.conUsers(conResponse)
 			.resultEnabled(debate.isResultEnabled());
-
-		if (includeParticipants) {
-			List<DebateUserResponse> responses = new ArrayList<>();
-			List<DebateParticipants> participants = debateParticipantsRepository.findByDebate_Uuid(roomId);
-			for (DebateParticipants participant : participants) {
-				User user = participant.getUser();
-				responses.add(DebateUserResponse.builder()
-								.id(user.getId())
-								.email(user.getEmail())
-								.nickname(user.getNickname())
-								.profileUrl(user.getProfileUrl())
-								.introduction(user.getIntroduction())
-								.winNumber(user.getWinNumber())
-								.drawNumber(user.getDrawNumber())
-								.defeatNumber(user.getDefeatNumber())
-								.position(participant.getPosition())
-								.build());
-			}
-			builder.participants(responses);
-		}
-
-		return builder.build();
+      .build();
 	}
 }
