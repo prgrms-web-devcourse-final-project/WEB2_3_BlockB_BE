@@ -71,7 +71,7 @@ public class DebateRoomService {
 	 */
 	public String createDebateRoom(CreateDebateRoomRequest request) {
 		String roomId = UUID.randomUUID().toString();
-
+		log.info("Service - createDebateRoom : resultEnabled = {}", roomId);
 		News news = null;
 		if (request.getNewsId() != null) {
 			Long newsId = Long.valueOf(request.getNewsId().toString());
