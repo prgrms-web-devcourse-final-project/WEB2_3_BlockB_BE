@@ -19,7 +19,9 @@ public class VoteStore {
     private final Map<UUID, VoteStatus> votes = new ConcurrentHashMap<>();
 
     public void startVote(UUID roomId){
-        votes.put(roomId,new VoteStatus());
+        if(!votes.containsKey(roomId)) {
+            votes.put(roomId, new VoteStatus());
+        }
     }
 
     public void processVote(UUID roomId, VoteRequest voteRequest) {
