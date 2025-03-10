@@ -9,6 +9,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import com.example.earthtalk.domain.debate.entity.*;
+import com.example.earthtalk.domain.debate.store.ObserverRoomStore;
 import com.example.earthtalk.domain.news.entity.MemberNumberType;
 import com.example.earthtalk.domain.news.entity.TimeType;
 import com.example.earthtalk.global.constant.ContinentType;
@@ -57,6 +58,8 @@ public class DebateRoomService {
 	private final UserRepository userRepository;
 	private final DebateUserStore debateUserStore;
 	private final DebateParticipantsRepository debateParticipantsRepository;
+	private final ObserverRoomStore observerRoomStore;
+
 	/**
 	 * 새로운 채팅방을 생성하고 저장소에 등록합니다.
 	 * <p>
@@ -101,6 +104,8 @@ public class DebateRoomService {
 
 			debateRepository.save(debate);
 			debateRoomStore.put(debate);
+
+			observerRoomStore.initializeRoom(roomId);
 
 		} catch (Exception e) {
 			log.error("토론방 생성 중 오류 발생: {}", e.getMessage(), e);

@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
@@ -26,6 +27,7 @@ import com.example.earthtalk.domain.debate.store.DebateUserStore;
 import com.example.earthtalk.domain.debate.entity.DebateParticipants;
 import com.example.earthtalk.domain.debate.repository.DebateParticipantsRepository;
 import com.example.earthtalk.domain.debate.store.ObserverMessageStore;
+import com.example.earthtalk.domain.debate.store.ObserverRoomStore;
 import com.example.earthtalk.global.exception.ErrorCode;
 import com.example.earthtalk.global.exception.ConflictException;
 import com.example.earthtalk.global.exception.SaveFailedException;
@@ -40,6 +42,7 @@ import com.example.earthtalk.global.exception.SaveFailedException;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class DebateUserService {
 
 	private final SimpMessagingTemplate messagingTemplate;
@@ -55,6 +58,7 @@ public class DebateUserService {
 	private final ObserverMessageStore observerMessageStore;
 	private final ObserverChatManagementService observerChatManagementService;
 	private final DebateChatManagementService debateChatManagementService;
+	private final ObserverRoomStore observerRoomStore;
 
 	/**
 	 * 토론방에 사용자를 추가합니다.
@@ -104,6 +108,9 @@ public class DebateUserService {
 					throw new IllegalArgumentException(ErrorCode.TOO_MANY_PARTICIPANTS.getMessage());
 				}
 				debateUserStore.addConUser(roomId, userName);
+			} else if ("observer".equalsIgnoreCase(position)) {
+				observerRoomStore.addUser(roomId, userName);
+				log.info("room {} 에 observer 참여 : {}" , roomId, userName);
 			} else {
 				throw new IllegalArgumentException(ErrorCode.METHOD_NOT_ALLOWED.getMessage());
 			}
