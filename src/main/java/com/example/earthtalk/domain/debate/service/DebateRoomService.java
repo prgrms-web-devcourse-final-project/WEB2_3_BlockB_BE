@@ -201,7 +201,7 @@ public class DebateRoomService {
 		Set<String> proUsers = debateUserStore.getProUsers(roomId.toString());
 		Set<DebateUserResponse> proResponse = convertUsernamesToUserResponses(proUsers);
 
-		Set<String> conUsers  =debateUserStore.getConUsers(roomId.toString());
+		Set<String> conUsers  = debateUserStore.getConUsers(roomId.toString());
 		Set<DebateUserResponse> conResponse = convertUsernamesToUserResponses(conUsers);
 
 		return WaitRoomResponse.builder()
@@ -238,8 +238,14 @@ public class DebateRoomService {
 			.collect(Collectors.toSet());
 	}
 
-	public DebateRoomResponse buildDebateRoomResponse(Debate debate, UUID roomId, boolean includeParticipants) {
-		DebateRoomResponse.DebateRoomResponseBuilder builder = DebateRoomResponse.builder()
+	public DebateRoomResponse buildDebateRoomResponse(Debate debate, UUID roomId) {
+		Set<String> proUsers = debateUserStore.getProUsers(roomId.toString());
+		Set<DebateUserResponse> proResponse = convertUsernamesToUserResponses(proUsers);
+
+		Set<String> conUsers  = debateUserStore.getConUsers(roomId.toString());
+		Set<DebateUserResponse> conResponse = convertUsernamesToUserResponses(conUsers);
+
+		return DebateRoomResponse.builder()
 			.roomId(debate.getId())
 			.title(debate.getTitle())
 			.description(debate.getDescription())
@@ -249,26 +255,10 @@ public class DebateRoomService {
 			.newsUrl(debate.getNews() != null ? debate.getNews().getLink() : null)
 			.status(debate.getStatus())
 			.timeType(debate.getTime().getValue())
-			.speakCountType(debate.getSpeakCount().getValue());
-
-		if (includeParticipants) {
-			List<DebateUserResponse> participants = debateParticipantsRepository.findByDebate_Uuid(roomId)
-				.stream()
-				.map(dp -> new DebateUserResponse(
-					dp.getUser().getId(),
-					dp.getUser().getEmail(),
-					dp.getUser().getNickname(),
-					dp.getUser().getIntroduction(),
-					dp.getUser().getProfileUrl(),
-					dp.getUser().getWinNumber(),
-					dp.getUser().getDefeatNumber(),
-					dp.getUser().getDrawNumber()
-				))
-				.toList();
-			builder.participants(participants);
-		}
-
-		return builder.build();
+			.speakCountType(debate.getSpeakCount().getValue())
+			.proUsers(proResponse)
+			.conUsers(conResponse)
+			.build();
 	}
 
 
