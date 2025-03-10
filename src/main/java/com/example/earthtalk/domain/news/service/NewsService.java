@@ -7,6 +7,7 @@ import com.example.earthtalk.domain.news.entity.NewsType;
 import com.example.earthtalk.domain.news.repository.NewsRepository;
 import com.example.earthtalk.global.constant.ContinentType;
 import io.github.bonigarcia.wdm.WebDriverManager;
+import jakarta.annotation.PostConstruct;
 import jakarta.validation.constraints.NotNull;
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -36,14 +37,34 @@ public class NewsService {
     private final NewsRepository newsRepository;
     private final CrawlConfig crawlConfig;
     private static final String WEB_DRIVER_ID = "webdriver.chrome.driver";
+    private  WebDriver driver;
 
     @Value("${webdriver.chrome.path}")
     private String chromeDriverPath;
 
+    @PostConstruct
+    public void init() {
+        System.setProperty(WEB_DRIVER_ID, chromeDriverPath);
+        WebDriverManager.chromedriver().setup();
+
+        ChromeOptions options = new ChromeOptions();
+        options.addArguments("--headless=new");  // GUI 없이 실행
+        options.addArguments("--disable-gpu"); // 백그라운드 실행
+        options.addArguments("--window-size=1920,1080");
+        options.addArguments("--no-sandbox");
+        options.addArguments("--disable-dev-shm-usage");
+        options.addArguments("--disable-blink-features=AutomationControlled");
+        options.addArguments("--remote-debugging-port=9222");
+
+        driver = new ChromeDriver(options);
+
+        driver.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(20));
+        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(5));
+    }
+
     @Transactional
     @Scheduled(cron = "0 */30 * * * *")
     public void crawlAllNews() {
-        System.setProperty(WEB_DRIVER_ID, chromeDriverPath);
 
         List<News> newsList = new ArrayList<>();
         // 모든 사이트 크롤링
@@ -56,6 +77,7 @@ public class NewsService {
                         newsList.addAll(newsResults);
                     }catch (Exception e) {
                         log.error("{}의 {} 지역 크롤링에 실패했습니다.",newsSite.getName(), continentType.getValue());
+                        log.error(e.getMessage());
                     }
                 }
             }
@@ -66,22 +88,6 @@ public class NewsService {
     }
 
     public List<News> crawlNews(@NotNull NewsSite newsSite, ContinentType continentType) {
-        WebDriverManager.chromedriver().setup();
-        // 브라우저 옵션 설정
-        ChromeOptions options = new ChromeOptions();
-        options.addArguments("--headless=new");  // GUI 없이 실행
-        options.addArguments("--disable-gpu"); // 백그라운드 실행
-        options.addArguments("--window-size=1920,1080");
-        options.addArguments("--no-sandbox");
-        options.addArguments("--disable-dev-shm-usage");
-        options.addArguments("--disable-blink-features=AutomationControlled");
-        options.addArguments("--remote-debugging-port=9222");
-
-        // 웹 드라이버 실행
-        WebDriver driver = new ChromeDriver(options);
-
-        driver.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(20));
-        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(5));
 
         List<News> newsList = new ArrayList<>();
         LocalDateTime latestArticleTime = getLatestNews(newsSite.getName(), continentType);
@@ -95,7 +101,6 @@ public class NewsService {
                 String pageUrl = baseUrl + "?" + newsSite.getPageParam() + "=" + currentPage;
                 log.info("현재 크롤링 중인 페이지 : {}", pageUrl);
                 driver.get(pageUrl);
-                Thread.sleep(500);
                 // 뉴스 목록 가져오기 (XPath 기반)
                 List<WebElement> articles = driver.findElements(
                     By.xpath(newsSite.getArticleXpath()));
@@ -133,8 +138,6 @@ public class NewsService {
                             .parseDefaulting(ChronoField.SECOND_OF_MINUTE, 0) // 초단위가 없다면 0으로 초기화
                             .toFormatter();
                         LocalDateTime deliveryTime = LocalDateTime.parse(date, formatter);
-
-                        log.info("마지막 크롤링한 기사 시간: " + latestArticleTime + ", deliveryTime: " + deliveryTime);
                         // 이미 크롤링 한 뉴스 중복 방지
                         if(latestArticleTime != null) {
                             if (deliveryTime.isBefore(latestArticleTime) || deliveryTime.equals(
@@ -173,7 +176,6 @@ public class NewsService {
             throw new NoSuchElementException();
         } finally {
             // 브라우저 종료
-            driver.quit();
         }
         log.info(newsSite.getName().getValue() + "에서 총 " + newsList.size() + "개의 뉴스를 크롤링했습니다.");
         return newsList;
