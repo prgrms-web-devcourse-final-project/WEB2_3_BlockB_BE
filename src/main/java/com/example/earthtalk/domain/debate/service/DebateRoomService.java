@@ -272,6 +272,7 @@ public class DebateRoomService {
 								.winNumber(user.getWinNumber())
 								.drawNumber(user.getDrawNumber())
 								.defeatNumber(user.getDefeatNumber())
+								.position(participant.getPosition())
 								.build());
 			}
 			builder.participants(responses);
