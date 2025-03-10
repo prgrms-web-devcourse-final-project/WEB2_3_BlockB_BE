@@ -115,8 +115,6 @@ public class Debate extends BaseTimeEntity {
         if (this.neutralNumber == null) {
             this.neutralNumber = 0L;
         }
-
-        this.resultEnabled = false;
     }
 
     public void updateVoteCounts(Long agree, Long disagree, Long neutral) {
