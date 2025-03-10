@@ -10,16 +10,19 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 @Component
 @AllArgsConstructor
+@Slf4j
 public class VoteStore {
     private final DebateRoomService debateRoomService;
     private final Map<UUID, VoteStatus> votes = new ConcurrentHashMap<>();
 
     public void startVote(UUID roomId){
         if(!votes.containsKey(roomId)) {
+            log.info("VoteStore - Create VoteStatus for {}", roomId);
             votes.put(roomId, new VoteStatus());
         }
     }
@@ -33,6 +36,7 @@ public class VoteStore {
         }
 
         FlagType flag = voteRequest.getVote();
+        log.info("VoteStore - Process vote for {} flag = {}", roomId, flag);
         VoteStatus voteStatus = votes.get(roomId);
         switch (flag) {
             case PRO:

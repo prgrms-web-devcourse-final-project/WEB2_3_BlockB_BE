@@ -46,7 +46,6 @@ public class DebateTurnManagementService {
         if (debateTurns.get(roomId) == FlagType.NO_POSITION) {
             debateTurns.put(roomId, FlagType.PRO);
             System.out.println("Debate Started for " + roomId);
-            return;
         }
 
         Map<String, Object> message1 = Map.of(

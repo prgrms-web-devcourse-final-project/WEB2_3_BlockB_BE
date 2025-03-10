@@ -170,14 +170,17 @@ public class DebateRoomService {
 		Debate debate = debateRepository.findByUuid(roomId)
 			.orElseThrow(() -> new IllegalArgumentException(ErrorCode.DEBATEROOM_NOT_FOUND.getMessage()));
 		Set<User> modifiedUsers = new HashSet<>();
+		log.info("Service - processDebateResult : resultEnabled = {} | roomId = {}", debate.isResultEnabled(), roomId);
 		boolean proWins = true, draw = false;
 		if (debate.isResultEnabled()) {
 			proWins = voteStatus.getPro() > voteStatus.getCon();
 			draw = voteStatus.getPro().equals(voteStatus.getCon());
 
+			log.info("Service - processDebateResult : pro = {}", voteStatus.getPro());
+			log.info("Service - processDebateResult : con = {}", voteStatus.getCon());
+			log.info("Service - processDebateResult : participants = {}", debate.getParticipants().size());
 			for (DebateParticipants participants : debate.getParticipants()) {
 				User user = participants.getUser();
-
 				if (draw) {
 					user.incrementDrawNumber();
 				} else if ((participants.getPosition() == FlagType.PRO && proWins) ||
@@ -190,6 +193,7 @@ public class DebateRoomService {
 				modifiedUsers.add(user);
 			}
 		}
+		log.info("processDebateResult : modifiedUsers.size() = {}", modifiedUsers.size());
 		userRepository.saveAll(modifiedUsers);
 
 		debate.updateVoteCounts(voteStatus.getPro(), voteStatus.getCon(), voteStatus.getNeutral());
