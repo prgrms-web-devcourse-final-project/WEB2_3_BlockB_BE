@@ -28,7 +28,7 @@ public class VoteStore {
         if (!votes.containsKey(roomId)) {
             throw new IllegalArgumentException(ErrorCode.VOTE_NOT_STARTED);
         }
-        if (!votes.get(roomId).getUsers().contains(voteRequest.getUserId())) {
+        if (votes.get(roomId).getUsers().contains(voteRequest.getUserId())) {
             throw new IllegalArgumentException(ErrorCode.VOTE_DUPLICATED);
         }
 
