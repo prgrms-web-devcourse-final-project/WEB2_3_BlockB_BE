@@ -15,6 +15,7 @@ import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.querydsl.jpa.JPQLQuery;
 import java.util.List;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
@@ -95,7 +96,7 @@ public class UserRepositoryImpl implements UserRepositoryCustom {
         QDebate debate = QDebate.debate;
 
         JPQLQuery<Tuple> result = jpaQueryFactory
-            .select(debate.id, debate.category, debate.title, debate.time, debate.member, debate.status,
+            .select(debate.uuid, debate.category, debate.title, debate.time, debate.member, debate.status,
                 new CaseBuilder()
                 .when(dp.role.eq(PARTICIPANT)).then(true)
                 .when(dp.role.eq(OBSERVER)).then(false)
@@ -111,13 +112,13 @@ public class UserRepositoryImpl implements UserRepositoryCustom {
 
 
     // 유저가 참관/참여한 토론방 상세 조회 - header
-    public List<Tuple> findAllWithDebateDetails(Long debatesId) {
+    public List<Tuple> findAllWithDebateDetails(UUID debatesId) {
         QDebate d = QDebate.debate;
         QNews n = QNews.news;
 
         List<Tuple> result = jpaQueryFactory
             .select(
-                d.id,
+                d.uuid,
                 d.title,
                 d.description,
                 n.link,
@@ -130,7 +131,7 @@ public class UserRepositoryImpl implements UserRepositoryCustom {
             )
             .from(d)
             .join(n).on(n.id.eq(d.news.id))
-            .where(d.id.eq(debatesId))
+            .where(d.uuid.eq(debatesId))
             .fetch();
 
         return result;

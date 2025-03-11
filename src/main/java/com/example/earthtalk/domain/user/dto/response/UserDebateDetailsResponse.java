@@ -6,9 +6,10 @@ import com.example.earthtalk.domain.debate.entity.SpeakCountType;
 import com.example.earthtalk.domain.news.entity.MemberNumberType;
 import com.example.earthtalk.domain.news.entity.TimeType;
 import com.example.earthtalk.global.constant.ContinentType;
+import java.util.UUID;
 
 public record UserDebateDetailsResponse(
-    Long debateId,
+    UUID debateId,
     String title,
     String description,
     String link,
@@ -23,7 +24,7 @@ public record UserDebateDetailsResponse(
     Long neutralNumber
 ) { public static UserDebateDetailsResponse from(Debate debate,String link) {
     return new UserDebateDetailsResponse(
-        debate.getId(),
+        debate.getUuid(),
         debate.getTitle(),
         debate.getDescription(),
         link,

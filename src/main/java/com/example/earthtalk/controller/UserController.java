@@ -21,6 +21,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -139,12 +140,13 @@ public class UserController {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "성공")})
     @GetMapping("/mypage/{debatesId}/debateChats")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getUserDebateChats(
-        @PathVariable("debatesId") Long debatesId) throws JsonProcessingException {
-        List<UserDebateDetailsResponse> responseHeader = userService.getDebateDetails( debatesId );
+        @PathVariable("debatesId") String debatesId) throws JsonProcessingException {
+        List<UserDebateDetailsResponse> responseHeader = userService.getDebateDetails(
+            UUID.fromString(debatesId));
 
         String headerData = new ObjectMapper().writeValueAsString(responseHeader);
 
-        Map<String, Object> response = userService.getUserDebateChats( debatesId );
+        Map<String, Object> response = userService.getUserDebateChats(UUID.fromString(debatesId));
         return ResponseEntity.ok()
             .header("X-Debate-Details", headerData)
             .body(ApiResponse.createSuccess(response));

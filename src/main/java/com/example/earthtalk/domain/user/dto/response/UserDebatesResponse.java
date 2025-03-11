@@ -4,9 +4,10 @@ import com.example.earthtalk.domain.debate.entity.CategoryType;
 import com.example.earthtalk.domain.debate.entity.RoomType;
 import com.example.earthtalk.domain.news.entity.MemberNumberType;
 import com.example.earthtalk.domain.news.entity.TimeType;
+import java.util.UUID;
 
 public record UserDebatesResponse(
-    Long debateId,
+    UUID debateId,
     CategoryType category,
     String title,
     TimeType time,
