@@ -40,10 +40,6 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 			.addInterceptors(new RoomIdInterceptor());
 		log.info("Registered STOMP endpoint: /observer/{roomId}");
 
-		registry.addEndpoint("/room-list")
-			.setAllowedOrigins("*");
-		log.info("Registered STOMP endpoint: /room-list");
-
 		registry.addEndpoint("/room-list/filtered")
 			.setAllowedOrigins("*")
 			.addInterceptors(new QueryHandshakeInterceptor());
