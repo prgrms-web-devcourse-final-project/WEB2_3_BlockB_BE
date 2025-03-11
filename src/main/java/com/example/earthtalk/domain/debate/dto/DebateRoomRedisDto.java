@@ -1,6 +1,8 @@
 package com.example.earthtalk.domain.debate.dto;
 
 import lombok.*;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.data.redis.core.RedisHash;
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -19,6 +21,7 @@ import com.example.earthtalk.domain.news.repository.NewsRepository;
 import com.example.earthtalk.global.constant.ContinentType;
 import com.example.earthtalk.global.exception.ErrorCode;
 
+@Slf4j
 @Getter
 @Setter
 @Builder
@@ -62,7 +65,8 @@ public class DebateRoomRedisDto implements Serializable {
 
 	// Debate 엔티티로부터 RedisDto 생성하는 변환 메서드
 	public static DebateRoomRedisDto fromEntity(Debate debate) {
-		return DebateRoomRedisDto.builder()
+		log.info("fromEntity 호출됨 - Debate 제목: {}, UUID: {}", debate.getTitle(), debate.getUuid());
+		DebateRoomRedisDto dto = DebateRoomRedisDto.builder()
 			.uuid(debate.getUuid())
 			.newsId(debate.getNews() != null ? debate.getNews().getId() : null)
 			.title(debate.getTitle())
@@ -82,9 +86,12 @@ public class DebateRoomRedisDto implements Serializable {
 				.map(p -> p.getId().toString())
 				.collect(Collectors.toList()))
 			.build();
+		log.info("fromEntity 완료 - 생성된 DebateRoomRedisDto: {}", dto);
+		return dto;
 	}
 
 	public Debate toEntity(NewsRepository newsRepository) {
+		log.info("toEntity 호출됨 - DTO UUID: {}", this.uuid);
 		Debate.DebateBuilder builder = Debate.builder()
 			.uuid(this.uuid)
 			.title(this.title)
@@ -102,15 +109,22 @@ public class DebateRoomRedisDto implements Serializable {
 			.resultEnabled(this.resultEnabled);
 
 		if (this.newsId != null) {
+			log.info("toEntity - 뉴스 ID 존재: {}", this.newsId);
 			builder.news(
 				newsRepository.findById(this.newsId)
-					.orElseThrow(() -> new IllegalArgumentException(ErrorCode.NEWS_NOT_FOUND.getMessage()))
+					.orElseThrow(() -> {
+						log.error("toEntity - 뉴스 조회 실패, newsId: {}", this.newsId);
+						return new IllegalArgumentException(ErrorCode.NEWS_NOT_FOUND.getMessage());
+					})
 			);
 		} else {
+			log.info("toEntity - 뉴스 ID 없음, null 처리");
 			builder.news(null);
 		}
 
-		return builder.build();
+		Debate debate = builder.build();
+		log.info("toEntity 완료 - 생성된 Debate 엔티티: {}", debate);
+		return debate;
 	}
 
 }

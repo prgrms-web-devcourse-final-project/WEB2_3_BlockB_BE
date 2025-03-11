@@ -285,20 +285,26 @@ public class DebateRoomService {
 		log.debug("buildDebateRoomResponse 호출됨 - Debate ID: {}, Room ID: {}", debate.getId(), roomId);
 
 		// 로그: Pro 사용자 목록 조회 시작
-		Set<String> proUsers = debateUserStore.getProUsers(roomId.toString());
+		List<DebateParticipants> proUsers = debateParticipantsRepository.findByDebate_UuidAndPosition(roomId, FlagType.PRO);
 		log.debug("Pro 사용자 조회 완료 - 사용자 수: {}", proUsers != null ? proUsers.size() : 0);
 
-		// 로그: Pro 사용자 목록을 DebateUserResponse로 변환 시작
-		Set<DebateUserResponse> proResponse = convertUsernamesToUserResponses(proUsers);
-		log.debug("Pro 사용자 응답 변환 완료 - 응답 수: {}", proResponse != null ? proResponse.size() : 0);
+		Set<DebateUserResponse> proResponse = new HashSet<>();
+
+		assert proUsers != null;
+		for (DebateParticipants proUser : proUsers) {
+			proResponse.add(fromParticipants(proUser));
+		}
+
+		Set<DebateUserResponse> conResponse = new HashSet<>();
 
 		// 로그: Con 사용자 목록 조회 시작
-		Set<String> conUsers  = debateUserStore.getConUsers(roomId.toString());
+		List<DebateParticipants> conUsers  = debateParticipantsRepository.findByDebate_UuidAndPosition(roomId, FlagType.CON);
 		log.debug("Con 사용자 조회 완료 - 사용자 수: {}", conUsers != null ? conUsers.size() : 0);
+		assert conUsers != null;
+		for (DebateParticipants conUser : conUsers) {
+			conResponse.add(fromParticipants(conUser));
+		}
 
-		// 로그: Con 사용자 목록을 DebateUserResponse로 변환 시작
-		Set<DebateUserResponse> conResponse = convertUsernamesToUserResponses(conUsers);
-		log.debug("Con 사용자 응답 변환 완료 - 응답 수: {}", conResponse != null ? conResponse.size() : 0);
 
 		// 로그: DebateRoomResponse 빌더를 사용하여 응답 객체 생성 시작
 		DebateRoomResponse response = DebateRoomResponse.builder()
@@ -319,6 +325,21 @@ public class DebateRoomService {
 		log.debug("DebateRoomResponse 빌드 완료 - Response: {}", response);
 
 		return response;
+	}
+
+	public static DebateUserResponse fromParticipants(DebateParticipants debateParticipant) {
+		User user = debateParticipant.getUser();
+		return DebateUserResponse.builder()
+			.id(user.getId())
+			.email(user.getEmail())
+			.nickname(user.getNickname())
+			.introduction(user.getIntroduction())
+			.profileUrl(user.getProfileUrl())
+			.winNumber(user.getWinNumber())
+			.drawNumber(user.getDrawNumber())
+			.defeatNumber(user.getDefeatNumber())
+			.position(debateParticipant.getPosition())  // 참여자의 position 설정
+			.build();
 	}
 
 }
