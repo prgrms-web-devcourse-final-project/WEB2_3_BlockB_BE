@@ -110,8 +110,6 @@ public class DebateManagementService {
 				));
 			}
 		}
-		debateRoomService.removeDebateRoom(debate.getUuid().toString());
-		debateUserStore.removeDebateRoom(debate.getUuid().toString());
 
 		debateTimerService.startDebateTimer(debate.getUuid(), debate.getTime(), debate.getSpeakCount());
 	}

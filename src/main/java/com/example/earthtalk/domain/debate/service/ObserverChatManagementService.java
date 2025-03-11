@@ -13,6 +13,9 @@ import com.example.earthtalk.domain.debate.entity.DebateParticipants;
 import com.example.earthtalk.domain.debate.entity.DebateRole;
 import com.example.earthtalk.domain.debate.entity.FlagType;
 import com.example.earthtalk.domain.debate.repository.DebateChatRepository;
+import com.example.earthtalk.domain.debate.store.DebateRoomStore;
+import com.example.earthtalk.domain.debate.store.DebateUserStore;
+import com.example.earthtalk.domain.debate.store.ObserverRoomStore;
 import com.example.earthtalk.global.exception.ErrorCode;
 
 import jakarta.transaction.Transactional;
@@ -25,7 +28,9 @@ public class ObserverChatManagementService {
 	private final DebateChatRepository debateChatRepository;
 	private final DebateRoomService debateRoomService;
 	private final ObserverUserService observerUserService;
-
+	private final DebateRoomStore debateRoomStore;
+	private final DebateUserStore debateUserStore;
+	private final ObserverRoomStore observerRoomStore;
 
 	@Transactional
 	public void saveChatHistory(String roomId, List<ObserverMessage> observerMessages) {
@@ -52,6 +57,10 @@ public class ObserverChatManagementService {
 				debateChatRepository.flush();
 			}
 		}
+		debateRoomStore.remove(roomId);
+		debateUserStore.removeDebateRoom(roomId);
+		observerRoomStore.removeRoom(roomId);
+
 		debateChatRepository.flush();
 	}
 }

@@ -122,4 +122,21 @@ public class ObserverRoomStore {
 		return (sortedRoomIds != null) ? new ArrayList<>(sortedRoomIds) : Collections.emptyList();
 	}
 
+	public void removeRoom(String roomId) {
+		if (roomId == null || roomId.trim().isEmpty()) {
+			throw new IllegalArgumentException(ErrorCode.DEBATEROOM_NOT_FOUND.getMessage());
+		}
+
+		// 관찰자 Set 삭제
+		String observerKey = OBSERVER_KEY_PREFIX + roomId;
+		redisTemplate.delete(observerKey);
+
+		// 최대 관찰자 수 Hash에서 해당 roomId 항목 삭제
+		redisTemplate.opsForHash().delete(MAX_OBSERVER_KEY, roomId);
+
+		// 현재 및 최대 관찰자 수 ZSet에서 roomId 항목 삭제
+		redisTemplate.opsForZSet().remove(OBSERVER_CURRENT_ZSET_KEY, roomId);
+		redisTemplate.opsForZSet().remove(OBSERVER_MAX_ZSET_KEY, roomId);
+	}
+
 }
