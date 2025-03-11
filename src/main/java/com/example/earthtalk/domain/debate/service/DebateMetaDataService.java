@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import com.example.earthtalk.domain.debate.dto.CreateDebateRoomRequest;
 import com.example.earthtalk.domain.debate.dto.DebateMetaDataResponse;
 import com.example.earthtalk.domain.debate.dto.DebateMetaDataRoomResponse;
+import com.example.earthtalk.domain.debate.dto.DebateRoomResponse;
 import com.example.earthtalk.domain.debate.dto.DebateUserResponse;
 import com.example.earthtalk.domain.debate.entity.Debate;
 import com.example.earthtalk.domain.debate.repository.DebateRepository;
@@ -35,6 +36,7 @@ public class DebateMetaDataService {
 	private final ObserverRoomStore observerRoomStore;
 	private final DebateRepository debateRepository;
 	private final UserRepository userRepository;
+	private final DebateRoomService debateRoomService;
 
 	/**
 	 * 시간 기준 내림차순 정렬된 Debate 목록에서 roomId를 추출하여 집계한 DebateMetaDataResponse 리스트 반환
@@ -89,24 +91,13 @@ public class DebateMetaDataService {
 			Long currentCount = observerRoomStore.getObserverCount(roomId);
 			Long maxCount = observerRoomStore.getMaxObserverCount(roomId);
 
-			Set<User> proUsers = fetchUsersByNames(debateUserStore.getProUsers(roomId));
-			Set<User> conUsers = fetchUsersByNames(debateUserStore.getConUsers(roomId));
 
-			DebateMetaDataRoomResponse debateRoomResponse = DebateMetaDataRoomResponse.fromEntity(debate);
-
-			Set<DebateUserResponse> proUserResponses = proUsers.stream()
-				.map(DebateUserResponse::fromEntity)
-				.collect(Collectors.toSet());
-			Set<DebateUserResponse> conUserResponses = conUsers.stream()
-				.map(DebateUserResponse::fromEntity)
-				.collect(Collectors.toSet());
+			DebateRoomResponse roomResponse = debateRoomService.buildDebateRoomResponse(debate, debate.getUuid());
 
 			DebateMetaDataResponse response = DebateMetaDataResponse.builder()
-				.debateMetaDataRoomResponse(debateRoomResponse)
+				.debateRoomResponse(roomResponse)
 				.currentCount(currentCount)
 				.maxCount(maxCount)
-				.proUsers(proUserResponses)
-				.conUsers(conUserResponses)
 				.build();
 			responses.add(response);
 		}

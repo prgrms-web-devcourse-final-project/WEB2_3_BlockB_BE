@@ -2,6 +2,7 @@ package com.example.earthtalk.domain.debate.dto;
 
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import com.example.earthtalk.domain.debate.entity.CategoryType;
@@ -17,7 +18,7 @@ import lombok.Getter;
 @Builder
 @AllArgsConstructor
 public class DebateRoomResponse {
-	private final Long roomId;
+	private final UUID uuid;
 	private final String title;
 	private final String description;
 	private final int memberNumberType;

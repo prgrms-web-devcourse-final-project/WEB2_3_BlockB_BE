@@ -17,9 +17,11 @@ import com.example.earthtalk.domain.news.repository.NewsRepository;
 
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class DebateRoomStore {
 
 	private static final String KEY = "debateRoomStore";
@@ -38,20 +40,39 @@ public class DebateRoomStore {
 	}
 
 	public void put(Debate debate) {
+		log.info("put 메서드 호출 - Debate 생성 시작, Debate ID: {}", debate.getId());
+
 		DebateRoomRedisDto redisDto = DebateRoomRedisDto.fromEntity(debate);
+		log.debug("DebateRoomRedisDto 변환 완료: {}", redisDto);
 
 		String debateKey = redisDto.getUuid().toString();
+		log.debug("생성된 debateKey: {}", debateKey);
+
 		hashOps.put(KEY, debateKey, redisDto);
+		log.debug("Redis hashOps에 put 완료 - KEY: {}, debateKey: {}", KEY, debateKey);
 
 		double score = redisDto.getCachedTime().toEpochSecond(ZoneOffset.UTC);
+		log.debug("계산된 score: {}", score);
 
 		zSetOps.add(KEY_ZSET, debateKey, score);
+		log.debug("Redis zSetOps에 add 완료 - KEY_ZSET: {}, debateKey: {}, score: {}", KEY_ZSET, debateKey, score);
 	}
 
 	public Debate get(String roomId) {
+		log.info("get 메서드 호출 - roomId: {}", roomId);
+
 		DebateRoomRedisDto redisDto = hashOps.get(KEY, roomId);
-		return redisDto != null ? redisDto.toEntity(newsRepository) : null;
+		if (redisDto != null) {
+			log.debug("Redis에서 조회된 DebateRoomRedisDto: {}", redisDto);
+			Debate debate = redisDto.toEntity(newsRepository);
+			log.debug("변환된 Debate 엔티티: {}", debate);
+			return debate;
+		} else {
+			log.warn("Redis에서 DebateRoomRedisDto를 조회하지 못함 - roomId: {}", roomId);
+			return null;
+		}
 	}
+
 
 	public void remove(String roomId) {
 		hashOps.delete(KEY, roomId);
