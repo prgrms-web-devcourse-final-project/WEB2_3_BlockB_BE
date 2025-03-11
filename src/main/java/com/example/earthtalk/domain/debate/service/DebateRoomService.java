@@ -38,6 +38,8 @@ import com.example.earthtalk.domain.news.repository.NewsRepository;
 import com.example.earthtalk.domain.user.entity.User;
 import com.example.earthtalk.domain.user.repository.UserRepository;
 import com.example.earthtalk.global.exception.ErrorCode;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * ChatRoomService는 채팅방 생성 및 관리를 위한 서비스를 제공합니다.
@@ -240,13 +242,15 @@ public class DebateRoomService {
 	}
 
 	public WaitRoomResponse buildWaitRoomResponse(Debate debate, UUID roomId) {
+		log.info("buildWaitResponse 메서드 시작 : {}", debate);
 		Set<String> proUsers = debateUserStore.getProUsers(roomId.toString());
 		Set<DebateUserResponse> proResponse = convertUsernamesToUserResponses(proUsers);
 
 		Set<String> conUsers  = debateUserStore.getConUsers(roomId.toString());
 		Set<DebateUserResponse> conResponse = convertUsernamesToUserResponses(conUsers);
 
-		return WaitRoomResponse.builder()
+
+		WaitRoomResponse response =  WaitRoomResponse.builder()
 			.roomId(debate.getId())
 			.title(debate.getTitle())
 			.description(debate.getDescription())
@@ -260,6 +264,16 @@ public class DebateRoomService {
 			.proUsers(proResponse)
 			.conUsers(conResponse)
 			.build();
+
+		ObjectMapper mapper = new ObjectMapper();
+		try {
+			String responseJson = mapper.writeValueAsString(response);
+			log.info("전체 WaitRoomResponse 상세 정보: {}", responseJson);
+		} catch (JsonProcessingException e) {
+			log.error("WaitRoomResponse JSON 변환 실패", e);
+		}
+
+		return response;
 	}
 
 	private Set<DebateUserResponse> convertUsernamesToUserResponses(Set<String> usernames) {
@@ -282,11 +296,11 @@ public class DebateRoomService {
 
 	public DebateRoomResponse buildDebateRoomResponse(Debate debate, UUID roomId) {
 		// 로그: 메서드 호출 확인 및 전달된 파라미터 로깅
-		log.debug("buildDebateRoomResponse 호출됨 - Debate ID: {}, Room ID: {}", debate.getId(), roomId);
+		log.info("buildDebateRoomResponse 호출됨 - Debate ID: {}, Room ID: {}", debate.getId(), roomId);
 
 		// 로그: Pro 사용자 목록 조회 시작
 		List<DebateParticipants> proUsers = debateParticipantsRepository.findByDebate_UuidAndPosition(roomId, FlagType.PRO);
-		log.debug("Pro 사용자 조회 완료 - 사용자 수: {}", proUsers != null ? proUsers.size() : 0);
+		log.info("Pro 사용자 조회 완료 - 사용자 수: {}", proUsers != null ? proUsers.size() : 0);
 
 		Set<DebateUserResponse> proResponse = new HashSet<>();
 
@@ -299,7 +313,7 @@ public class DebateRoomService {
 
 		// 로그: Con 사용자 목록 조회 시작
 		List<DebateParticipants> conUsers  = debateParticipantsRepository.findByDebate_UuidAndPosition(roomId, FlagType.CON);
-		log.debug("Con 사용자 조회 완료 - 사용자 수: {}", conUsers != null ? conUsers.size() : 0);
+		log.info("Con 사용자 조회 완료 - 사용자 수: {}", conUsers != null ? conUsers.size() : 0);
 		assert conUsers != null;
 		for (DebateParticipants conUser : conUsers) {
 			conResponse.add(fromParticipants(conUser));
@@ -322,12 +336,18 @@ public class DebateRoomService {
 			.conUsers(conResponse)
 			.resultEnabled(debate.isResultEnabled())
 			.build();
-		log.debug("DebateRoomResponse 빌드 완료 - Response: {}", response);
-
+		ObjectMapper mapper = new ObjectMapper();
+		try {
+			String responseJson = mapper.writeValueAsString(response);
+			log.info("전체 DebateRoomResponse 상세 정보: {}", responseJson);
+		} catch (JsonProcessingException e) {
+			log.error("DebateRoomResponse JSON 변환 실패", e);
+		}
 		return response;
 	}
 
 	public static DebateUserResponse fromParticipants(DebateParticipants debateParticipant) {
+		log.info("fromParticipants 작업 시작 {}", debateParticipant);
 		User user = debateParticipant.getUser();
 		return DebateUserResponse.builder()
 			.id(user.getId())
@@ -338,7 +358,7 @@ public class DebateRoomService {
 			.winNumber(user.getWinNumber())
 			.drawNumber(user.getDrawNumber())
 			.defeatNumber(user.getDefeatNumber())
-			.position(debateParticipant.getPosition())  // 참여자의 position 설정
+			.position(debateParticipant.getPosition())
 			.build();
 	}
 
