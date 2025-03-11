@@ -71,19 +71,40 @@ public class DebateRoomService {
 	 * @return 생성된 채팅방의 고유 식별자 (roomId)
 	 */
 	public String createDebateRoom(CreateDebateRoomRequest request) {
+		// 메서드 시작 로그: 요청 정보와 함께 시작됨
+		log.info("createDebateRoom 시작 - 요청 정보: {}", request);
+
+		// roomId 생성 및 로그 기록
 		String roomId = UUID.randomUUID().toString();
+		log.debug("생성된 roomId: {}", roomId);
+
+		// 요청 결과 활성화 여부 로깅
 		log.info("Service - createDebateRoom : resultEnabled = {}", request.isResultEnabled());
+
 		News news = null;
 		if (request.getNewsId() != null) {
+			log.debug("NewsId 존재 - 요청된 NewsId: {}", request.getNewsId());
 			Long newsId = Long.valueOf(request.getNewsId().toString());
 			try {
-				news = newsRepository.findById(newsId)
-					.orElse(null); // news가 없으면 null로 처리
+				news = newsRepository.findById(newsId).orElse(null);
+				if (news != null) {
+					log.debug("News 조회 성공 - newsId: {}", newsId);
+				} else {
+					log.warn("News 조회 결과 null - newsId: {}", newsId);
+				}
 			} catch (Exception e) {
-				log.error("News 조회 중 오류 발생: {}", e.getMessage(), e);
+				log.error("News 조회 중 오류 발생 - newsId: {} | 메시지: {}", newsId, e.getMessage(), e);
 			}
+		} else {
+			log.debug("요청에 NewsId 미포함");
 		}
+
 		try {
+			// Debate 객체 생성 전 필드 값 로깅
+			log.debug("Debate 객체 생성 시작 - title: {}, description: {}, member: {}, continent: {}, category: {}, speakCount: {}, time: {}",
+				request.getTitle(), request.getDescription(), request.getMemberNumber(),
+				request.getContinent(), request.getCategory(), request.getSpeakCount(), request.getTime());
+
 			Debate debate = Debate.builder()
 				.uuid(UUID.fromString(roomId))
 				.news(news)
@@ -97,36 +118,43 @@ public class DebateRoomService {
 				.time(request.getTime())
 				.cachedTime(LocalDateTime.now())
 				.status(RoomType.WAITING) // 기본 상태 설정
-				.agreeNumber(0L) // 초기 찬성 수
-				.disagreeNumber(0L) // 초기 반대 수
-				.neutralNumber(0L) // 초기 중립 수
+				.agreeNumber(0L)         // 초기 찬성 수
+				.disagreeNumber(0L)      // 초기 반대 수
+				.neutralNumber(0L)       // 초기 중립 수
 				.build();
+			log.debug("Debate 객체 생성 완료 - {}", debate);
 
 			debateRepository.save(debate);
+			log.debug("Debate 저장 완료 - Debate ID: {}", debate.getId());
+
 			debateRoomStore.put(debate);
+			log.debug("DebateRoomStore에 Debate 추가 완료 - Debate ID: {}", debate.getId());
 
 			observerRoomStore.initializeRoom(roomId);
+			log.debug("ObserverRoomStore 초기화 완료 - roomId: {}", roomId);
 
+			// 토론방 생성 완료 로그
+			log.info("createDebateRoom 완료 - 생성된 토론방 ID: {}", roomId);
 		} catch (Exception e) {
 			log.error("토론방 생성 중 오류 발생: {}", e.getMessage(), e);
 
-			// 원본 예외의 상세 정보 추출
+			// 예외 발생 시 전체 스택 트레이스 로깅
 			StringWriter sw = new StringWriter();
 			PrintWriter pw = new PrintWriter(sw);
 			e.printStackTrace(pw);
 			String fullStackTrace = sw.toString();
-
-			// 추가적인 디버깅 정보 로깅
 			log.error("전체 스택 트레이스: {}", fullStackTrace);
 
-			// 요청 파라미터 로깅 (민감한 정보 주의)
+			// 요청 파라미터도 로깅 (민감한 정보 주의)
 			log.error("요청 파라미터: {}", request.toString());
 
-			// 원본 예외를 그대로 다시 던짐
+			// 예외 발생 시 에러 코드에 해당하는 메시지 반환
 			throw new IllegalArgumentException(ErrorCode.INTERNAL_SERVER_ERROR.getMessage());
 		}
+
 		return roomId;
 	}
+
 
 	/**
 	 * 주어진 roomId에 해당하는 채팅방 정보를 반환합니다.
@@ -274,7 +302,7 @@ public class DebateRoomService {
 
 		// 로그: DebateRoomResponse 빌더를 사용하여 응답 객체 생성 시작
 		DebateRoomResponse response = DebateRoomResponse.builder()
-			.roomId(debate.getId())
+			.uuid(debate.getUuid())
 			.title(debate.getTitle())
 			.description(debate.getDescription())
 			.memberNumberType(debate.getMember().getValue())

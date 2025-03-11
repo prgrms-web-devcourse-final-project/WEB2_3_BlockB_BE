@@ -40,13 +40,14 @@ public class FilteredUpdateController {
 		Predicate<DebateMetaDataResponse> filterPredicate = response -> {
 			boolean matches = true;
 			if (continentType != null) {
-				matches &= response.getDebateMetaDataRoomResponse().getContinent().equals(continentType);
+				matches &= response.getDebateRoomResponse().getContinentType().equals(continentType);
 			}
 			if (categoryType != null) {
-				matches &= response.getDebateMetaDataRoomResponse().getCategory().equals(categoryType);
+				matches &= response.getDebateRoomResponse().getCategoryType().equals(categoryType);
 			}
 			if (memberNumberType != null) {
-				matches &= response.getDebateMetaDataRoomResponse().getMemberNumber().equals(memberNumberType);
+				matches &= (response.getDebateRoomResponse().getMemberNumberType() == memberNumberType.getValue());
+
 			}
 			return matches;
 		};
