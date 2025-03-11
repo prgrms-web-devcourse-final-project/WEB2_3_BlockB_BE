@@ -79,6 +79,7 @@ public class DebateChatManagementService {
 					.debateParticipants(debateParticipants)
 					.content(message.getMessage())
 					.time(message.getTimestamp())
+					.flagtype(debateParticipants.getPosition())
 					.build();
 				// 생성된 DebateChat 객체를 디버그 레벨로 로깅
 				log.debug("DebateChat 생성: {}", debateChat);
