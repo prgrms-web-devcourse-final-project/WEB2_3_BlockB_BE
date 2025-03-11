@@ -16,6 +16,7 @@ import com.example.earthtalk.domain.debate.entity.Debate;
 import com.example.earthtalk.global.exception.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * ChatUserStore는 각 채팅방(roomId)별로 찬성(pro) 및 반대(con) 사용자 목록을 관리하는 컴포넌트입니다.
@@ -26,6 +27,7 @@ import lombok.RequiredArgsConstructor;
  */
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class DebateUserStore {
 
 	private static final String PRO_KEY_PREFIX = "debate:pro:";
@@ -42,10 +44,12 @@ public class DebateUserStore {
 	 * @return 찬성 사용자 집합
 	 */
 	public Set<String> getProUsers(String roomId) {
+		log.debug("Pro 사용자 조회 시작 - roomId: {}", roomId);
 		Set<String> members = redisTemplate.opsForSet().members(PRO_KEY_PREFIX + roomId);
+		int count = (members != null) ? members.size() : 0;
+		log.debug("Pro 사용자 조회 완료 - roomId: {}, 조회된 사용자 수: {}", roomId, count);
 		return (members != null) ? members : Collections.emptySet();
 	}
-
 	public void addProUser(String roomId, String userId) {
 		validateRoomIdAndUserId(roomId, userId);
 		redisTemplate.opsForSet().add(PRO_KEY_PREFIX + roomId, userId);
@@ -61,7 +65,10 @@ public class DebateUserStore {
 	 * @return 반대 사용자 집합
 	 */
 	public Set<String> getConUsers(String roomId) {
+		log.debug("Con 사용자 조회 시작 - roomId: {}", roomId);
 		Set<String> members = redisTemplate.opsForSet().members(CON_KEY_PREFIX + roomId);
+		int count = (members != null) ? members.size() : 0;
+		log.debug("Con 사용자 조회 완료 - roomId: {}, 조회된 사용자 수: {}", roomId, count);
 		return (members != null) ? members : Collections.emptySet();
 	}
 
