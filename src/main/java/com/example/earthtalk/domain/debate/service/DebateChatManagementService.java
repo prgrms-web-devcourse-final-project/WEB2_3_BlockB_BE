@@ -66,7 +66,7 @@ public class DebateChatManagementService {
 		log.info("Debate 조회 완료: {}", debate);
 
 		List<DebateChat> chatList = messages.stream()
-			.filter(message -> "chat".equals(message.getEvent()))
+			.filter(message -> "MESSAGE".equals(message.getEvent()))
 			.map(message -> {
 				DebateParticipants debateParticipants = findDebateUserByUserName(UUID.fromString(uuid), message.getUserName());
 				if (debateParticipants == null) {
