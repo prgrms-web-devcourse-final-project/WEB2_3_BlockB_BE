@@ -3,9 +3,11 @@ package com.example.earthtalk.domain.user.service;
 import com.example.earthtalk.domain.chat.repository.ObserverChatRepository;
 import com.example.earthtalk.domain.debate.entity.CategoryType;
 import com.example.earthtalk.domain.debate.entity.Debate;
+import com.example.earthtalk.domain.debate.entity.DebateChat;
 import com.example.earthtalk.domain.debate.entity.DebateRole;
 import com.example.earthtalk.domain.debate.entity.FlagType;
 import com.example.earthtalk.domain.debate.entity.RoomType;
+import com.example.earthtalk.domain.debate.repository.DebateChatQueryRepository;
 import com.example.earthtalk.domain.debate.repository.DebateParticipantsRepository;
 import com.example.earthtalk.domain.debate.repository.DebateRepository;
 import com.example.earthtalk.domain.news.entity.Bookmark;
@@ -22,6 +24,8 @@ import com.example.earthtalk.domain.notification.repository.NotificationReposito
 import com.example.earthtalk.domain.notification.service.NotificationService;
 import com.example.earthtalk.domain.oauth.repository.RefreshTokenRepository;
 import com.example.earthtalk.domain.report.repository.ReportRepository;
+import com.example.earthtalk.domain.user.dto.response.DebateChatResponse;
+import com.example.earthtalk.domain.user.dto.response.ObserverChatResponse;
 import com.example.earthtalk.domain.user.dto.response.UserBookmarksResponse;
 import com.example.earthtalk.domain.user.dto.response.UserDebateChatsResponse;
 import com.example.earthtalk.domain.user.dto.response.UserDebateDetailsResponse;
@@ -68,6 +72,7 @@ public class UserService {
     private final ObserverChatRepository observerChatRepository;
     private final DebateParticipantsRepository debateParticipantsRepository;
     private final NotificationService notificationService;
+    private final DebateChatQueryRepository debateChatQueryRepository;
 
     //유저 조회
     public User getUSerInfo(Long userId) {
@@ -221,51 +226,19 @@ public class UserService {
     }
 
     // 유저가 참여/참관한 토론방 상세 조회 - body
-    public Map<String, Object> getUserDebateChats(UUID debatesId) {
+    public List<DebateChatResponse> getUserDebateChats(UUID debatesId) {
         Debate debate = debateRepository.findByUuid(debatesId)
             .orElseThrow(() -> new NotFoundException(ErrorCode.DEBATEROOM_NOT_FOUND));
-
-        List<Tuple> userDebateChatsData = userRepository.findAllWithDebateChats(debate.getId());
-
-        List<UserDebateChatsResponse> userDebateChatsDTOList = new ArrayList<>();
-        List<UserDebateRoomInfoResponse> pros = new ArrayList<>();
-        List<UserDebateRoomInfoResponse> cons = new ArrayList<>();
-
-        for ( Tuple data : userDebateChatsData ) {
-            Long userId = data.get(0, Long.class);
-            DebateRole role = DebateRole.valueOf(
-                String.valueOf(data.get(1, DebateRole.class)));
-            FlagType position = FlagType.valueOf(
-                String.valueOf(data.get(2, FlagType.class)));
-            String debateContent = data.get(3, String.class);
-            LocalDateTime createdAt = data.get(4, LocalDateTime.class);
-            String nickname = data.get(5, String.class);
-            String profileImg = data.get(6, String.class);
-            Long winNumber = data.get(7, Long.class);
-            Long defeatNumber = data.get(8, Long.class);
-            Long drawNumber = data.get(9, Long.class);
-
-            userDebateChatsDTOList.add(new UserDebateChatsResponse(
-                userId, role, position, debateContent, createdAt));
-
-            UserDebateRoomInfoResponse userInfo = new UserDebateRoomInfoResponse(userId, nickname, profileImg, winNumber, defeatNumber, drawNumber);
-            if (position == FlagType.PRO) {
-                pros.add(userInfo);
-            } else if (position == FlagType.CON) {
-                cons.add(userInfo);
-            }
-        }
-
-        Map<String, Object> result = new HashMap<>();
-
-        result.put("찬성", pros);
-        result.put("반대", cons);
-        result.put("chats", userDebateChatsDTOList);
-
-        return result;
+        Long debateId = debate.getId();
+        return debateChatQueryRepository.findDebateChatsByDebateId(debateId);
     }
 
-
+    public List<ObserverChatResponse> getUserObserverChats(UUID debatesId) {
+        Debate debate = debateRepository.findByUuid(debatesId)
+            .orElseThrow(() -> new NotFoundException(ErrorCode.DEBATEROOM_NOT_FOUND));
+        Long debateId = debate.getId();
+        return debateChatQueryRepository.findObserverChatsByDebateId(debateId);
+    }
 
     // 유저 팔로우/필로워 조회
     public List<UserFolloweesResponse> getUserFollowees(Long userId) {

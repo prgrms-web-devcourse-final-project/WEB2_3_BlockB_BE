@@ -7,7 +7,7 @@ import lombok.Getter;
 @Builder
 @Getter
 public class TurnInfoResponse {
-    private FlagType flagType;
+    private Integer time;
     private Integer turnCount;
 
 }

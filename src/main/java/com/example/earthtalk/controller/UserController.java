@@ -1,7 +1,10 @@
 package com.example.earthtalk.controller;
 
+import com.example.earthtalk.domain.debate.entity.DebateChat;
 import com.example.earthtalk.domain.news.service.NewsDataService;
 import com.example.earthtalk.domain.oauth.dto.CustomOAuth2User;
+import com.example.earthtalk.domain.user.dto.response.DebateChatResponse;
+import com.example.earthtalk.domain.user.dto.response.ObserverChatResponse;
 import com.example.earthtalk.domain.user.dto.response.UserBookmarksResponse;
 import com.example.earthtalk.domain.user.dto.response.UserDebateDetailsResponse;
 import com.example.earthtalk.domain.user.dto.response.UserDebatesResponse;
@@ -139,16 +142,22 @@ public class UserController {
     @ApiResponses(value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "성공")})
     @GetMapping("/mypage/{debatesId}/debateChats")
-    public ResponseEntity<ApiResponse<Map<String, Object>>> getUserDebateChats(
-        @PathVariable("debatesId") String debatesId) throws JsonProcessingException {
-        List<UserDebateDetailsResponse> responseHeader = userService.getDebateDetails(
-            UUID.fromString(debatesId));
+    public ResponseEntity<ApiResponse<List<DebateChatResponse>>> getUserDebateChats(
+        @PathVariable("debatesId") String debatesId)  {
 
-        String headerData = new ObjectMapper().writeValueAsString(responseHeader);
+        List<DebateChatResponse> response = userService.getUserDebateChats(UUID.fromString(debatesId));
 
-        Map<String, Object> response = userService.getUserDebateChats(UUID.fromString(debatesId));
+        return ResponseEntity.ok().body(ApiResponse.createSuccess(response));
+    }
+    @Operation(summary = "관전방 상세 정보 조회 API", description = "관전방 채팅 기록을 비롯한 상세 정보를 조회합니다.")
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "성공")})
+    @GetMapping("/mypage/{debatesId}/observerChats")
+    public ResponseEntity<ApiResponse<List<ObserverChatResponse>>> getUserObserverChats(
+        @PathVariable("debatesId") String debatesId) {
+        List<ObserverChatResponse> response = userService.getUserObserverChats(UUID.fromString(debatesId));
+
         return ResponseEntity.ok()
-            .header("X-Debate-Details", headerData)
             .body(ApiResponse.createSuccess(response));
     }
 
