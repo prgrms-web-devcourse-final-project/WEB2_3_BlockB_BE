@@ -48,6 +48,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -186,7 +187,7 @@ public class UserService {
         List<UserDebatesResponse> userDebatesDTOList = new ArrayList<>();
 
         for ( Tuple data : userDebatesData ) {
-            Long debateId = data.get(0, Long.class); // 인덱스 0
+            UUID debateId = data.get(0, UUID.class); // 인덱스 0
             CategoryType category = data.get(1, CategoryType.class); // 인덱스 1
             String title = data.get(2, String.class); // 인덱스 2
             TimeType time = data.get(3, TimeType.class); // 인덱스 3
@@ -202,7 +203,7 @@ public class UserService {
     }
 
     // 유저가 참여/참관한 토론방 상세 조회 - header
-    public List<UserDebateDetailsResponse> getDebateDetails(Long debatesId) {
+    public List<UserDebateDetailsResponse> getDebateDetails(UUID debatesId) {
         List<Tuple> debateDetailsData = userRepository.findAllWithDebateDetails(debatesId);
 
         List<UserDebateDetailsResponse> userDebateDetailsDTOList = new ArrayList<>();
@@ -210,7 +211,7 @@ public class UserService {
         for (Tuple data : debateDetailsData) {
             String link = data.get(3, String.class);
 
-            Debate debate = debateRepository.findById(debatesId)
+            Debate debate = debateRepository.findByUuid(debatesId)
                 .orElseThrow(() -> new NotFoundException(ErrorCode.DEBATEROOM_NOT_FOUND));
 
             userDebateDetailsDTOList.add(UserDebateDetailsResponse.from(debate, link));
@@ -220,8 +221,11 @@ public class UserService {
     }
 
     // 유저가 참여/참관한 토론방 상세 조회 - body
-    public Map<String, Object> getUserDebateChats(Long debatesId) {
-        List<Tuple> userDebateChatsData = userRepository.findAllWithDebateChats(debatesId);
+    public Map<String, Object> getUserDebateChats(UUID debatesId) {
+        Debate debate = debateRepository.findByUuid(debatesId)
+            .orElseThrow(() -> new NotFoundException(ErrorCode.DEBATEROOM_NOT_FOUND));
+
+        List<Tuple> userDebateChatsData = userRepository.findAllWithDebateChats(debate.getId());
 
         List<UserDebateChatsResponse> userDebateChatsDTOList = new ArrayList<>();
         List<UserDebateRoomInfoResponse> pros = new ArrayList<>();
