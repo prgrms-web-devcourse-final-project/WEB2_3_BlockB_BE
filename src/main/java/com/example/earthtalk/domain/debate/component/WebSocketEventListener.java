@@ -175,7 +175,7 @@ public class WebSocketEventListener {
 				String debateRoomId = sessionInfo.getRoomId();
 				log.info("Debate Room ID: {}", debateRoomId);
 
-				// 로그: 해당 방의 사용자 수를 계산 (pro와 con 합산)
+				// 로그: 해당 방의 사용자 수 계산 (pro와 con 합산)
 				int proCount = debateUserService.getUserCount(debateRoomId).get("pro");
 				int conCount = debateUserService.getUserCount(debateRoomId).get("con");
 				int currentUserCount = proCount + conCount;
@@ -184,24 +184,36 @@ public class WebSocketEventListener {
 				if (currentUserCount <= 1) {
 					log.info("사용자 수가 1 이하이므로 채팅 기록 저장 및 방 상태 업데이트를 시도합니다.");
 					List<DebateMessage> debateMessages = debateMessageStore.removeDebateMessages(debateRoomId);
-					log.info("삭제된 Debate 메시지 수: {}", debateMessages != null ? debateMessages.size() : 0);
+					int debateMsgCount = debateMessages != null ? debateMessages.size() : 0;
+					log.info("삭제된 Debate 메시지 수: {}", debateMsgCount);
 
 					List<ObserverMessage> observerMessages = observerMessageStore.removeObserverMessages(debateRoomId);
-					log.info("삭제된 Observer 메시지 수: {}", observerMessages != null ? observerMessages.size() : 0);
+					int observerMsgCount = observerMessages != null ? observerMessages.size() : 0;
+					log.info("삭제된 Observer 메시지 수: {}", observerMsgCount);
 
-					if (debateMessages != null && !debateMessages.isEmpty()) {
-						try {
+					try {
+						// Debate 메시지 저장: null 또는 empty 인 경우 처리하지 않음
+						if (debateMessages != null && !debateMessages.isEmpty()) {
 							log.info("Debate 채팅 기록 저장 시작");
 							debateChatManagementService.saveChatHistory(debateRoomId, debateMessages);
+						} else {
+							log.info("Debate 메시지가 null 또는 비어 있음");
+						}
+
+						// Observer 메시지 저장: null 또는 empty 인 경우 처리하지 않음
+						if (observerMessages != null && !observerMessages.isEmpty()) {
 							log.info("Observer 채팅 기록 저장 시작");
 							observerChatManagementService.saveChatHistory(debateRoomId, observerMessages);
-							log.info("Debate 방 상태 업데이트 시작");
-							debateRoomService.updateStatus(debateRoomId);
-							log.info("채팅 기록 저장 및 방 상태 업데이트 완료");
-						} catch(Exception e) {
-							log.error("채팅 기록 저장 실패: {}", e.getMessage());
-							throw new SaveFailedException(ErrorCode.SAVE_FAILED);
+						} else {
+							log.info("Observer 메시지가 null 또는 비어 있음");
 						}
+
+						log.info("Debate 방 상태 업데이트 시작");
+						debateRoomService.updateStatus(debateRoomId);
+						log.info("채팅 기록 저장 및 방 상태 업데이트 완료");
+					} catch(Exception e) {
+						log.error("채팅 기록 저장 실패: {}", e.getMessage());
+						throw new SaveFailedException(ErrorCode.SAVE_FAILED);
 					}
 				}
 				log.info("Debate 사용자 제거 시작: {}", sessionInfo.getUserName());
@@ -227,5 +239,6 @@ public class WebSocketEventListener {
 		webSocketIdleSessionMonitor.unregisterSession(sessionId);
 		log.debug("웹소켓 Idle 세션 모니터 등록 해제 완료");
 	}
+
 
 }
