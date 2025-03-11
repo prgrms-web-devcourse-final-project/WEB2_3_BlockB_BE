@@ -30,7 +30,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/debates")
 @RequiredArgsConstructor
@@ -50,11 +52,13 @@ public class DebateRoomController {
 	public ResponseEntity<ApiResponse<DebateRoomResponse>> getDebateRoom(
 		@PathVariable("uuid") String uuid
 	) {
+		log.info("토론방 상세 조회 api 접근");
 		UUID roomId = UUID.fromString(uuid);
 		Debate debate = debateRepository.findByUuid(roomId)
 			.orElseThrow(() -> new IllegalArgumentException(ErrorCode.DEBATEROOM_NOT_FOUND.getMessage()));
+		log.info("debate method 조회 {}" , debate);
 		DebateRoomResponse response = debateRoomService.buildDebateRoomResponse(debate, roomId);
-
+		log.info("response 조회 완료 {}" , response);
 		return ResponseEntity.ok().body(ApiResponse.createSuccess(response));
 	}
 
