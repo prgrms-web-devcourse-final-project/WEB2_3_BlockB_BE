@@ -29,7 +29,7 @@ public class DebateTurnManagementService {
 
     public void createDebateTurn(UUID roomId, TimeType timeType, SpeakCountType speakCountType) {
         debateTurns.put(roomId, FlagType.NO_POSITION);
-        turnCounts.put(roomId, speakCountType.getValue());
+        turnCounts.put(roomId, speakCountType.getValue()*2);
         scheduler.schedule(()-> {
             Map<String, Object> message = Map.of(
                 "event", EventType.STATUS,
@@ -85,6 +85,7 @@ public class DebateTurnManagementService {
         if(removed != null) {
             removed.cancel(true);
         }
+        turnCounts.remove(roomId);
         System.out.println("Remove debate turn for " + roomId);
 
     }
@@ -97,8 +98,8 @@ public class DebateTurnManagementService {
         }
 
         return TurnInfoResponse.builder()
-            .flagType(debateTurns.get(roomId))
-            .turnCount(delay -1)
+            .time(delay -1)
+            .turnCount(turnCounts.get(roomId))
             .build();
     }
 
