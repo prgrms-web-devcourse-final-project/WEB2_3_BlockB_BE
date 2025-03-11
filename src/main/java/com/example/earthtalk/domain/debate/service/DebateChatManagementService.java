@@ -17,6 +17,7 @@ import com.example.earthtalk.domain.debate.repository.DebateParticipantsReposito
 import com.example.earthtalk.global.exception.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * DebateChatService는 토론방의 채팅 메시지를 DebateChat 엔티티로 변환하여 데이터베이스에 저장하는 기능을 제공합니다.
@@ -28,6 +29,7 @@ import lombok.RequiredArgsConstructor;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class DebateChatManagementService {
 
 	private final DebateChatRepository debateChatRepository;
@@ -57,37 +59,50 @@ public class DebateChatManagementService {
 	 */
 	@Async
 	public void saveChatHistory(String uuid, List<DebateMessage> messages) {
+		// 시작 로깅: 메서드 진입 및 전달된 메시지 수
+		log.info("saveChatHistory 시작: roomId = {}, 메시지 수 = {}", uuid, messages != null ? messages.size() : 0);
+
 		Debate debate = debateService.getDebateByRoomId(uuid);
+		log.info("Debate 조회 완료: {}", debate);
 
 		List<DebateChat> chatList = messages.stream()
-			.filter(message -> "chat".equals(message.getEvent())) //
+			.filter(message -> "chat".equals(message.getEvent()))
 			.map(message -> {
 				DebateParticipants debateParticipants = findDebateUserByUserName(UUID.fromString(uuid), message.getUserName());
 				if (debateParticipants == null) {
-					return Optional.<DebateChat>empty(); // Optional 사용하여 null 방지
+					// DebateParticipants가 없는 경우 경고 로그 출력
+					log.warn("DebateParticipants 없음: roomId = {}, userName = {}", uuid, message.getUserName());
+					return Optional.<DebateChat>empty();
 				}
-				// FlagType 변환을 Enum 메서드로 추출하여 가독성 향상
-				return Optional.of(DebateChat.builder()
+				DebateChat debateChat = DebateChat.builder()
 					.debate(debate)
 					.debateParticipants(debateParticipants)
 					.content(message.getMessage())
 					.time(message.getTimestamp())
-					.build());
+					.build();
+				// 생성된 DebateChat 객체를 디버그 레벨로 로깅
+				log.debug("DebateChat 생성: {}", debateChat);
+				return Optional.of(debateChat);
 			})
-			.flatMap(Optional::stream) // Optional을 활용하여 null 제거
+			.flatMap(Optional::stream)
 			.toList();
 
+		log.info("변환된 DebateChat 총 수: {}", chatList.size());
 
 		int batchSize = 100;
 		for (int i = 0; i < chatList.size(); i += batchSize) {
 			int end = Math.min(i + batchSize, chatList.size());
 			List<DebateChat> batch = chatList.subList(i, end);
+			log.info("배치 저장 시작: 인덱스 {}부터 {}까지, 배치 크기 = {}", i, end, batch.size());
 			debateChatRepository.saveAll(batch);
-			// 필요한 경우 flush()를 호출하여 DB에 즉시 반영할 수 있습니다.
+			log.info("배치 저장 완료: 인덱스 {}부터 {}까지", i, end);
 			debateChatRepository.flush();
+			log.debug("DB flush 완료: 인덱스 {}부터 {}까지", i, end);
 		}
 
+		log.info("saveChatHistory 완료: roomId = {}", uuid);
 	}
+
 
 	private DebateParticipants findDebateUserByUserName(UUID uuid, String userName) {
 		return debateParticipantsRepository.findByDebate_UuidAndUser_Nickname(uuid, userName)
