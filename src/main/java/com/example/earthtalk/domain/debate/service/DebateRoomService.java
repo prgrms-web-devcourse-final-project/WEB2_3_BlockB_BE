@@ -125,13 +125,13 @@ public class DebateRoomService {
 			log.debug("Debate 객체 생성 완료 - {}", debate);
 
 			debateRepository.save(debate);
-			log.debug("Debate 저장 완료 - Debate ID: {}", debate.getId());
+			log.info("Debate 저장 완료 - Debate ID: {}", debate.getId());
 
 			debateRoomStore.put(debate);
-			log.debug("DebateRoomStore에 Debate 추가 완료 - Debate ID: {}", debate.getId());
+			log.info("DebateRoomStore에 Debate 추가 완료 - Debate ID: {}", debate.getId());
 
 			observerRoomStore.initializeRoom(roomId);
-			log.debug("ObserverRoomStore 초기화 완료 - roomId: {}", roomId);
+			log.info("ObserverRoomStore 초기화 완료 - roomId: {}", roomId);
 
 			// 토론방 생성 완료 로그
 			log.info("createDebateRoom 완료 - 생성된 토론방 ID: {}", roomId);
