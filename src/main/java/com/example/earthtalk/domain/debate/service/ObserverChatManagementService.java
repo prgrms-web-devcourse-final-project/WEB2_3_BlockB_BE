@@ -40,6 +40,7 @@ public class ObserverChatManagementService {
 				.debateParticipants(participants)
 				.content(message.getMessage())
 				.time(message.getTimestamp())
+				.flagtype(FlagType.NO_POSITION)
 				.build();
 		}).toList();
 
