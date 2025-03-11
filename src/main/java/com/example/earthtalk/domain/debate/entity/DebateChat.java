@@ -5,6 +5,8 @@ import java.time.LocalDateTime;
 import com.example.earthtalk.global.baseTime.BaseTimeEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -39,4 +41,8 @@ public class DebateChat extends BaseTimeEntity {
 
     @Column(nullable = false)
     private LocalDateTime time;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "flag_type", nullable = false)
+    private FlagType flagtype;
 }
