@@ -43,19 +43,19 @@ public class DebateRoomStore {
 		log.info("put 메서드 호출 - Debate 생성 시작, Debate ID: {}", debate.getId());
 
 		DebateRoomRedisDto redisDto = DebateRoomRedisDto.fromEntity(debate);
-		log.debug("DebateRoomRedisDto 변환 완료: {}", redisDto);
+		log.info("DebateRoomRedisDto 변환 완료: {}", redisDto);
 
 		String debateKey = redisDto.getUuid().toString();
-		log.debug("생성된 debateKey: {}", debateKey);
+		log.info("생성된 debateKey: {}", debateKey);
 
 		hashOps.put(KEY, debateKey, redisDto);
-		log.debug("Redis hashOps에 put 완료 - KEY: {}, debateKey: {}", KEY, debateKey);
+		log.info("Redis hashOps에 put 완료 - KEY: {}, debateKey: {}", KEY, debateKey);
 
 		double score = redisDto.getCachedTime().toEpochSecond(ZoneOffset.UTC);
-		log.debug("계산된 score: {}", score);
+		log.info("계산된 score: {}", score);
 
 		zSetOps.add(KEY_ZSET, debateKey, score);
-		log.debug("Redis zSetOps에 add 완료 - KEY_ZSET: {}, debateKey: {}, score: {}", KEY_ZSET, debateKey, score);
+		log.info("Redis zSetOps에 add 완료 - KEY_ZSET: {}, debateKey: {}, score: {}", KEY_ZSET, debateKey, score);
 	}
 
 	public Debate get(String roomId) {
@@ -63,9 +63,9 @@ public class DebateRoomStore {
 
 		DebateRoomRedisDto redisDto = hashOps.get(KEY, roomId);
 		if (redisDto != null) {
-			log.debug("Redis에서 조회된 DebateRoomRedisDto: {}", redisDto);
+			log.info("Redis에서 조회된 DebateRoomRedisDto: {}", redisDto);
 			Debate debate = redisDto.toEntity(newsRepository);
-			log.debug("변환된 Debate 엔티티: {}", debate);
+			log.info("변환된 Debate 엔티티: {}", debate);
 			return debate;
 		} else {
 			log.warn("Redis에서 DebateRoomRedisDto를 조회하지 못함 - roomId: {}", roomId);
