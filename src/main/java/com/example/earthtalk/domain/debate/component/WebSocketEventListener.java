@@ -156,57 +156,57 @@ public class WebSocketEventListener {
 
 		// 로그: 메시지에서 StompHeaderAccessor 생성
 		StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
-		log.debug("StompHeaderAccessor 생성 완료");
+		log.info("StompHeaderAccessor 생성 완료");
 
 		String sessionId = event.getSessionId();
-		log.debug("Session ID: {}", sessionId);
+		log.info("Session ID: {}", sessionId);
 
 		// 로그: 세션 속성에서 사용자 이름(userName) 추출
 		String userNameAttr = (String) headerAccessor.getSessionAttributes().get("userName");
-		log.debug("추출된 userName: {}", userNameAttr);
+		log.info("추출된 userName: {}", userNameAttr);
 
 		// 로그: sessionInfoMap에 현재 세션 정보가 있는지 확인
 		if (sessionInfoMap.containsKey(sessionId)) {
-			log.debug("sessionInfoMap에 sessionId 존재: {}", sessionId);
+			log.info("sessionInfoMap에 sessionId 존재: {}", sessionId);
 			SessionInfo sessionInfo = sessionInfoMap.remove(sessionId);
-			log.debug("SessionInfo 제거 완료: {}", sessionInfo);
+			log.info("SessionInfo 제거 완료: {}", sessionInfo);
 
 			if (sessionInfo != null) {
 				String debateRoomId = sessionInfo.getRoomId();
-				log.debug("Debate Room ID: {}", debateRoomId);
+				log.info("Debate Room ID: {}", debateRoomId);
 
 				// 로그: 해당 방의 사용자 수를 계산 (pro와 con 합산)
 				int proCount = debateUserService.getUserCount(debateRoomId).get("pro");
 				int conCount = debateUserService.getUserCount(debateRoomId).get("con");
 				int currentUserCount = proCount + conCount;
-				log.debug("현재 사용자 수 (pro: {}, con: {}, total: {})", proCount, conCount, currentUserCount);
+				log.info("현재 사용자 수 (pro: {}, con: {}, total: {})", proCount, conCount, currentUserCount);
 
 				if (currentUserCount <= 1) {
-					log.debug("사용자 수가 1 이하이므로 채팅 기록 저장 및 방 상태 업데이트를 시도합니다.");
+					log.info("사용자 수가 1 이하이므로 채팅 기록 저장 및 방 상태 업데이트를 시도합니다.");
 					List<DebateMessage> debateMessages = debateMessageStore.removeDebateMessages(debateRoomId);
-					log.debug("삭제된 Debate 메시지 수: {}", debateMessages != null ? debateMessages.size() : 0);
+					log.info("삭제된 Debate 메시지 수: {}", debateMessages != null ? debateMessages.size() : 0);
 
 					List<ObserverMessage> observerMessages = observerMessageStore.removeObserverMessages(debateRoomId);
-					log.debug("삭제된 Observer 메시지 수: {}", observerMessages != null ? observerMessages.size() : 0);
+					log.info("삭제된 Observer 메시지 수: {}", observerMessages != null ? observerMessages.size() : 0);
 
 					if (debateMessages != null && !debateMessages.isEmpty()) {
 						try {
-							log.debug("Debate 채팅 기록 저장 시작");
+							log.info("Debate 채팅 기록 저장 시작");
 							debateChatManagementService.saveChatHistory(debateRoomId, debateMessages);
-							log.debug("Observer 채팅 기록 저장 시작");
+							log.info("Observer 채팅 기록 저장 시작");
 							observerChatManagementService.saveChatHistory(debateRoomId, observerMessages);
-							log.debug("Debate 방 상태 업데이트 시작");
+							log.info("Debate 방 상태 업데이트 시작");
 							debateRoomService.updateStatus(debateRoomId);
-							log.debug("채팅 기록 저장 및 방 상태 업데이트 완료");
+							log.info("채팅 기록 저장 및 방 상태 업데이트 완료");
 						} catch(Exception e) {
 							log.error("채팅 기록 저장 실패: {}", e.getMessage());
 							throw new SaveFailedException(ErrorCode.SAVE_FAILED);
 						}
 					}
 				}
-				log.debug("Debate 사용자 제거 시작: {}", sessionInfo.getUserName());
+				log.info("Debate 사용자 제거 시작: {}", sessionInfo.getUserName());
 				debateUserService.removeUser(debateRoomId, sessionInfo.getUserName());
-				log.debug("Debate 사용자 제거 완료");
+				log.info("Debate 사용자 제거 완료");
 			}
 		}
 
