@@ -253,13 +253,27 @@ public class DebateRoomService {
 	}
 
 	public DebateRoomResponse buildDebateRoomResponse(Debate debate, UUID roomId) {
+		// 로그: 메서드 호출 확인 및 전달된 파라미터 로깅
+		log.debug("buildDebateRoomResponse 호출됨 - Debate ID: {}, Room ID: {}", debate.getId(), roomId);
+
+		// 로그: Pro 사용자 목록 조회 시작
 		Set<String> proUsers = debateUserStore.getProUsers(roomId.toString());
+		log.debug("Pro 사용자 조회 완료 - 사용자 수: {}", proUsers != null ? proUsers.size() : 0);
+
+		// 로그: Pro 사용자 목록을 DebateUserResponse로 변환 시작
 		Set<DebateUserResponse> proResponse = convertUsernamesToUserResponses(proUsers);
+		log.debug("Pro 사용자 응답 변환 완료 - 응답 수: {}", proResponse != null ? proResponse.size() : 0);
 
+		// 로그: Con 사용자 목록 조회 시작
 		Set<String> conUsers  = debateUserStore.getConUsers(roomId.toString());
-		Set<DebateUserResponse> conResponse = convertUsernamesToUserResponses(conUsers);
+		log.debug("Con 사용자 조회 완료 - 사용자 수: {}", conUsers != null ? conUsers.size() : 0);
 
-		return DebateRoomResponse.builder()
+		// 로그: Con 사용자 목록을 DebateUserResponse로 변환 시작
+		Set<DebateUserResponse> conResponse = convertUsernamesToUserResponses(conUsers);
+		log.debug("Con 사용자 응답 변환 완료 - 응답 수: {}", conResponse != null ? conResponse.size() : 0);
+
+		// 로그: DebateRoomResponse 빌더를 사용하여 응답 객체 생성 시작
+		DebateRoomResponse response = DebateRoomResponse.builder()
 			.roomId(debate.getId())
 			.title(debate.getTitle())
 			.description(debate.getDescription())
@@ -273,6 +287,10 @@ public class DebateRoomService {
 			.proUsers(proResponse)
 			.conUsers(conResponse)
 			.resultEnabled(debate.isResultEnabled())
-      		.build();
+			.build();
+		log.debug("DebateRoomResponse 빌드 완료 - Response: {}", response);
+
+		return response;
 	}
+
 }
