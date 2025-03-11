@@ -1,6 +1,10 @@
 package com.example.earthtalk.domain.debate.controller;
 
+import com.example.earthtalk.domain.debate.dto.TurnInfoResponse;
+import com.example.earthtalk.domain.debate.service.DebateTurnManagementService;
 import com.example.earthtalk.domain.debate.store.VoteStore;
+import com.example.earthtalk.domain.news.entity.TimeType;
+import com.example.earthtalk.global.exception.NotFoundException;
 import java.util.UUID;
 
 import com.example.earthtalk.domain.debate.entity.*;
@@ -41,6 +45,7 @@ public class DebateRoomController {
 
 	private final DebateRepository debateRepository;
 	private final DebateRoomService debateRoomService;
+	private final DebateTurnManagementService debateTurnManagementService;
 	private final VoteStore voteStore;
 
 	@Operation(summary = "토론방 상세 조회 API", description = "토론방의 UUID로 상세 정보를 조회합니다.")
@@ -146,6 +151,19 @@ public class DebateRoomController {
 			.neutralNumber(debate.getNeutralNumber())
 			.build();
 
+		return ResponseEntity.ok(ApiResponse.createSuccess(response));
+	}
+
+	@Operation(summary = "토론 턴 조회 API", description = "토론방 중간에 입장한 관전자가 현재 턴 카운트와 남은시간을 조회할 수 있습니다.")
+	@ApiResponses(value = {
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "성공"),
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 토론방을 찾을 수 없습니다."),
+	})
+	@GetMapping("/turn/{uuid}")
+	public ResponseEntity<ApiResponse<TurnInfoResponse>> getCurrentTurn(@PathVariable String uuid){
+		TimeType timeType = debateRepository.findByUuid(UUID.fromString(uuid))
+			.orElseThrow(()->new NotFoundException(ErrorCode.DEBATEROOM_NOT_FOUND)).getTime();
+		TurnInfoResponse response = debateTurnManagementService.getCurrentTurn(UUID.fromString(uuid), timeType);
 		return ResponseEntity.ok(ApiResponse.createSuccess(response));
 	}
 }

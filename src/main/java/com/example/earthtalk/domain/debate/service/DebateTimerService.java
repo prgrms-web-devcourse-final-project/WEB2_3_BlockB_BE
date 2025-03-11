@@ -48,7 +48,7 @@ public class DebateTimerService {
             "message", "잠시 후 토론이 시작됩니다... "
         );
         messagingTemplate.convertAndSend("/topic/debate/" + roomId.toString(), message);
-        debateTurnManagementService.createDebateTurn(roomId,timeType);
+        debateTurnManagementService.createDebateTurn(roomId,timeType, speakCountType);
         System.out.println("Debate started for " + roomId);
     }
 
