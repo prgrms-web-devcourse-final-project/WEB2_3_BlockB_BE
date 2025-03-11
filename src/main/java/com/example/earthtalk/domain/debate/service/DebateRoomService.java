@@ -251,7 +251,7 @@ public class DebateRoomService {
 
 
 		WaitRoomResponse response =  WaitRoomResponse.builder()
-			.roomId(debate.getId())
+			.roomId(debate.getUuid())
 			.title(debate.getTitle())
 			.description(debate.getDescription())
 			.memberNumberType(debate.getMember().getValue())
