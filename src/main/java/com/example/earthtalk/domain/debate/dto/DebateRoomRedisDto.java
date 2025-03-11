@@ -86,7 +86,7 @@ public class DebateRoomRedisDto implements Serializable {
 				.map(p -> p.getId().toString())
 				.collect(Collectors.toList()))
 			.build();
-		log.debug("fromEntity 완료 - 생성된 DebateRoomRedisDto: {}", dto);
+		log.info("fromEntity 완료 - 생성된 DebateRoomRedisDto: {}", dto);
 		return dto;
 	}
 
@@ -118,12 +118,12 @@ public class DebateRoomRedisDto implements Serializable {
 					})
 			);
 		} else {
-			log.debug("toEntity - 뉴스 ID 없음, null 처리");
+			log.info("toEntity - 뉴스 ID 없음, null 처리");
 			builder.news(null);
 		}
 
 		Debate debate = builder.build();
-		log.debug("toEntity 완료 - 생성된 Debate 엔티티: {}", debate);
+		log.info("toEntity 완료 - 생성된 Debate 엔티티: {}", debate);
 		return debate;
 	}
 
