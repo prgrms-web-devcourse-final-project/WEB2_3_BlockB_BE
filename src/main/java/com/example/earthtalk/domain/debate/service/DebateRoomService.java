@@ -227,7 +227,6 @@ public class DebateRoomService {
 				e.printStackTrace();
 			}
 		}
-		log.info("processDebateResult : modifiedUsers.size() = {}", modifiedUsers.size());
 		userRepository.saveAll(modifiedUsers);
 
 		debate.updateVoteCounts(voteStatus.getPro(), voteStatus.getCon(), voteStatus.getNeutral());
@@ -242,7 +241,6 @@ public class DebateRoomService {
 	}
 
 	public WaitRoomResponse buildWaitRoomResponse(Debate debate, UUID roomId) {
-		log.info("buildWaitResponse 메서드 시작 : {}", debate);
 		Set<String> proUsers = debateUserStore.getProUsers(roomId.toString());
 		Set<DebateUserResponse> proResponse = convertUsernamesToUserResponses(proUsers);
 
@@ -326,7 +324,6 @@ public class DebateRoomService {
 	}
 
 	public static DebateUserResponse fromParticipants(DebateParticipants debateParticipant) {
-		log.info("fromParticipants 작업 시작 {}", debateParticipant);
 		User user = debateParticipant.getUser();
 		return DebateUserResponse.builder()
 			.id(user.getId())
