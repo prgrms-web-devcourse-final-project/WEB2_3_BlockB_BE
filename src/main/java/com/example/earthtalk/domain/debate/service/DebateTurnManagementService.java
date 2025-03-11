@@ -1,5 +1,6 @@
 package com.example.earthtalk.domain.debate.service;
 
+import com.example.earthtalk.domain.debate.dto.TurnInfoResponse;
 import com.example.earthtalk.domain.debate.entity.EventType;
 import com.example.earthtalk.domain.debate.entity.FlagType;
 import com.example.earthtalk.domain.debate.entity.RoomType;
@@ -22,11 +23,13 @@ public class DebateTurnManagementService {
 
     private final Map<UUID, ScheduledFuture<?>> turnScheduler = new ConcurrentHashMap<>();
     private final Map<UUID, FlagType> debateTurns = new ConcurrentHashMap<>();
+    private final Map<UUID, Integer> turnCounts = new ConcurrentHashMap<>();
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(50);
     private final SimpMessagingTemplate messagingTemplate;
 
-    public void createDebateTurn(UUID roomId, TimeType timeType) {
+    public void createDebateTurn(UUID roomId, TimeType timeType, SpeakCountType speakCountType) {
         debateTurns.put(roomId, FlagType.NO_POSITION);
+        turnCounts.put(roomId, speakCountType.getValue());
         scheduler.schedule(()-> {
             Map<String, Object> message = Map.of(
                 "event", EventType.STATUS,
@@ -47,13 +50,14 @@ public class DebateTurnManagementService {
             debateTurns.put(roomId, FlagType.PRO);
             System.out.println("Debate Started for " + roomId);
         }
-
         Map<String, Object> message1 = Map.of(
             "event", EventType.NOTIFICATION,
-            "message", "10초 후 턴이 바뀝니다..."
+            "message", "10초 후 발언이 종료됩니다."
         );
         messagingTemplate.convertAndSend("/topic/debate/" + roomId.toString(), message1);
         System.out.println("10 Seconds to change turn.... for " + roomId);
+
+        if(turnCounts.get(roomId) <= 1) return;
 
         FlagType currentTurn = debateTurns.get(roomId);
         FlagType nextTurn = switch (currentTurn) {
@@ -63,6 +67,7 @@ public class DebateTurnManagementService {
         };
         String turn = nextTurn == FlagType.PRO ? "찬성" : "반대";
         scheduler.schedule(() -> {
+            turnCounts.put(roomId, turnCounts.get(roomId) - 1);
             Map<String, Object> message2 = Map.of(
                 "event", EventType.TURN,
                 "turn", nextTurn,
@@ -82,6 +87,19 @@ public class DebateTurnManagementService {
         }
         System.out.println("Remove debate turn for " + roomId);
 
+    }
+
+    public TurnInfoResponse getCurrentTurn(UUID roomId, TimeType timeType) {
+        int delay = (int) turnScheduler.get(roomId).getDelay(TimeUnit.SECONDS);
+
+        if( delay >= timeType.getValue() - 10 && delay <= timeType.getValue() ) {
+            delay = delay - timeType.getValue() - 10;
+        }
+
+        return TurnInfoResponse.builder()
+            .flagType(debateTurns.get(roomId))
+            .turnCount(delay -1)
+            .build();
     }
 
 }
