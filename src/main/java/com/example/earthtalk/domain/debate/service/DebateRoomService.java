@@ -249,8 +249,7 @@ public class DebateRoomService {
 		Set<String> conUsers  = debateUserStore.getConUsers(roomId.toString());
 		Set<DebateUserResponse> conResponse = convertUsernamesToUserResponses(conUsers);
 
-
-		WaitRoomResponse response =  WaitRoomResponse.builder()
+		return WaitRoomResponse.builder()
 			.roomId(debate.getUuid())
 			.title(debate.getTitle())
 			.description(debate.getDescription())
@@ -263,17 +262,8 @@ public class DebateRoomService {
 			.speakCountType(debate.getSpeakCount().getValue())
 			.proUsers(proResponse)
 			.conUsers(conResponse)
+			.resultEnabled(debate.isResultEnabled())
 			.build();
-
-		ObjectMapper mapper = new ObjectMapper();
-		try {
-			String responseJson = mapper.writeValueAsString(response);
-			log.info("전체 WaitRoomResponse 상세 정보: {}", responseJson);
-		} catch (JsonProcessingException e) {
-			log.error("WaitRoomResponse JSON 변환 실패", e);
-		}
-
-		return response;
 	}
 
 	private Set<DebateUserResponse> convertUsernamesToUserResponses(Set<String> usernames) {
@@ -295,12 +285,8 @@ public class DebateRoomService {
 	}
 
 	public DebateRoomResponse buildDebateRoomResponse(Debate debate, UUID roomId) {
-		// 로그: 메서드 호출 확인 및 전달된 파라미터 로깅
-		log.info("buildDebateRoomResponse 호출됨 - Debate ID: {}, Room ID: {}", debate.getId(), roomId);
 
-		// 로그: Pro 사용자 목록 조회 시작
 		List<DebateParticipants> proUsers = debateParticipantsRepository.findByDebate_UuidAndPosition(roomId, FlagType.PRO);
-		log.info("Pro 사용자 조회 완료 - 사용자 수: {}", proUsers != null ? proUsers.size() : 0);
 
 		Set<DebateUserResponse> proResponse = new HashSet<>();
 
@@ -313,7 +299,6 @@ public class DebateRoomService {
 
 		// 로그: Con 사용자 목록 조회 시작
 		List<DebateParticipants> conUsers  = debateParticipantsRepository.findByDebate_UuidAndPosition(roomId, FlagType.CON);
-		log.info("Con 사용자 조회 완료 - 사용자 수: {}", conUsers != null ? conUsers.size() : 0);
 		assert conUsers != null;
 		for (DebateParticipants conUser : conUsers) {
 			conResponse.add(fromParticipants(conUser));
@@ -336,13 +321,7 @@ public class DebateRoomService {
 			.conUsers(conResponse)
 			.resultEnabled(debate.isResultEnabled())
 			.build();
-		ObjectMapper mapper = new ObjectMapper();
-		try {
-			String responseJson = mapper.writeValueAsString(response);
-			log.info("전체 DebateRoomResponse 상세 정보: {}", responseJson);
-		} catch (JsonProcessingException e) {
-			log.error("DebateRoomResponse JSON 변환 실패", e);
-		}
+
 		return response;
 	}
 
