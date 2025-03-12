@@ -128,8 +128,6 @@ public class DebateUserService {
 					debateUserStore.getProUsers(roomId),
 					debateUserStore.getConUsers(roomId)
 				);
-				debateUserStore.removeProUsers(roomId);
-				debateUserStore.removeConUsers(roomId);
 			}
 		} finally {
 			lock.unlock();
