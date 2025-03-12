@@ -30,17 +30,16 @@ public class DebateTurnManagementService {
     public void createDebateTurn(UUID roomId, TimeType timeType, SpeakCountType speakCountType) {
         debateTurns.put(roomId, FlagType.NO_POSITION);
         turnCounts.put(roomId, speakCountType.getValue()*2);
-        scheduler.schedule(()-> {
-            Map<String, Object> message = Map.of(
-                "event", EventType.STATUS,
-                "status", RoomType.DEBATE,
-                "message", "토론이 시작되었습니다."
-            );
-            messagingTemplate.convertAndSend("/topic/debate/" + roomId.toString(), message);
-            ScheduledFuture<?> debateTurnThread = scheduler.scheduleAtFixedRate(() ->
-                switchTurn(roomId), 20, timeType.getValue(), TimeUnit.SECONDS);
-            turnScheduler.put(roomId, debateTurnThread);
-        }, 5, TimeUnit.SECONDS);
+        Map<String, Object> message = Map.of(
+            "event", EventType.STATUS,
+            "status", RoomType.DEBATE,
+            "message", "토론이 시작되었습니다."
+        );
+        messagingTemplate.convertAndSend("/topic/debate/" + roomId.toString(), message);
+        ScheduledFuture<?> debateTurnThread = scheduler.scheduleAtFixedRate(() ->
+            switchTurn(roomId), 20, timeType.getValue(), TimeUnit.SECONDS);
+        turnScheduler.put(roomId, debateTurnThread);
+
 
         System.out.println("Create debate turn for " + roomId);
     }
