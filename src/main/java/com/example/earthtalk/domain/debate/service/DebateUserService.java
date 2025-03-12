@@ -1,6 +1,7 @@
 package com.example.earthtalk.domain.debate.service;
 
 import com.example.earthtalk.domain.debate.entity.EventType;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -23,6 +24,7 @@ import com.example.earthtalk.domain.debate.entity.FlagType;
 import com.example.earthtalk.domain.debate.entity.RoomType;
 import com.example.earthtalk.domain.debate.repository.DebateRepository;
 import com.example.earthtalk.domain.debate.store.DebateMessageStore;
+import com.example.earthtalk.domain.debate.store.DebateRoomStore;
 import com.example.earthtalk.domain.debate.store.DebateUserStore;
 import com.example.earthtalk.domain.debate.entity.DebateParticipants;
 import com.example.earthtalk.domain.debate.repository.DebateParticipantsRepository;
@@ -51,6 +53,7 @@ public class DebateUserService {
 
 	// 사용자 상태 관리를 담당하는 별도의 컴포넌트
 	private final DebateUserStore debateUserStore;
+	private final DebateRoomStore debateRoomStore;
 	private final DebateRepository debateRepository;
 
 	private final RedissonClient redissonClient;
@@ -110,7 +113,7 @@ public class DebateUserService {
 				debateUserStore.addConUser(roomId, userName);
 			} else if ("observer".equalsIgnoreCase(position)) {
 				observerRoomStore.addUser(roomId, userName);
-				log.info("room {} 에 observer 참여 : {}" , roomId, userName);
+				log.info("room {} 에 observer 참여 : {}", roomId, userName);
 			} else {
 				throw new IllegalArgumentException(ErrorCode.METHOD_NOT_ALLOWED.getMessage());
 			}
@@ -144,72 +147,117 @@ public class DebateUserService {
 	 * @param userName 퇴장하는 사용자 이름
 	 */
 	public void removeUser(String roomId, String userName) {
+		log.info("removeUser 시작 - roomId: {}, userName: {}", roomId, userName);
 
 		RLock lock = redissonClient.getLock("debate:lock:" + roomId);
 		lock.lock();
 		try {
 			boolean removed = false;
+			log.info("Lock 획득 완료 - roomId: {}", roomId);
 
 			Debate debate = debateRepository.findByUuid(UUID.fromString(roomId))
-				.orElseThrow(() -> new IllegalArgumentException(ErrorCode.DEBATEROOM_NOT_FOUND.getMessage()));
+				.orElseThrow(() -> {
+					log.info("Debate room 조회 실패 - roomId: {}", roomId);
+					return new IllegalArgumentException(ErrorCode.DEBATEROOM_NOT_FOUND.getMessage());
+				});
+			log.info("Debate room 조회 성공 - roomId: {}", roomId);
 
 			Set<String> proSet = debateUserStore.getProUsers(roomId);
 			if (proSet.contains(userName)) {
+				log.info("Pro 사용자 존재 확인 - roomId: {}, userName: {}", roomId, userName);
 				removed = proSet.remove(userName);
+				log.info("Pro 사용자 제거 결과 - roomId: {}, userName: {}, removed: {}", roomId, userName, removed);
 				if (proSet.isEmpty()) {
 					debateUserStore.removeProUsers(roomId);
+					log.info("Pro 사용자 집합 비어 있음 - roomId: {} 처리 완료", roomId);
 				}
+			} else {
+				log.info("Pro 사용자에 해당하지 않음 - roomId: {}, userName: {}", roomId, userName);
 			}
 
 			Set<String> conSet = debateUserStore.getConUsers(roomId);
 			if (conSet.contains(userName)) {
+				log.info("Con 사용자 존재 확인 - roomId: {}, userName: {}", roomId, userName);
 				removed = conSet.remove(userName) || removed;
+				log.info("Con 사용자 제거 결과 - roomId: {}, userName: {}, removed: {}", roomId, userName, removed);
 				if (conSet.isEmpty()) {
 					debateUserStore.removeConUsers(roomId);
+					log.info("Con 사용자 집합 비어 있음 - roomId: {} 처리 완료", roomId);
 				}
+			} else {
+				log.info("Con 사용자에 해당하지 않음 - roomId: {}, userName: {}", roomId, userName);
 			}
 
 			if (removed) {
+				log.info("사용자 제거 성공 - roomId: {}, userName: {}. 사용자 수 업데이트 및 퇴장 메시지 전송", roomId, userName);
 				sendUserCountUpdate(roomId);
 				sendUserLeftMessage(roomId, userName);
+			} else {
+				log.info("사용자 제거 시도 실패 또는 해당 사용자가 존재하지 않음 - roomId: {}, userName: {}", roomId, userName);
 			}
 
-			if (debate.getMember().getValue() != 1
+			if ((debate.getMember().getValue() != 1
 				&& ((proSet.size() <= 1 || conSet.size() <= 1)
 				&& debate.getAgreeNumber() == 0
 				&& debate.getDisagreeNumber() == 0
-				&& debate.getNeutralNumber() == 0)) {
+				&& debate.getNeutralNumber() == 0))
+				|| (debate.getMember().getValue() == 1
+				&& (proSet.isEmpty() || conSet.isEmpty()
+				&& debate.getAgreeNumber() == 0
+				&& debate.getDisagreeNumber() == 0
+				&& debate.getNeutralNumber() == 0))) {
+				log.info("특정 조건 충족 - 채팅 기록 저장 및 결과 처리 시작 - roomId: {}", roomId);
 				List<DebateMessage> debateMessages = debateMessageStore.removeDebateMessages(roomId);
 				List<ObserverMessage> observerMessages = observerMessageStore.removeObserverMessages(roomId);
-				if (debateMessages != null && !debateMessages.isEmpty()) {
-					try {
+				log.info("메시지 삭제 완료 - debateMessages: {}개, observerMessages: {}개",
+					debateMessages != null ? debateMessages.size() : 0,
+					observerMessages != null ? observerMessages.size() : 0);
+				try {
+					if (debateMessages != null && !debateMessages.isEmpty()) {
+						log.info("Debate 채팅 기록 저장 시작");
 						debateChatManagementService.saveChatHistory(roomId, debateMessages);
-						observerChatManagementService.saveChatHistory(roomId, observerMessages);
-						if (debate.isResultEnabled()) {
-							FlagType winningTeam = determineWinningTeam(proSet.size());
-							updateParticipantsResult(debate, winningTeam);
-
-							String victoryMsg = winningTeam == FlagType.PRO
-								? "찬성 팀이 승리했습니다."
-								: "반대 팀이 승리했습니다.";
-
-							DebateResultMessage victoryMessage = DebateResultMessage.builder()
-								.event(EventType.NOTIFICATION)
-								.roomId(roomId)
-								.message(victoryMsg)
-								.build();
-
-							messagingTemplate.convertAndSend("/topic/debate/" + roomId, victoryMessage);
-							messagingTemplate.convertAndSend("/topic/observer/" + roomId, victoryMessage);
-
-						}
-					} catch (Exception e) {
-						throw new SaveFailedException(ErrorCode.SAVE_FAILED);
+					} else {
+						log.info("Debate 메시지가 null 또는 비어 있음");
 					}
+
+					// Observer 메시지 저장: null 또는 empty 인 경우 처리하지 않음
+					if (observerMessages != null && !observerMessages.isEmpty()) {
+						log.info("Observer 채팅 기록 저장 시작");
+						observerChatManagementService.saveChatHistory(roomId, observerMessages);
+					} else {
+						log.info("Observer 메시지가 null 또는 비어 있음");
+					}
+					if (debate.isResultEnabled()) {
+						FlagType winningTeam = determineWinningTeam(proSet.size());
+						updateParticipantsResult(debate, winningTeam);
+						log.info("결과 처리 완료 - roomId: {}, winningTeam: {}", roomId, winningTeam);
+
+						String victoryMsg = winningTeam == FlagType.PRO
+							? "한쪽 팀이 중도 퇴장 하여 찬성 팀이 승리했습니다."
+							: "한쪽 팀의 중도 퇴장 하여 반대 팀이 승리했습니다.";
+
+						DebateResultMessage victoryMessage = DebateResultMessage.builder()
+							.event(EventType.WIN_BY_DEFAULT)
+							.roomId(roomId)
+							.message(victoryMsg)
+							.build();
+
+						messagingTemplate.convertAndSend("/topic/debate/" + roomId, victoryMessage);
+						messagingTemplate.convertAndSend("/topic/observer/" + roomId, victoryMessage);
+						log.info("승리 메시지 전송 완료 - roomId: {}, message: {}", roomId, victoryMsg);
+
+						debateRoomStore.remove(roomId);
+						debateUserStore.removeDebateRoom(roomId);
+						observerRoomStore.removeRoom(roomId);
+					}
+				} catch (Exception e) {
+					log.info("채팅 기록 저장 실패 - roomId: {}, error: {}", roomId, e.getMessage());
+					throw new SaveFailedException(ErrorCode.SAVE_FAILED);
 				}
 			}
 		} finally {
 			lock.unlock();
+			log.info("Lock 해제 완료 - roomId: {}", roomId);
 		}
 	}
 
@@ -227,7 +275,6 @@ public class DebateUserService {
 			debate.updateRoomType(RoomType.CLOSED);
 		}
 	}
-
 
 	/**
 	 * 주어진 토론방의 현재 사용자 수를 반환합니다.

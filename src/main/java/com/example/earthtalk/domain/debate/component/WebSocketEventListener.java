@@ -1,7 +1,9 @@
 package com.example.earthtalk.domain.debate.component;
 
 import com.example.earthtalk.domain.debate.service.DebateTurnManagementService;
+
 import java.util.UUID;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -89,9 +91,9 @@ public class WebSocketEventListener {
 		if (destination != null && !destination.startsWith("/room-list")) {
 			// HandshakeInterceptor에서 저장한 세션 속성에서 값 조회
 			Map<String, Object> sessionAttributes = headerAccessor.getSessionAttributes();
-			String roomId = sessionAttributes != null ? (String) sessionAttributes.get("roomId") : null;
-			String userName = sessionAttributes != null ? (String) sessionAttributes.get("userName") : null;
-			String position = sessionAttributes != null ? (String) sessionAttributes.get("position") : null;
+			String roomId = sessionAttributes != null ? (String)sessionAttributes.get("roomId") : null;
+			String userName = sessionAttributes != null ? (String)sessionAttributes.get("userName") : null;
+			String position = sessionAttributes != null ? (String)sessionAttributes.get("position") : null;
 
 			log.info("세션 속성 - roomId: {}, userName: {}, position: {}", roomId, userName, position);
 
@@ -113,11 +115,13 @@ public class WebSocketEventListener {
 						log.info("Debate 참여 성공 - roomId: {}, userName: {}, position: {}", roomId, userName, position);
 					} catch (Exception e) {
 						sessionInfoMap.remove(headerAccessor.getSessionId());
-						log.error("Debate 사용자 추가 실패 - roomId: {}, userName: {}. 예외 메시지: {}", roomId, userName, e.getMessage(), e);
+						log.error("Debate 사용자 추가 실패 - roomId: {}, userName: {}. 예외 메시지: {}", roomId, userName,
+							e.getMessage(), e);
 						throw new IllegalArgumentException(ErrorCode.CHAT_NOT_FOUND);
 					}
 				} else {
-					log.warn("Debate 참여 필수 속성이 누락됨 - roomId: {}, userName: {}, position: {}", roomId, userName, position);
+					log.warn("Debate 참여 필수 속성이 누락됨 - roomId: {}, userName: {}, position: {}", roomId, userName,
+						position);
 				}
 			}
 			// Observer 관련 구독 처리
@@ -166,7 +170,7 @@ public class WebSocketEventListener {
 		log.info("Session ID: {}", sessionId);
 
 		// 로그: 세션 속성에서 사용자 이름(userName) 추출
-		String userNameAttr = (String) headerAccessor.getSessionAttributes().get("userName");
+		String userNameAttr = (String)headerAccessor.getSessionAttributes().get("userName");
 		log.info("추출된 userName: {}", userNameAttr);
 
 		// 로그: sessionInfoMap에 현재 세션 정보가 있는지 확인
@@ -184,49 +188,13 @@ public class WebSocketEventListener {
 				int conCount = debateUserService.getUserCount(debateRoomId).get("con");
 				int currentUserCount = proCount + conCount;
 				log.info("현재 사용자 수 (pro: {}, con: {}, total: {})", proCount, conCount, currentUserCount);
+					log.info("Debate 사용자 제거 시작: {}", sessionInfo.getUserName());
+					debateUserService.removeUser(debateRoomId, sessionInfo.getUserName());
+					log.info("Debate 사용자 제거 완료");
 
-				if (currentUserCount <= 1) {
-					log.info("사용자 수가 1 이하이므로 채팅 기록 저장 및 방 상태 업데이트를 시도합니다.");
-					List<DebateMessage> debateMessages = debateMessageStore.removeDebateMessages(debateRoomId);
-					int debateMsgCount = debateMessages != null ? debateMessages.size() : 0;
-					log.info("삭제된 Debate 메시지 수: {}", debateMsgCount);
-
-					List<ObserverMessage> observerMessages = observerMessageStore.removeObserverMessages(debateRoomId);
-					int observerMsgCount = observerMessages != null ? observerMessages.size() : 0;
-					log.info("삭제된 Observer 메시지 수: {}", observerMsgCount);
-
-					try {
-						// Debate 메시지 저장: null 또는 empty 인 경우 처리하지 않음
-						if (debateMessages != null && !debateMessages.isEmpty()) {
-							log.info("Debate 채팅 기록 저장 시작");
-							debateChatManagementService.saveChatHistory(debateRoomId, debateMessages);
-						} else {
-							log.info("Debate 메시지가 null 또는 비어 있음");
-						}
-
-						// Observer 메시지 저장: null 또는 empty 인 경우 처리하지 않음
-						if (observerMessages != null && !observerMessages.isEmpty()) {
-							log.info("Observer 채팅 기록 저장 시작");
-							observerChatManagementService.saveChatHistory(debateRoomId, observerMessages);
-						} else {
-							log.info("Observer 메시지가 null 또는 비어 있음");
-						}
-
-						debateRoomStore.remove(debateRoomId);
-						debateUserStore.removeDebateRoom(debateRoomId);
-						observerRoomStore.removeRoom(debateRoomId);
-
-						log.info("Debate 방 상태 업데이트 시작");
-						debateRoomService.updateStatus(debateRoomId);
-						log.info("채팅 기록 저장 및 방 상태 업데이트 완료");
-					} catch(Exception e) {
-						log.error("채팅 기록 저장 실패: {}", e.getMessage());
-						throw new SaveFailedException(ErrorCode.SAVE_FAILED);
-					}
-				}
-				log.info("Debate 사용자 제거 시작: {}", sessionInfo.getUserName());
-				debateUserService.removeUser(debateRoomId, sessionInfo.getUserName());
-				log.info("Debate 사용자 제거 완료");
+					log.info("Debate 방 상태 업데이트 시작");
+					debateRoomService.updateStatus(debateRoomId);
+					log.info("채팅 기록 저장 및 방 상태 업데이트 완료");
 			}
 		}
 
@@ -247,6 +215,5 @@ public class WebSocketEventListener {
 		webSocketIdleSessionMonitor.unregisterSession(sessionId);
 		log.debug("웹소켓 Idle 세션 모니터 등록 해제 완료");
 	}
-
 
 }

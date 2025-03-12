@@ -285,9 +285,8 @@ public class DebateRoomService {
 	public DebateRoomResponse buildDebateRoomResponse(Debate debate, UUID roomId) {
 
 		List<DebateParticipants> proUsers = debateParticipantsRepository.findByDebate_UuidAndPosition(roomId, FlagType.PRO);
-
+		log.info("proUsers: {}", proUsers);
 		Set<DebateUserResponse> proResponse = new HashSet<>();
-
 		assert proUsers != null;
 		for (DebateParticipants proUser : proUsers) {
 			proResponse.add(fromParticipants(proUser));
@@ -297,6 +296,7 @@ public class DebateRoomService {
 
 		// 로그: Con 사용자 목록 조회 시작
 		List<DebateParticipants> conUsers  = debateParticipantsRepository.findByDebate_UuidAndPosition(roomId, FlagType.CON);
+		log.info("conUsers: {}", conUsers);
 		assert conUsers != null;
 		for (DebateParticipants conUser : conUsers) {
 			conResponse.add(fromParticipants(conUser));
