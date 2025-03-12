@@ -28,7 +28,10 @@ import com.example.earthtalk.domain.debate.service.DebateUserService;
 import com.example.earthtalk.domain.debate.service.ObserverChatManagementService;
 import com.example.earthtalk.domain.debate.service.ObserverUserService;
 import com.example.earthtalk.domain.debate.store.DebateMessageStore;
+import com.example.earthtalk.domain.debate.store.DebateRoomStore;
+import com.example.earthtalk.domain.debate.store.DebateUserStore;
 import com.example.earthtalk.domain.debate.store.ObserverMessageStore;
+import com.example.earthtalk.domain.debate.store.ObserverRoomStore;
 import com.example.earthtalk.global.exception.ErrorCode;
 import com.example.earthtalk.global.exception.IllegalArgumentException;
 import com.example.earthtalk.global.exception.SaveFailedException;
@@ -44,7 +47,6 @@ public class WebSocketEventListener {
 
 	private final DebateUserService debateUserService;
 	private final DebateRoomService debateRoomService;
-	private final DebateTurnManagementService debateTurnManagementService;
 
 	private final DebateChatManagementService debateChatManagementService;
 	private final ObserverChatManagementService observerChatManagementService;
@@ -59,8 +61,10 @@ public class WebSocketEventListener {
 
 	private final DebateMessageStore debateMessageStore;
 	private final ObserverMessageStore observerMessageStore;
-	private final DebateRepository debateRepository;
-	private final DebateService debateService;
+
+	private final DebateRoomStore debateRoomStore;
+	private final DebateUserStore debateUserStore;
+	private final ObserverRoomStore observerRoomStore;
 
 	/**
 	 * WebSocket 연결 이벤트를 처리하여 세션 정보를 저장하고, 해당 채팅방에 사용자를 추가합니다.
@@ -207,6 +211,10 @@ public class WebSocketEventListener {
 						} else {
 							log.info("Observer 메시지가 null 또는 비어 있음");
 						}
+
+						debateRoomStore.remove(debateRoomId);
+						debateUserStore.removeDebateRoom(debateRoomId);
+						observerRoomStore.removeRoom(debateRoomId);
 
 						log.info("Debate 방 상태 업데이트 시작");
 						debateRoomService.updateStatus(debateRoomId);

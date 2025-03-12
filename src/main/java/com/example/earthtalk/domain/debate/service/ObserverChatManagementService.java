@@ -57,9 +57,6 @@ public class ObserverChatManagementService {
 				debateChatRepository.flush();
 			}
 		}
-		debateRoomStore.remove(roomId);
-		debateUserStore.removeDebateRoom(roomId);
-		observerRoomStore.removeRoom(roomId);
 
 		debateChatRepository.flush();
 	}
