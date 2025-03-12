@@ -2,6 +2,7 @@ package com.example.earthtalk.domain.debate.service;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -15,6 +16,7 @@ import com.example.earthtalk.domain.debate.dto.DebateMetaDataRoomResponse;
 import com.example.earthtalk.domain.debate.dto.DebateRoomResponse;
 import com.example.earthtalk.domain.debate.dto.DebateUserResponse;
 import com.example.earthtalk.domain.debate.entity.Debate;
+import com.example.earthtalk.domain.debate.entity.FlagType;
 import com.example.earthtalk.domain.debate.repository.DebateRepository;
 import com.example.earthtalk.domain.debate.store.DebateRoomStore;
 import com.example.earthtalk.domain.debate.store.DebateUserStore;
@@ -91,18 +93,74 @@ public class DebateMetaDataService {
 			Long currentCount = observerRoomStore.getObserverCount(roomId);
 			Long maxCount = observerRoomStore.getMaxObserverCount(roomId);
 
+			Set<String> redisProUsers = debateUserStore.getProUsers(roomId);
+			Set<String> redisConUsers = debateUserStore.getConUsers(roomId);
 
-			DebateRoomResponse roomResponse = debateRoomService.buildDebateRoomResponse(debate, debate.getUuid());
+			Set<DebateUserResponse> proUserResponses = new HashSet<>();
+			for (String userName : redisProUsers) {
+				User user = userRepository.findByNickname(userName)
+					.orElseThrow(null);
+				proUserResponses.add(DebateUserResponse.builder()
+						.id(user.getId())
+						.nickname(user.getNickname())
+						.email(user.getEmail())
+						.position(FlagType.PRO)
+						.introduction(user.getIntroduction())
+						.defeatNumber(user.getDefeatNumber())
+						.winNumber(user.getWinNumber())
+						.drawNumber(user.getDrawNumber())
+						.defeatNumber(user.getDefeatNumber())
+						.profileUrl(user.getProfileUrl())
+					.build());
+			}
+
+			Set<DebateUserResponse> conUserResponses = new HashSet<>();
+
+			for (String userName : redisConUsers) {
+				User user = userRepository.findByNickname(userName)
+					.orElseThrow(null);
+				conUserResponses.add(DebateUserResponse.builder()
+					.id(user.getId())
+					.nickname(user.getNickname())
+					.email(user.getEmail())
+					.position(FlagType.CON)
+					.introduction(user.getIntroduction())
+					.defeatNumber(user.getDefeatNumber())
+					.winNumber(user.getWinNumber())
+					.drawNumber(user.getDrawNumber())
+					.defeatNumber(user.getDefeatNumber())
+					.profileUrl(user.getProfileUrl())
+					.build());
+			}
+
+			DebateRoomResponse roomResponse = DebateRoomResponse.builder()
+				.uuid(debate.getUuid())
+				.title(debate.getTitle())
+				.description(debate.getDescription())
+				.memberNumberType(debate.getMember().getValue())
+				.categoryType(debate.getCategory())
+				.continentType(debate.getContinent())
+				.newsUrl(debate.getNews() != null ? debate.getNews().getLink() : null)
+				.status(debate.getStatus())
+				.timeType(debate.getTime().getValue())
+				.speakCountType(debate.getSpeakCount().getValue())
+				.proUsers(proUserResponses)
+				.conUsers(conUserResponses)
+				.resultEnabled(debate.isResultEnabled())
+				.build();
 
 			DebateMetaDataResponse response = DebateMetaDataResponse.builder()
 				.debateRoomResponse(roomResponse)
 				.currentCount(currentCount)
 				.maxCount(maxCount)
 				.build();
+
 			responses.add(response);
 		}
 		return responses;
 	}
+
+
 
 
 
