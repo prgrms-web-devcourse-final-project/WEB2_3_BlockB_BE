@@ -241,6 +241,7 @@ public class DebateUserService {
 						DebateResultMessage victoryMessage = DebateResultMessage.builder()
 							.event(EventType.WIN_BY_DEFAULT)
 							.roomId(roomId)
+							.winner(winningTeam)
 							.message(victoryMsg)
 							.build();
 
