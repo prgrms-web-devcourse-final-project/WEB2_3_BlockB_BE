@@ -28,7 +28,7 @@ public class DebateTurnManagementService {
     private final SimpMessagingTemplate messagingTemplate;
 
     public void createDebateTurn(UUID roomId, TimeType timeType, SpeakCountType speakCountType) {
-        debateTurns.put(roomId, FlagType.NO_POSITION);
+        debateTurns.put(roomId, FlagType.PRO);
         turnCounts.put(roomId, speakCountType.getValue()*2);
         Map<String, Object> message = Map.of(
             "event", EventType.STATUS,
@@ -40,15 +40,10 @@ public class DebateTurnManagementService {
             switchTurn(roomId), 20, timeType.getValue(), TimeUnit.SECONDS);
         turnScheduler.put(roomId, debateTurnThread);
 
-
         System.out.println("Create debate turn for " + roomId);
     }
 
     private void switchTurn(UUID roomId) {
-        if (debateTurns.get(roomId) == FlagType.NO_POSITION) {
-            debateTurns.put(roomId, FlagType.PRO);
-            System.out.println("Debate Started for " + roomId);
-        }
         Map<String, Object> message1 = Map.of(
             "event", EventType.NOTIFICATION,
             "message", "10초 후 발언이 종료됩니다."

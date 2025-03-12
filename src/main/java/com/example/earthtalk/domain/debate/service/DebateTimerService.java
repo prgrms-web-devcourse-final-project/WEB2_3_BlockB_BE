@@ -39,17 +39,17 @@ public class DebateTimerService {
     private final Map<UUID, ScheduledFuture<?>> voteTimers = new ConcurrentHashMap<>();
 
     public void startDebateTimer(UUID roomId, TimeType timeType, SpeakCountType speakCountType) {
-        debateTimers.put(roomId,
-            scheduler.schedule(() -> endDebate(roomId),
-                (long) timeType.getValue() * speakCountType.getValue() * 2 - 30, TimeUnit.SECONDS));
-
         Map<String, Object> message = Map.of(
             "event", EventType.NOTIFICATION,
             "message", "잠시 후 토론이 시작됩니다... "
         );
         messagingTemplate.convertAndSend("/topic/debate/" + roomId.toString(), message);
-        scheduler.schedule(
-            ()-> debateTurnManagementService.createDebateTurn(roomId,timeType, speakCountType)
+        scheduler.schedule(()-> {
+            debateTimers.put(roomId,
+                scheduler.schedule(() -> endDebate(roomId),
+                    (long) timeType.getValue() * speakCountType.getValue() * 2 - 30, TimeUnit.SECONDS));
+            debateTurnManagementService.createDebateTurn(roomId,timeType, speakCountType);
+            }
             ,5, TimeUnit.SECONDS);
 
         System.out.println("Debate started for " + roomId);
