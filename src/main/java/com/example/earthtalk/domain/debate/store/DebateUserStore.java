@@ -100,6 +100,32 @@ public class DebateUserStore {
 	}
 
 	/**
+	 * 주어진 채팅방 ID의 찬성 사용자 집합에서 특정 사용자를 제거합니다.
+	 *
+	 * @param roomId 채팅방 식별자
+	 * @param userName 제거할 사용자 닉네임
+	 */
+	public void removeProUser(String roomId, String userName) {
+		validateRoomIdAndUserId(roomId, userName);
+		Long removedCount = redisTemplate.opsForSet().remove(PRO_KEY_PREFIX + roomId, userName);
+		log.debug("Pro 사용자 제거 - roomId: {}, userName: {}, removedCount: {}", roomId, userName, removedCount);
+		updateDebateScore(roomId);
+	}
+
+	/**
+	 * 주어진 채팅방 ID의 반대 사용자 집합에서 특정 사용자를 제거합니다.
+	 *
+	 * @param roomId 채팅방 식별자
+	 * @param userName 제거할 사용자 닉네임
+	 */
+	public void removeConUser(String roomId, String userName) {
+		validateRoomIdAndUserId(roomId, userName);
+		Long removedCount = redisTemplate.opsForSet().remove(CON_KEY_PREFIX + roomId, userName);
+		log.debug("Con 사용자 제거 - roomId: {}, userName: {}, removedCount: {}", roomId, userName, removedCount);
+		updateDebateScore(roomId);
+	}
+
+	/**
 	 * 각 채팅방별 찬성 사용자 수를 집계하여 반환합니다.
 	 *
 	 * @return 방 ID와 찬성 사용자 수의 매핑 정보
