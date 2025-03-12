@@ -48,6 +48,10 @@ public class DebateTimerService {
             "message", "잠시 후 토론이 시작됩니다... "
         );
         messagingTemplate.convertAndSend("/topic/debate/" + roomId.toString(), message);
+        scheduler.schedule(
+            ()-> debateTurnManagementService.createDebateTurn(roomId,timeType, speakCountType)
+            ,5, TimeUnit.SECONDS);
+
         debateTurnManagementService.createDebateTurn(roomId,timeType, speakCountType);
         System.out.println("Debate started for " + roomId);
     }
