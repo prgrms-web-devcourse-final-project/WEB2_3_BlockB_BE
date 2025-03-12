@@ -1,5 +1,7 @@
 package com.example.earthtalk.domain.debate.component;
 
+import com.example.earthtalk.domain.debate.entity.FlagType;
+import com.example.earthtalk.domain.debate.entity.RoomType;
 import com.example.earthtalk.domain.debate.service.DebateTurnManagementService;
 
 import java.util.UUID;
@@ -105,19 +107,21 @@ public class WebSocketEventListener {
 					if (debate == null) {
 						log.error("Debate room을 찾을 수 없음 - roomId: {}", roomId);
 						throw new IllegalArgumentException(ErrorCode.CHAT_NOT_FOUND);
-					}
-					SessionInfo sessionInfo = new SessionInfo(roomId, userName, position);
-					String sessionId = headerAccessor.getSessionId();
-					sessionInfoMap.put(sessionId, sessionInfo);
-					log.info("세션 정보 저장 완료 - sessionInfo: {}", sessionInfo);
-					try {
-						debateUserService.addUser(debate, userName, position);
-						log.info("Debate 참여 성공 - roomId: {}, userName: {}, position: {}", roomId, userName, position);
-					} catch (Exception e) {
-						sessionInfoMap.remove(headerAccessor.getSessionId());
-						log.error("Debate 사용자 추가 실패 - roomId: {}, userName: {}. 예외 메시지: {}", roomId, userName,
-							e.getMessage(), e);
-						throw new IllegalArgumentException(ErrorCode.CHAT_NOT_FOUND);
+					} if (!position.equals("observer")) {
+						SessionInfo sessionInfo = new SessionInfo(roomId, userName, position);
+						String sessionId = headerAccessor.getSessionId();
+						sessionInfoMap.put(sessionId, sessionInfo);
+						log.info("세션 정보 저장 완료 - sessionInfo: {}", sessionInfo);
+						try {
+							debateUserService.addUser(debate, userName, position);
+							log.info("Debate 참여 성공 - roomId: {}, userName: {}, position: {}", roomId, userName,
+								position);
+						} catch (Exception e) {
+							sessionInfoMap.remove(headerAccessor.getSessionId());
+							log.error("Debate 사용자 추가 실패 - roomId: {}, userName: {}. 예외 메시지: {}", roomId, userName,
+								e.getMessage(), e);
+							throw new IllegalArgumentException(ErrorCode.CHAT_NOT_FOUND);
+						}
 					}
 				} else {
 					log.warn("Debate 참여 필수 속성이 누락됨 - roomId: {}, userName: {}, position: {}", roomId, userName,
