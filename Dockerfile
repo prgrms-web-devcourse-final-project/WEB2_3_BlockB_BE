@@ -18,5 +18,5 @@ ENV TZ=Asia/Seoul
 
 ARG JAR_FILE=build/libs/earth_talk-0.0.1-SNAPSHOT.jar
 COPY ${JAR_FILE} app.jar
-COPY /etc/letsencrypt/live/earthtalk.shop/keystore.p12 /etc/letsencrypt/live/earthtalk.shop/keystore.p12
+#COPY /etc/letsencrypt/live/earthtalk.shop/keystore.p12 /etc/letsencrypt/live/earthtalk.shop/keystore.p12
 ENTRYPOINT ["java", "-jar", "/app.jar"]
