@@ -1,8 +1,6 @@
 package com.example.earthtalk.domain.debate.service;
 
 import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
@@ -10,7 +8,6 @@ import com.example.earthtalk.domain.debate.dto.ObserverMessage;
 import com.example.earthtalk.domain.debate.entity.Debate;
 import com.example.earthtalk.domain.debate.entity.DebateChat;
 import com.example.earthtalk.domain.debate.entity.DebateParticipants;
-import com.example.earthtalk.domain.debate.entity.DebateRole;
 import com.example.earthtalk.domain.debate.entity.FlagType;
 import com.example.earthtalk.domain.debate.repository.DebateChatRepository;
 import com.example.earthtalk.domain.debate.store.DebateRoomStore;
@@ -28,9 +25,6 @@ public class ObserverChatManagementService {
 	private final DebateChatRepository debateChatRepository;
 	private final DebateRoomService debateRoomService;
 	private final ObserverUserService observerUserService;
-	private final DebateRoomStore debateRoomStore;
-	private final DebateUserStore debateUserStore;
-	private final ObserverRoomStore observerRoomStore;
 
 	@Transactional
 	public void saveChatHistory(String roomId, List<ObserverMessage> observerMessages) {
