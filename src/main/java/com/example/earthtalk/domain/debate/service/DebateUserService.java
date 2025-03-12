@@ -8,6 +8,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -144,6 +145,7 @@ public class DebateUserService {
 	 * @param roomId   토론방 ID
 	 * @param userName 퇴장하는 사용자 이름
 	 */
+	@Transactional
 	public void removeUser(String roomId, String userName) {
 		log.info("removeUser 시작 - roomId: {}, userName: {}", roomId, userName);
 
