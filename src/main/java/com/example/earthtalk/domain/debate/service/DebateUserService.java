@@ -166,6 +166,7 @@ public class DebateUserService {
 			if (proSet.contains(userName)) {
 				log.info("Pro 사용자 존재 확인 - roomId: {}, userName: {}", roomId, userName);
 				removed = proSet.remove(userName);
+				debateUserStore.removeProUser(roomId, userName);
 				log.info("Pro 사용자 제거 결과 - roomId: {}, userName: {}, removed: {}", roomId, userName, removed);
 				if (proSet.isEmpty()) {
 					debateUserStore.removeProUsers(roomId);
@@ -179,6 +180,7 @@ public class DebateUserService {
 			if (conSet.contains(userName)) {
 				log.info("Con 사용자 존재 확인 - roomId: {}, userName: {}", roomId, userName);
 				removed = conSet.remove(userName) || removed;
+				debateUserStore.removeConUser(roomId, userName);
 				log.info("Con 사용자 제거 결과 - roomId: {}, userName: {}, removed: {}", roomId, userName, removed);
 				if (conSet.isEmpty()) {
 					debateUserStore.removeConUsers(roomId);
