@@ -75,6 +75,7 @@ public class DebateRoomStore {
 
 
 	public void remove(String roomId) {
+		log.info("debateRoomStore remove 진입 : {}", roomId);
 		hashOps.delete(KEY, roomId);
 		zSetOps.remove(KEY_ZSET, roomId);
 	}
