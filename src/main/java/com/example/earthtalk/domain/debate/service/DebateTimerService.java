@@ -52,7 +52,6 @@ public class DebateTimerService {
             ()-> debateTurnManagementService.createDebateTurn(roomId,timeType, speakCountType)
             ,5, TimeUnit.SECONDS);
 
-        debateTurnManagementService.createDebateTurn(roomId,timeType, speakCountType);
         System.out.println("Debate started for " + roomId);
     }
 
