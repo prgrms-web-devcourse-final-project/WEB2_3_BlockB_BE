@@ -7,5 +7,6 @@ public enum EventType {
     CHAT,
     JOIN,
     EXIT,
-    WIN_BY_DEFAULT
+    WIN_BY_DEFAULT,
+    EXIT_OVERFLOW_NULL
 }
