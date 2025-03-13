@@ -289,7 +289,16 @@ public class DebateRoomService {
 		Set<DebateUserResponse> proResponse = new HashSet<>();
 		Set<DebateUserResponse> conResponse = new HashSet<>();
 
-		if (proUsers.size() <=1 || conUsers.size() <=1) {
+		if ((debate.getMember().getValue() != 1
+			&& ((proUsers.size() <= 1 || conUsers.size() <= 1)
+			&& debate.getAgreeNumber() == 0
+			&& debate.getDisagreeNumber() == 0
+			&& debate.getNeutralNumber() == 0))
+			|| (debate.getMember().getValue() == 1
+			&& (proUsers.isEmpty() || conUsers.isEmpty()
+			&& debate.getAgreeNumber() == 0
+			&& debate.getDisagreeNumber() == 0
+			&& debate.getNeutralNumber() == 0))) {
 			proUsers.clear();
 			conUsers.clear();
 			List<DebateParticipants> dbProUser = debate.getParticipants();
