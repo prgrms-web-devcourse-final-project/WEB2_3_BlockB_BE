@@ -74,4 +74,4 @@ jobs:
         port: 22
         script: |
           docker stop earthtalk && docker rm earthtalk && docker rmi ${{ secrets.DOCKERHUB_USERNAME }}/earthtalk:latest
-          docker run -d -p 8080:8080 -p --name earthtalk ${{ secrets.DOCKERHUB_USERNAME }}/earthtalk:latest
+          docker run -d -p 8080:8080 --name earthtalk ${{ secrets.DOCKERHUB_USERNAME }}/earthtalk:latest
