@@ -315,7 +315,7 @@ public class DebateRoomService {
 						.defeatNumber(participants.getUser().getDefeatNumber())
 						.position(FlagType.PRO)
 						.build());
-				} else {
+				} else if (participants.getPosition() == FlagType.CON) {
 					conResponse.add(DebateUserResponse.builder()
 						.id(participants.getId())
 						.email(participants.getUser().getEmail())
