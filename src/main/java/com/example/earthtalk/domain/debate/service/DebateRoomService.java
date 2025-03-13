@@ -284,22 +284,43 @@ public class DebateRoomService {
 
 	public DebateRoomResponse buildDebateRoomResponse(Debate debate, UUID roomId) {
 
-		List<DebateParticipants> proUsers = debateParticipantsRepository.findByDebate_UuidAndPosition(roomId, FlagType.PRO);
+		Set<String> proUsers = debateUserStore.getProUsers(roomId.toString());
 		Set<DebateUserResponse> proResponse = new HashSet<>();
-		assert proUsers != null;
-		for (DebateParticipants proUser : proUsers) {
-			proResponse.add(fromParticipants(proUser));
+		for (String proUser : proUsers) {
+			User user = userRepository.findByNickname(proUser)
+					.orElseThrow(() -> new IllegalArgumentException(ErrorCode.USER_NOT_FOUND.getMessage()));
+			DebateUserResponse.builder()
+				.id(user.getId())
+				.email(user.getEmail())
+				.nickname(user.getNickname())
+				.introduction(user.getIntroduction())
+				.profileUrl(user.getProfileUrl())
+				.winNumber(user.getWinNumber())
+				.drawNumber(user.getDrawNumber())
+				.defeatNumber(user.getDefeatNumber())
+				.position(FlagType.PRO)
+				.build();
 		}
 
 		Set<DebateUserResponse> conResponse = new HashSet<>();
 
 		// 로그: Con 사용자 목록 조회 시작
-		List<DebateParticipants> conUsers  = debateParticipantsRepository.findByDebate_UuidAndPosition(roomId, FlagType.CON);
-		assert conUsers != null;
-		for (DebateParticipants conUser : conUsers) {
-			conResponse.add(fromParticipants(conUser));
+		Set<String> conUsers = debateUserStore.getConUsers(roomId.toString());
+		for (String conUser : conUsers) {
+			User user = userRepository.findByNickname(conUser)
+				.orElseThrow(() -> new IllegalArgumentException(ErrorCode.USER_NOT_FOUND.getMessage()));
+			DebateUserResponse.builder()
+				.id(user.getId())
+				.email(user.getEmail())
+				.nickname(user.getNickname())
+				.introduction(user.getIntroduction())
+				.profileUrl(user.getProfileUrl())
+				.winNumber(user.getWinNumber())
+				.drawNumber(user.getDrawNumber())
+				.defeatNumber(user.getDefeatNumber())
+				.position(FlagType.CON)
+				.build();
 		}
-
 
 		// 로그: DebateRoomResponse 빌더를 사용하여 응답 객체 생성 시작
 		DebateRoomResponse response = DebateRoomResponse.builder()
@@ -319,21 +340,6 @@ public class DebateRoomService {
 			.build();
 
 		return response;
-	}
-
-	public static DebateUserResponse fromParticipants(DebateParticipants debateParticipant) {
-		User user = debateParticipant.getUser();
-		return DebateUserResponse.builder()
-			.id(user.getId())
-			.email(user.getEmail())
-			.nickname(user.getNickname())
-			.introduction(user.getIntroduction())
-			.profileUrl(user.getProfileUrl())
-			.winNumber(user.getWinNumber())
-			.drawNumber(user.getDrawNumber())
-			.defeatNumber(user.getDefeatNumber())
-			.position(debateParticipant.getPosition())
-			.build();
 	}
 
 }
