@@ -31,6 +31,14 @@ jobs:
         run: chmod +x ./gradlew
         shell: bash
 
+      - name: Actions/Caches에 Gradle 라이브러리 캐싱
+        id: cache-gradle
+        uses: actions/cache@v3
+        with:
+          path: ~/.gradle/caches
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
+          restore-keys: ${{ runner.os }}-gradle
+
       # 3. Spring Boot 애플리케이션 빌드
       - name: Build with Gradle
         run: ./gradlew bootJar
@@ -66,4 +74,4 @@ jobs:
         port: 22
         script: |
           docker stop earthtalk && docker rm earthtalk && docker rmi ${{ secrets.DOCKERHUB_USERNAME }}/earthtalk:latest
-          docker run -d -p 8080:8080 --name earthtalk ${{ secrets.DOCKERHUB_USERNAME }}/earthtalk:latest
+          docker run -d -p 8080:8080 -p 8443:8443 -v /etc/letsencrypt/live/earthtalk.shop/keystore.p12:/etc/letsencrypt/live/earthtalk.shop/keystore.p12 --name earthtalk ${{ secrets.DOCKERHUB_USERNAME }}/earthtalk:latest
