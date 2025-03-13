@@ -290,6 +290,8 @@ public class DebateRoomService {
 		Set<DebateUserResponse> conResponse = new HashSet<>();
 
 		if (proUsers.size() <=1 || conUsers.size() <=1) {
+			proUsers.clear();
+			conUsers.clear();
 			List<DebateParticipants> dbProUser = debate.getParticipants();
 			for (DebateParticipants participants : dbProUser) {
 				if (participants.getPosition() == FlagType.PRO) {
