@@ -289,7 +289,8 @@ public class DebateRoomService {
 		for (String proUser : proUsers) {
 			User user = userRepository.findByNickname(proUser)
 					.orElseThrow(() -> new IllegalArgumentException(ErrorCode.USER_NOT_FOUND.getMessage()));
-			DebateUserResponse.builder()
+
+			proResponse.add(DebateUserResponse.builder()
 				.id(user.getId())
 				.email(user.getEmail())
 				.nickname(user.getNickname())
@@ -299,7 +300,7 @@ public class DebateRoomService {
 				.drawNumber(user.getDrawNumber())
 				.defeatNumber(user.getDefeatNumber())
 				.position(FlagType.PRO)
-				.build();
+				.build());
 		}
 
 		Set<DebateUserResponse> conResponse = new HashSet<>();
@@ -309,7 +310,7 @@ public class DebateRoomService {
 		for (String conUser : conUsers) {
 			User user = userRepository.findByNickname(conUser)
 				.orElseThrow(() -> new IllegalArgumentException(ErrorCode.USER_NOT_FOUND.getMessage()));
-			DebateUserResponse.builder()
+			conResponse.add(DebateUserResponse.builder()
 				.id(user.getId())
 				.email(user.getEmail())
 				.nickname(user.getNickname())
@@ -319,7 +320,7 @@ public class DebateRoomService {
 				.drawNumber(user.getDrawNumber())
 				.defeatNumber(user.getDefeatNumber())
 				.position(FlagType.CON)
-				.build();
+				.build());
 		}
 
 		// 로그: DebateRoomResponse 빌더를 사용하여 응답 객체 생성 시작
