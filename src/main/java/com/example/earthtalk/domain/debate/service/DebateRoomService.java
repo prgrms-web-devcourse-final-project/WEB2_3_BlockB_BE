@@ -285,42 +285,72 @@ public class DebateRoomService {
 	public DebateRoomResponse buildDebateRoomResponse(Debate debate, UUID roomId) {
 
 		Set<String> proUsers = debateUserStore.getProUsers(roomId.toString());
+		Set<String> conUsers = debateUserStore.getConUsers(roomId.toString());
 		Set<DebateUserResponse> proResponse = new HashSet<>();
-		for (String proUser : proUsers) {
-			User user = userRepository.findByNickname(proUser)
-					.orElseThrow(() -> new IllegalArgumentException(ErrorCode.USER_NOT_FOUND.getMessage()));
-
-			proResponse.add(DebateUserResponse.builder()
-				.id(user.getId())
-				.email(user.getEmail())
-				.nickname(user.getNickname())
-				.introduction(user.getIntroduction())
-				.profileUrl(user.getProfileUrl())
-				.winNumber(user.getWinNumber())
-				.drawNumber(user.getDrawNumber())
-				.defeatNumber(user.getDefeatNumber())
-				.position(FlagType.PRO)
-				.build());
-		}
-
 		Set<DebateUserResponse> conResponse = new HashSet<>();
 
-		// 로그: Con 사용자 목록 조회 시작
-		Set<String> conUsers = debateUserStore.getConUsers(roomId.toString());
-		for (String conUser : conUsers) {
-			User user = userRepository.findByNickname(conUser)
-				.orElseThrow(() -> new IllegalArgumentException(ErrorCode.USER_NOT_FOUND.getMessage()));
-			conResponse.add(DebateUserResponse.builder()
-				.id(user.getId())
-				.email(user.getEmail())
-				.nickname(user.getNickname())
-				.introduction(user.getIntroduction())
-				.profileUrl(user.getProfileUrl())
-				.winNumber(user.getWinNumber())
-				.drawNumber(user.getDrawNumber())
-				.defeatNumber(user.getDefeatNumber())
-				.position(FlagType.CON)
-				.build());
+		if (proUsers.size() <=1 || conUsers.size() <=1) {
+			List<DebateParticipants> dbProUser = debate.getParticipants();
+			for (DebateParticipants participants : dbProUser) {
+				if (participants.getPosition() == FlagType.PRO) {
+					proResponse.add(DebateUserResponse.builder()
+						.id(participants.getId())
+						.email(participants.getUser().getEmail())
+						.nickname(participants.getUser().getNickname())
+						.introduction(participants.getUser().getIntroduction())
+						.profileUrl(participants.getUser().getProfileUrl())
+						.winNumber(participants.getUser().getWinNumber())
+						.drawNumber(participants.getUser().getDrawNumber())
+						.defeatNumber(participants.getUser().getDefeatNumber())
+						.position(FlagType.PRO)
+						.build());
+				} else {
+					proResponse.add(DebateUserResponse.builder()
+						.id(participants.getId())
+						.email(participants.getUser().getEmail())
+						.nickname(participants.getUser().getNickname())
+						.introduction(participants.getUser().getIntroduction())
+						.profileUrl(participants.getUser().getProfileUrl())
+						.winNumber(participants.getUser().getWinNumber())
+						.drawNumber(participants.getUser().getDrawNumber())
+						.defeatNumber(participants.getUser().getDefeatNumber())
+						.position(FlagType.CON)
+						.build());
+				}
+			}
+		}else {
+			for (String proUser : proUsers) {
+				User user = userRepository.findByNickname(proUser)
+					.orElseThrow(() -> new IllegalArgumentException(ErrorCode.USER_NOT_FOUND.getMessage()));
+
+				proResponse.add(DebateUserResponse.builder()
+					.id(user.getId())
+					.email(user.getEmail())
+					.nickname(user.getNickname())
+					.introduction(user.getIntroduction())
+					.profileUrl(user.getProfileUrl())
+					.winNumber(user.getWinNumber())
+					.drawNumber(user.getDrawNumber())
+					.defeatNumber(user.getDefeatNumber())
+					.position(FlagType.PRO)
+					.build());
+			}
+
+			for (String conUser : conUsers) {
+				User user = userRepository.findByNickname(conUser)
+					.orElseThrow(() -> new IllegalArgumentException(ErrorCode.USER_NOT_FOUND.getMessage()));
+				conResponse.add(DebateUserResponse.builder()
+					.id(user.getId())
+					.email(user.getEmail())
+					.nickname(user.getNickname())
+					.introduction(user.getIntroduction())
+					.profileUrl(user.getProfileUrl())
+					.winNumber(user.getWinNumber())
+					.drawNumber(user.getDrawNumber())
+					.defeatNumber(user.getDefeatNumber())
+					.position(FlagType.CON)
+					.build());
+			}
 		}
 
 		// 로그: DebateRoomResponse 빌더를 사용하여 응답 객체 생성 시작
