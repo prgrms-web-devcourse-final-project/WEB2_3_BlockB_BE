@@ -63,7 +63,7 @@ public class DebateRoomController {
 			.orElseThrow(() -> new IllegalArgumentException(ErrorCode.DEBATEROOM_NOT_FOUND.getMessage()));
 		log.info("debate method 조회 {}" , debate);
 		DebateRoomResponse response = debateRoomService.buildDebateRoomResponse(debate, roomId);
-		log.info("user 정보 조회 pro : {}, con : {}", response.getProUsers(), response.getConUsers());
+		log.info("user 정보 조회 pro : {}, con : {}", response.getProUsers().size(), response.getConUsers().size());
 		log.info("response 조회 완료 {}" , response);
 		return ResponseEntity.ok().body(ApiResponse.createSuccess(response));
 	}
