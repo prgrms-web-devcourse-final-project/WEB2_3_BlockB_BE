@@ -99,6 +99,7 @@ public class DebateUserService {
 					messagingTemplate.convertAndSend("/topic/debate/" + roomId, errorMessage);
 					throw new IllegalArgumentException(ErrorCode.TOO_MANY_PARTICIPANTS.getMessage());
 				}
+				log.info("addProUser 접근");
 				debateUserStore.addProUser(roomId, userName);
 			} else if ("con".equalsIgnoreCase(position)) {
 				if (debateUserStore.getConUserCounts().getOrDefault(roomId, 0) >= maxMembers) {
@@ -257,8 +258,12 @@ public class DebateUserService {
 							.winner(null)
 							.message("일정 수 이상의 유저가 퇴장하여 토론이 자동 종료됩니다.")
 							.build();
-						messagingTemplate.convertAndSend("/topic/debate/" + roomId, message);
-						messagingTemplate.convertAndSend("/topic/observer/" + roomId, message);
+						try {
+							messagingTemplate.convertAndSend("/topic/debate/" + roomId, message);
+							messagingTemplate.convertAndSend("/topic/observer/" + roomId, message);
+						} catch (Exception e) {
+							log.error("자동 종료 메시지 전송 실패 - roomId: {} , error: {}" , roomId, e.getMessage());
+						}
 					}
 					debateRoomStore.remove(roomId);
 					debateUserStore.removeDebateRoom(roomId);
