@@ -250,13 +250,13 @@ public class DebateUserService {
 						log.info("승리 메시지 전송 완료 - roomId: {}, message: {}", roomId, victoryMsg);
 
 					} else {
+						log.info("일정 수 이상의 유저 퇴장");
 						DebateResultMessage message = DebateResultMessage.builder()
 							.event(EventType.EXIT_OVERFLOW_NULL)
 							.roomId(roomId)
 							.winner(null)
 							.message("일정 수 이상의 유저가 퇴장하여 토론이 자동 종료됩니다.")
 							.build();
-
 						messagingTemplate.convertAndSend("/topic/debate/" + roomId, message);
 						messagingTemplate.convertAndSend("/topic/observer/" + roomId, message);
 					}
