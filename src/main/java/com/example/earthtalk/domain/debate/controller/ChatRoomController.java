@@ -4,6 +4,7 @@ import com.example.earthtalk.domain.debate.service.DebateRoomService;
 import com.example.earthtalk.global.response.ApiResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +25,7 @@ import com.example.earthtalk.domain.debate.dto.CreateDebateRoomRequest;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
+@Tag(name = "chatRoom", description = "채팅방 생성 api")
 @RequestMapping("/api/chat")
 public class ChatRoomController {
 	private final DebateRoomService debateRoomService;

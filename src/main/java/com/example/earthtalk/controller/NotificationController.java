@@ -11,6 +11,7 @@ import com.example.earthtalk.domain.notification.service.FcmTokenService;
 import com.example.earthtalk.domain.notification.service.NotificationService;
 import com.example.earthtalk.global.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +21,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
+@Tag(name = "notification", description = "알람 기능 관련 api")
 @RequestMapping("/api/notifications")
 public class NotificationController {
 
