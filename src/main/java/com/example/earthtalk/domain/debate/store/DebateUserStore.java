@@ -44,13 +44,15 @@ public class DebateUserStore {
 	 * @return 찬성 사용자 집합
 	 */
 	public Set<String> getProUsers(String roomId) {
-		log.debug("Pro 사용자 조회 시작 - roomId: {}", roomId);
+		log.info("Pro 사용자 조회 시작 - roomId: {}", roomId);
 		Set<String> members = redisTemplate.opsForSet().members(PRO_KEY_PREFIX + roomId);
 		int count = (members != null) ? members.size() : 0;
-		log.debug("Pro 사용자 조회 완료 - roomId: {}, 조회된 사용자 수: {}", roomId, count);
+		log.info("Pro 사용자 조회 완료 - roomId: {}, 조회된 사용자 수: {}", roomId, count);
 		return (members != null) ? members : Collections.emptySet();
 	}
+
 	public void addProUser(String roomId, String userId) {
+		log.info("ProUser 추가 시작 - roomId: {}, userId: {}", roomId, userId);
 		validateRoomIdAndUserId(roomId, userId);
 		redisTemplate.opsForSet().add(PRO_KEY_PREFIX + roomId, userId);
 		updateDebateScore(roomId);
