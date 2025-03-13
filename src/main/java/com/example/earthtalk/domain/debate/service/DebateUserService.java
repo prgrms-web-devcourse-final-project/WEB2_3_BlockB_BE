@@ -249,10 +249,10 @@ public class DebateUserService {
 						messagingTemplate.convertAndSend("/topic/observer/" + roomId, victoryMessage);
 						log.info("승리 메시지 전송 완료 - roomId: {}, message: {}", roomId, victoryMsg);
 
-						debateRoomStore.remove(roomId);
-						debateUserStore.removeDebateRoom(roomId);
-						observerRoomStore.removeRoom(roomId);
 					}
+					debateRoomStore.remove(roomId);
+					debateUserStore.removeDebateRoom(roomId);
+					observerRoomStore.removeRoom(roomId);
 				} catch (Exception e) {
 					log.info("채팅 기록 저장 실패 - roomId: {}, error: {}", roomId, e.getMessage());
 					throw new SaveFailedException(ErrorCode.SAVE_FAILED);
