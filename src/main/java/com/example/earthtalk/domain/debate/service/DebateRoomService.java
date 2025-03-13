@@ -316,7 +316,7 @@ public class DebateRoomService {
 						.position(FlagType.PRO)
 						.build());
 				} else {
-					proResponse.add(DebateUserResponse.builder()
+					conResponse.add(DebateUserResponse.builder()
 						.id(participants.getId())
 						.email(participants.getUser().getEmail())
 						.nickname(participants.getUser().getNickname())
