@@ -59,8 +59,7 @@ public class DebateRoomController {
 	) {
 		log.info("토론방 상세 조회 api 접근");
 		UUID roomId = UUID.fromString(uuid);
-		Debate debate = debateRepository.findByUuid(roomId)
-			.orElseThrow(() -> new IllegalArgumentException(ErrorCode.DEBATEROOM_NOT_FOUND.getMessage()));
+		Debate debate = debateRoomService.getDebate(uuid);
 		log.info("debate method 조회 {}" , debate);
 		DebateRoomResponse response = debateRoomService.buildDebateRoomResponse(debate, roomId);
 		int pro = response.getProUsers().size();
