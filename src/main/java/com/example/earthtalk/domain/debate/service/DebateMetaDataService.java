@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import com.example.earthtalk.domain.debate.dto.CreateDebateRoomRequest;
@@ -84,6 +85,7 @@ public class DebateMetaDataService {
 	 * 공통 헬퍼 메서드: 주어진 roomId 리스트에 대해 DebateRepository, ObserverRoomStore, DebateUserStore의 데이터를 결합하여
 	 * DebateMetaDataResponse DTO 리스트를 생성합니다.
 	 */
+	@Transactional
 	private List<DebateMetaDataResponse> buildResponseList(List<String> sortedRoomIds) {
 		List<DebateMetaDataResponse> responses = new ArrayList<>();
 		for (String roomId : sortedRoomIds) {
