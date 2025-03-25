@@ -19,6 +19,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -55,6 +57,7 @@ public class DebateTimerService {
         System.out.println("Debate started for " + roomId);
     }
 
+    @Transactional
     private void startVoteTimer(UUID roomId) {
         Map<String, Object> message1 = Map.of(
             "event", EventType.NOTIFICATION,
@@ -84,6 +87,7 @@ public class DebateTimerService {
         }, 3, TimeUnit.SECONDS);
     }
 
+    @Transactional
     private void endDebate(UUID roomId) {
         Map<String, Object> message1 = Map.of(
             "event", EventType.NOTIFICATION,
@@ -129,6 +133,7 @@ public class DebateTimerService {
             }, 10, TimeUnit.SECONDS);
     }
 
+    @Transactional
     private void closeDebate(UUID roomId) {
         Debate debate = debateRepository.findByUuid(roomId)
             .orElseThrow(() -> new IllegalArgumentException(ErrorCode.DEBATEROOM_NOT_FOUND));

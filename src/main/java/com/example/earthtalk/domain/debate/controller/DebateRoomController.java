@@ -94,8 +94,7 @@ public class DebateRoomController {
 		@PathVariable("uuid") String uuid
 	) {
 		UUID roomId = UUID.fromString(uuid);
-		Debate debate = debateRepository.findByUuid(roomId)
-			.orElseThrow(() -> new IllegalArgumentException(ErrorCode.DEBATEROOM_NOT_FOUND.getMessage()));
+		Debate debate = debateRoomService.getDebateRoom(uuid);
 		DebateRoomResponse response = debateRoomService.buildDebateRoomResponse(debate, roomId);
 		return ResponseEntity.ok().body(ApiResponse.createSuccess(response));
 
@@ -111,8 +110,7 @@ public class DebateRoomController {
 		@PathVariable("uuid") String uuid
 	) {
 		UUID roomId = UUID.fromString(uuid);
-		Debate debate = debateRepository.findByUuid(roomId)
-			.orElseThrow(() -> new IllegalArgumentException(ErrorCode.DEBATEROOM_NOT_FOUND.getMessage()));
+		Debate debate = debateRoomService.getDebateRoom(uuid);
 
 		WaitRoomResponse response = debateRoomService.buildWaitRoomResponse(debate, roomId);
 
@@ -144,8 +142,7 @@ public class DebateRoomController {
 	public ResponseEntity<ApiResponse<VoteResponse>> getVote(
 		@PathVariable("uuid") String uuid
 	) {
-		Debate debate = debateRepository.findByUuid(UUID.fromString(uuid))
-			.orElseThrow(() -> new IllegalArgumentException(ErrorCode.DEBATEROOM_NOT_FOUND.getMessage()));
+		Debate debate = debateRoomService.getDebateRoom(uuid);
 
 		VoteResponse response = VoteResponse.builder()
 			.agreeNumber(debate.getAgreeNumber())
@@ -163,8 +160,7 @@ public class DebateRoomController {
 	})
 	@GetMapping("/turn/{uuid}")
 	public ResponseEntity<ApiResponse<TurnInfoResponse>> getCurrentTurn(@PathVariable String uuid){
-		TimeType timeType = debateRepository.findByUuid(UUID.fromString(uuid))
-			.orElseThrow(()->new NotFoundException(ErrorCode.DEBATEROOM_NOT_FOUND)).getTime();
+		TimeType timeType = debateRoomService.getDebateRoom(uuid).getTime();
 		TurnInfoResponse response = debateTurnManagementService.getCurrentTurn(UUID.fromString(uuid), timeType);
 		return ResponseEntity.ok(ApiResponse.createSuccess(response));
 	}

@@ -236,6 +236,7 @@ public class DebateRoomService {
 		return draw ? FlagType.NO_POSITION : (proWins ? FlagType.PRO : FlagType.CON);
 	}
 
+	@Transactional
 	public void updateStatus(String roomId) {
 		Debate debate = debateRepository.findByUuid(UUID.fromString(roomId))
 				.orElseThrow(() -> new IllegalArgumentException(ErrorCode.DEBATEROOM_NOT_FOUND.getMessage()));
