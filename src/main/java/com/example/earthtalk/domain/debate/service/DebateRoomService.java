@@ -72,6 +72,7 @@ public class DebateRoomService {
 	 * @param request 채팅방 생성에 필요한 메타데이터를 담은 {@link CreateDebateRoomRequest} 객체
 	 * @return 생성된 채팅방의 고유 식별자 (roomId)
 	 */
+	@Transactional
 	public String createDebateRoom(CreateDebateRoomRequest request) {
 		// 메서드 시작 로그: 요청 정보와 함께 시작됨
 		log.info("createDebateRoom 시작 - 요청 정보: {}", request);
