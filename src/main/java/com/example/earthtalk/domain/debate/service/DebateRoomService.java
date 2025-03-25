@@ -169,6 +169,7 @@ public class DebateRoomService {
 		return debateRoomStore.get(roomId);
 	}
 
+	@Transactional
 	public Debate getDebate(String roomId) {
 		return debateRepository.findByUuid(UUID.fromString(roomId))
 			.orElseThrow(() -> new IllegalArgumentException(ErrorCode.DEBATEROOM_NOT_FOUND.getMessage()));
