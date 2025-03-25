@@ -9,6 +9,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import jakarta.transaction.Transactional;
+import org.hibernate.Hibernate;
 import org.springframework.stereotype.Service;
 
 import com.example.earthtalk.domain.debate.dto.CreateDebateRoomRequest;
@@ -92,6 +93,9 @@ public class DebateMetaDataService {
 			log.info("Processing roomId: {}", roomId);
 			Debate debate = debateRepository.findByUuid(UUID.fromString(roomId))
 				.orElseThrow(() -> new IllegalArgumentException(ErrorCode.DEBATEROOM_NOT_FOUND.getMessage()));
+			if(debate.getNews() != null) {
+				Hibernate.initialize(debate.getNews());
+			}
 			Long currentCount = observerRoomStore.getObserverCount(roomId);
 			Long maxCount = observerRoomStore.getMaxObserverCount(roomId);
 
