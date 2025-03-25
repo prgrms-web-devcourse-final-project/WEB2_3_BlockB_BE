@@ -13,12 +13,16 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.example.earthtalk.domain.debate.entity.Debate;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import jakarta.persistence.LockModeType;
+
 public interface DebateRepository extends JpaRepository<Debate, Long> {
 
+	@Lock(LockModeType.PESSIMISTIC_WRITE)
 	@Query("select d from debates d left join fetch d.news where d.uuid = :uuid")
 	Optional<Debate> findByUuid(UUID uuid);
 

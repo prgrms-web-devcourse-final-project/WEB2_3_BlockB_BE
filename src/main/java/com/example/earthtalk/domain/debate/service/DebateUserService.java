@@ -35,6 +35,8 @@ import com.example.earthtalk.global.exception.ErrorCode;
 import com.example.earthtalk.global.exception.ConflictException;
 import com.example.earthtalk.global.exception.SaveFailedException;
 
+import javax.persistence.LockModeType;
+
 /**
  * DebateUserService는 토론방 내 사용자의 입장, 퇴장 및 상태 업데이트를 관리하는 서비스 클래스입니다.
  * <p>
@@ -156,8 +158,7 @@ public class DebateUserService {
 			boolean removed = false;
 			log.info("Lock 획득 완료 - roomId: {}", roomId);
 
-			Debate debate = debateRepository.findByUuid(UUID.fromString(roomId))
-				.orElseThrow(() -> {
+			Debate debate = debateRepository.findByUuid(UUID.fromString(roomId)).orElseThrow(() -> {
 					log.info("Debate room 조회 실패 - roomId: {}", roomId);
 					return new IllegalArgumentException(ErrorCode.DEBATEROOM_NOT_FOUND.getMessage());
 				});
@@ -231,20 +232,25 @@ public class DebateUserService {
 						log.info("Observer 메시지가 null 또는 비어 있음");
 					}
 					if (debate.isResultEnabled()) {
-						FlagType winningTeam = determineWinningTeam(proSet.size());
+						FlagType winningTeam;
+						if (debate.getMember().getValue() == 3) {
+							winningTeam = determineWinningTeam(proSet.size());
+						} else {
+							winningTeam = proSet.isEmpty() ? FlagType.CON : FlagType.PRO;
+						}
 						updateParticipantsResult(debate, winningTeam);
 						log.info("결과 처리 완료 - roomId: {}, winningTeam: {}", roomId, winningTeam);
 
 						String victoryMsg = winningTeam == FlagType.PRO
-							? "한쪽 팀이 중도 퇴장 하여 찬성 팀이 승리했습니다."
-							: "한쪽 팀의 중도 퇴장 하여 반대 팀이 승리했습니다.";
+								? "한쪽 팀이 중도 퇴장 하여 찬성 팀이 승리했습니다."
+								: "한쪽 팀의 중도 퇴장 하여 반대 팀이 승리했습니다.";
 
 						DebateResultMessage victoryMessage = DebateResultMessage.builder()
-							.event(EventType.WIN_BY_DEFAULT)
-							.roomId(roomId)
-							.winner(winningTeam)
-							.message(victoryMsg)
-							.build();
+								.event(EventType.WIN_BY_DEFAULT)
+								.roomId(roomId)
+								.winner(winningTeam)
+								.message(victoryMsg)
+								.build();
 
 						messagingTemplate.convertAndSend("/topic/debate/" + roomId, victoryMessage);
 						messagingTemplate.convertAndSend("/topic/observer/" + roomId, victoryMessage);
