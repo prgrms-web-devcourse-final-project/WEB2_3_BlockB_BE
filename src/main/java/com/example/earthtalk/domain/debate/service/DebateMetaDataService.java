@@ -87,7 +87,7 @@ public class DebateMetaDataService {
 	 * DebateMetaDataResponse DTO 리스트를 생성합니다.
 	 */
 	@Transactional
-	private List<DebateMetaDataResponse> buildResponseList(List<String> sortedRoomIds) {
+	public List<DebateMetaDataResponse> buildResponseList(List<String> sortedRoomIds) {
 		List<DebateMetaDataResponse> responses = new ArrayList<>();
 		for (String roomId : sortedRoomIds) {
 			log.info("Processing roomId: {}", roomId);
