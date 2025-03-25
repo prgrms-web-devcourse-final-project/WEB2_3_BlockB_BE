@@ -208,6 +208,7 @@ public class UserService {
     }
 
     // 유저가 참여/참관한 토론방 상세 조회 - header
+    @Transactional
     public List<UserDebateDetailsResponse> getDebateDetails(UUID debatesId) {
         List<Tuple> debateDetailsData = userRepository.findAllWithDebateDetails(debatesId);
 
@@ -226,6 +227,7 @@ public class UserService {
     }
 
     // 유저가 참여/참관한 토론방 상세 조회 - body
+    @Transactional
     public List<DebateChatResponse> getUserDebateChats(UUID debatesId) {
         Debate debate = debateRepository.findByUuid(debatesId)
             .orElseThrow(() -> new NotFoundException(ErrorCode.DEBATEROOM_NOT_FOUND));
@@ -233,6 +235,7 @@ public class UserService {
         return debateChatQueryRepository.findDebateChatsByDebateId(debateId);
     }
 
+    @Transactional
     public List<ObserverChatResponse> getUserObserverChats(UUID debatesId) {
         Debate debate = debateRepository.findByUuid(debatesId)
             .orElseThrow(() -> new NotFoundException(ErrorCode.DEBATEROOM_NOT_FOUND));
