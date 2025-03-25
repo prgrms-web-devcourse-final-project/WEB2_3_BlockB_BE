@@ -48,7 +48,7 @@ public class Debate extends BaseTimeEntity {
     private UUID uuid;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "news_id")
+    @JoinColumn(name = "news_id", nullable = true)
     private News news;
 
     @Column(nullable = false)
