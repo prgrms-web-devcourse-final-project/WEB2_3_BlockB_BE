@@ -8,7 +8,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import org.hibernate.Hibernate;
 import org.springframework.stereotype.Service;
 
@@ -45,6 +45,7 @@ public class DebateMetaDataService {
 	/**
 	 * 시간 기준 내림차순 정렬된 Debate 목록에서 roomId를 추출하여 집계한 DebateMetaDataResponse 리스트 반환
 	 */
+	@Transactional(readOnly = true)
 	public List<DebateMetaDataResponse> getSortByTime() {
 		List<Debate> sortedDebates = debateRoomStore.getSortByTime();
 		List<String> roomIds = new ArrayList<>();
@@ -58,6 +59,7 @@ public class DebateMetaDataService {
 	/**
 	 * Debater 점수 기준 내림차순 정렬된 roomId 리스트를 이용하여 집계한 DebateMetaDataResponse 리스트 반환
 	 */
+	@Transactional(readOnly = true)
 	public List<DebateMetaDataResponse> getSortByDebaterScore() {
 		List<String> sortedRoomIds = debateUserStore.getSortedRoomIdsByScoreDesc();
 		log.info("getSortByDebaterScore - sortedRoomIds: {}", sortedRoomIds);
@@ -67,6 +69,7 @@ public class DebateMetaDataService {
 	/**
 	 * 현재 시청자 수 기준 내림차순 정렬된 roomId 리스트를 이용하여 집계한 DebateMetaDataResponse 리스트 반환
 	 */
+	@Transactional(readOnly = true)
 	public List<DebateMetaDataResponse> getSortByCurrentCount() {
 		List<String> sortedRoomIds = observerRoomStore.getSortedRoomIdsByCurrentViewer();
 		log.info("getSortByCurrentCount - sortedRoomIds: {}", sortedRoomIds);
@@ -76,6 +79,7 @@ public class DebateMetaDataService {
 	/**
 	 * 최대 시청자 수 기준 내림차순 정렬된 roomId 리스트를 이용하여 집계한 DebateMetaDataResponse 리스트 반환
 	 */
+	@Transactional(readOnly = true)
 	public List<DebateMetaDataResponse> getSortByMaxCount() {
 		List<String> sortedRoomIds = observerRoomStore.getSortedRoomIdsByMaxViewer();
 		log.info("getSortByMaxCount - sortedRoomIds: {}", sortedRoomIds);

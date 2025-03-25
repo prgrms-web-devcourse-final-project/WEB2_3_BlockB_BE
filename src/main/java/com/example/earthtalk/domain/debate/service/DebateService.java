@@ -2,7 +2,7 @@ package com.example.earthtalk.domain.debate.service;
 
 import java.util.UUID;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 
 import com.example.earthtalk.domain.debate.entity.Debate;

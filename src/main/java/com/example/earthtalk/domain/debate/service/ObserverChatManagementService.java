@@ -15,7 +15,7 @@ import com.example.earthtalk.domain.debate.store.DebateUserStore;
 import com.example.earthtalk.domain.debate.store.ObserverRoomStore;
 import com.example.earthtalk.global.exception.ErrorCode;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service

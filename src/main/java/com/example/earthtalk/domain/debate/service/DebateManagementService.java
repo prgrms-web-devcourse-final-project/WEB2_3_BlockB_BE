@@ -24,7 +24,7 @@ import com.example.earthtalk.global.exception.BadRequestException;
 import com.example.earthtalk.global.exception.ErrorCode;
 import com.example.earthtalk.global.exception.IllegalArgumentException;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * DebateManagementService는 채팅방이 가득 찼을 때 해당 채팅방의 메타데이터를 기반으로
