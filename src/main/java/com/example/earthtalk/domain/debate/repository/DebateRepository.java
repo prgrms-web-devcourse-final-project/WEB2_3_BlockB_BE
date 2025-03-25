@@ -19,7 +19,7 @@ import org.springframework.data.repository.query.Param;
 
 public interface DebateRepository extends JpaRepository<Debate, Long> {
 
-	@Query("select d from Debate d left join fetch d.news where d.uuid = :uuid")
+	@Query("select d from debates d left join fetch d.news where d.uuid = :uuid")
 	Optional<Debate> findByUuid(UUID uuid);
 
 	@Query("SELECT d FROM debates d "+
