@@ -129,21 +129,20 @@ public class DebateRoomService {
 			log.info("Debate 저장 완료 - Debate ID: {}", debate.getId());
 			debateRepository.flush();
 
-			debateRoomStore.put(debate);
-			log.info("DebateRoomStore에 Debate 추가 완료 - Debate ID: {}", debate.getId());
-
-			observerRoomStore.initializeRoom(roomId);
-			log.info("ObserverRoomStore 초기화 완료 - roomId: {}", roomId);
-
 			TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
 				@Override
 				public void afterCommit() {
+					debateRoomStore.put(debate);
+					log.info("DebateRoomStore에 Debate 추가 완료 - Debate ID: {}", debate.getId());
+
+					observerRoomStore.initializeRoom(roomId);
+					log.info("ObserverRoomStore 초기화 완료 - roomId: {}", roomId);
+
 					rabbitMQService.bindRabbitMQ(roomId);
 					log.info("afterCommit: RabbitMQ 바인딩 완료 - roomId: {}", roomId);
 				}
 			});
 
-			// 토론방 생성 완료 로그
 			log.info("createDebateRoom 완료 - 생성된 토론방 ID: {}", roomId);
 		} catch (Exception e) {
 			log.error("토론방 생성 중 오류 발생: {}", e.getMessage(), e);
