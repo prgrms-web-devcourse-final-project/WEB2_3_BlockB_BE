@@ -36,6 +36,9 @@ import com.example.earthtalk.domain.user.repository.UserRepository;
 import com.example.earthtalk.global.exception.ErrorCode;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+
 /**
  * ChatRoomService는 채팅방 생성 및 관리를 위한 서비스를 제공합니다.
  * <p>
@@ -124,6 +127,7 @@ public class DebateRoomService {
 
 			debateRepository.save(debate);
 			log.info("Debate 저장 완료 - Debate ID: {}", debate.getId());
+			debateRepository.flush();
 
 			debateRoomStore.put(debate);
 			log.info("DebateRoomStore에 Debate 추가 완료 - Debate ID: {}", debate.getId());
@@ -131,7 +135,13 @@ public class DebateRoomService {
 			observerRoomStore.initializeRoom(roomId);
 			log.info("ObserverRoomStore 초기화 완료 - roomId: {}", roomId);
 
-			rabbitMQService.bindRabbitMQ(roomId);
+			TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+				@Override
+				public void afterCommit() {
+					rabbitMQService.bindRabbitMQ(roomId);
+					log.info("afterCommit: RabbitMQ 바인딩 완료 - roomId: {}", roomId);
+				}
+			});
 
 			// 토론방 생성 완료 로그
 			log.info("createDebateRoom 완료 - 생성된 토론방 ID: {}", roomId);
