@@ -50,7 +50,7 @@ public class ChatController {
 	 * @throws IllegalArgumentException 메시지의 필수 필드가 null 또는 공백인 경우
 	 */
 	@MessageMapping("/debate/{roomId}")
-	public DebateMessage sendDebateMessage(
+	public void sendDebateMessage(
 			@DestinationVariable String roomId,
 			@Payload DebateMessage message,
 			SimpMessageHeaderAccessor headerAccessor
@@ -67,7 +67,6 @@ public class ChatController {
 		debateMessageStore.addDebateMessage(roomId, message);
 		rabbitMQService.sendRabbitMq(roomId, message);
 
-		return message;
 	}
 
 	/**
@@ -85,7 +84,7 @@ public class ChatController {
 	 *
 	 */
 	@MessageMapping("/observer/{roomId}")
-	public ObserverMessage sendObserverMessage(@DestinationVariable String roomId, @Payload ObserverMessage message,
+	public void sendObserverMessage(@DestinationVariable String roomId, @Payload ObserverMessage message,
 		SimpMessageHeaderAccessor headerAccessor
 	) {
 
@@ -100,7 +99,6 @@ public class ChatController {
 		observerMessageStore.addObserverMessage(roomId, message);
 		rabbitMQService.sendRabbitMq(roomId, message);
 
-		return message;
 	}
 
 }
