@@ -3,6 +3,8 @@ package com.example.earthtalk.domain.debate.service;
 import com.example.earthtalk.config.RabbitMQConfig;
 import com.example.earthtalk.domain.debate.dto.DebateMessage;
 import com.example.earthtalk.domain.debate.dto.ObserverMessage;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Binding;
@@ -22,6 +24,7 @@ public class RabbitMQService {
     private final DirectExchange exchange;
     private final RabbitMQListener listener;
     private final RabbitTemplate rabbitTemplate;
+    private final ObjectMapper objectMapper;
 
     public void bindRabbitMQ(String roomId) {
         log.info("RabbitMQ 바인딩 : ${}", roomId);
@@ -67,12 +70,22 @@ public class RabbitMQService {
     // 메시지를 RabbitMQ 에 전송 - 토론방
     public void sendRabbitMq(String roomId, DebateMessage message) {
         String rabbitKey = RabbitMQConfig.KEY_PREFIX + roomId + "_" + RabbitMQConfig.DEBATE_SUFFIX;
-        rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE_NAME, rabbitKey, message);
+        try {
+            String jsonMessage = objectMapper.writeValueAsString(message);
+            rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE_NAME, rabbitKey, jsonMessage);
+        } catch (JsonProcessingException e) {
+            log.info("채팅방 메시지 변환 실패");
+        }
     }
 
     // 메시지를 RabbitMQ 에 전송 - 관전방
     public void sendRabbitMq(String roomId, ObserverMessage message) {
         String rabbitKey = RabbitMQConfig.KEY_PREFIX + roomId + "_" + RabbitMQConfig.OBSERVER_SUFFIX;
-        rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE_NAME, rabbitKey, message);
+        try {
+            String jsonMessage = objectMapper.writeValueAsString(message);
+            rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE_NAME, rabbitKey, jsonMessage);
+        } catch (JsonProcessingException e) {
+            log.info("관전방 메시지 변환 실패");
+        }
     }
 }
