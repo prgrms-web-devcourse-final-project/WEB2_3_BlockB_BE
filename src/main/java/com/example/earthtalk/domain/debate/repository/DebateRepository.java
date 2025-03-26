@@ -22,7 +22,7 @@ import jakarta.persistence.LockModeType;
 
 public interface DebateRepository extends JpaRepository<Debate, Long> {
 
-	@Lock(LockModeType.PESSIMISTIC_WRITE)
+	@Lock(LockModeType.PESSIMISTIC_READ)
 	@Query("select d from debates d left join fetch d.news where d.uuid = :uuid")
 	Optional<Debate> findByUuid(UUID uuid);
 

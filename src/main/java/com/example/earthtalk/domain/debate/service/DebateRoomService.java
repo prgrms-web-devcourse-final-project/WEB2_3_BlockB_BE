@@ -11,6 +11,7 @@ import com.example.earthtalk.domain.debate.store.ObserverRoomStore;
 import com.example.earthtalk.domain.news.entity.MemberNumberType;
 import com.example.earthtalk.global.constant.ContinentType;
 import com.example.earthtalk.global.exception.NotFoundException;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -66,7 +67,7 @@ public class DebateRoomService {
 	 * @param request 채팅방 생성에 필요한 메타데이터를 담은 {@link CreateDebateRoomRequest} 객체
 	 * @return 생성된 채팅방의 고유 식별자 (roomId)
 	 */
-	@Transactional
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public String createDebateRoom(CreateDebateRoomRequest request) {
 		// 메서드 시작 로그: 요청 정보와 함께 시작됨
 		log.info("createDebateRoom 시작 - 요청 정보: {}", request);
