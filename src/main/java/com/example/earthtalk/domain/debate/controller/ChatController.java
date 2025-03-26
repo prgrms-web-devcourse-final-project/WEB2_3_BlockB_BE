@@ -50,7 +50,6 @@ public class ChatController {
 	 * @throws IllegalArgumentException 메시지의 필수 필드가 null 또는 공백인 경우
 	 */
 	@MessageMapping("/debate/{roomId}")
-	@SendTo("/topic/debate/{roomId}")
 	public DebateMessage sendDebateMessage(
 			@DestinationVariable String roomId,
 			@Payload DebateMessage message,
@@ -86,7 +85,6 @@ public class ChatController {
 	 *
 	 */
 	@MessageMapping("/observer/{roomId}")
-	@SendTo("/topic/observer/{roomId}")
 	public ObserverMessage sendObserverMessage(@DestinationVariable String roomId, @Payload ObserverMessage message,
 		SimpMessageHeaderAccessor headerAccessor
 	) {
