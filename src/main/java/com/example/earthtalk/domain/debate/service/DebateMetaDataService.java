@@ -1,11 +1,6 @@
 package com.example.earthtalk.domain.debate.service;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import org.springframework.transaction.annotation.Transactional;
@@ -95,8 +90,12 @@ public class DebateMetaDataService {
 		List<DebateMetaDataResponse> responses = new ArrayList<>();
 		for (String roomId : sortedRoomIds) {
 			log.info("Processing roomId: {}", roomId);
-			Debate debate = debateRepository.findByUuid(UUID.fromString(roomId))
-				.orElseThrow(() -> new IllegalArgumentException(ErrorCode.DEBATEROOM_NOT_FOUND.getMessage()));
+			Optional<Debate> debateOpt = debateRepository.findByUuid(UUID.fromString(roomId));
+			if (!debateOpt.isPresent()) {
+				log.warn("Debate with roomId {} not found. Skipping.", roomId);
+				continue;  // 해당 roomId는 건너뜁니다.
+			}
+			Debate debate = debateOpt.get();
 			Long currentCount = observerRoomStore.getObserverCount(roomId);
 			Long maxCount = observerRoomStore.getMaxObserverCount(roomId);
 
@@ -106,7 +105,7 @@ public class DebateMetaDataService {
 			Set<DebateUserResponse> proUserResponses = new HashSet<>();
 			for (String userName : redisProUsers) {
 				User user = userRepository.findByNickname(userName)
-					.orElseThrow(null);
+						.orElseThrow(() -> new IllegalArgumentException("User not found for nickname: " + userName));
 				proUserResponses.add(DebateUserResponse.builder()
 						.id(user.getId())
 						.nickname(user.getNickname())
@@ -116,56 +115,54 @@ public class DebateMetaDataService {
 						.defeatNumber(user.getDefeatNumber())
 						.winNumber(user.getWinNumber())
 						.drawNumber(user.getDrawNumber())
-						.defeatNumber(user.getDefeatNumber())
 						.profileUrl(user.getProfileUrl())
-					.build());
+						.build());
 			}
 
 			Set<DebateUserResponse> conUserResponses = new HashSet<>();
-
 			for (String userName : redisConUsers) {
 				User user = userRepository.findByNickname(userName)
-					.orElseThrow(null);
+						.orElseThrow(() -> new IllegalArgumentException("User not found for nickname: " + userName));
 				conUserResponses.add(DebateUserResponse.builder()
-					.id(user.getId())
-					.nickname(user.getNickname())
-					.email(user.getEmail())
-					.position(FlagType.CON)
-					.introduction(user.getIntroduction())
-					.defeatNumber(user.getDefeatNumber())
-					.winNumber(user.getWinNumber())
-					.drawNumber(user.getDrawNumber())
-					.defeatNumber(user.getDefeatNumber())
-					.profileUrl(user.getProfileUrl())
-					.build());
+						.id(user.getId())
+						.nickname(user.getNickname())
+						.email(user.getEmail())
+						.position(FlagType.CON)
+						.introduction(user.getIntroduction())
+						.defeatNumber(user.getDefeatNumber())
+						.winNumber(user.getWinNumber())
+						.drawNumber(user.getDrawNumber())
+						.profileUrl(user.getProfileUrl())
+						.build());
 			}
 
 			DebateRoomResponse roomResponse = DebateRoomResponse.builder()
-				.uuid(debate.getUuid())
-				.title(debate.getTitle())
-				.description(debate.getDescription())
-				.memberNumberType(debate.getMember().getValue())
-				.categoryType(debate.getCategory())
-				.continentType(debate.getContinent())
-				.newsUrl(debate.getNews() != null ? debate.getNews().getLink() : null)
-				.status(debate.getStatus())
-				.timeType(debate.getTime().getValue())
-				.speakCountType(debate.getSpeakCount().getValue())
-				.proUsers(proUserResponses)
-				.conUsers(conUserResponses)
-				.resultEnabled(debate.isResultEnabled())
-				.build();
+					.uuid(debate.getUuid())
+					.title(debate.getTitle())
+					.description(debate.getDescription())
+					.memberNumberType(debate.getMember().getValue())
+					.categoryType(debate.getCategory())
+					.continentType(debate.getContinent())
+					.newsUrl(debate.getNews() != null ? debate.getNews().getLink() : null)
+					.status(debate.getStatus())
+					.timeType(debate.getTime().getValue())
+					.speakCountType(debate.getSpeakCount().getValue())
+					.proUsers(proUserResponses)
+					.conUsers(conUserResponses)
+					.resultEnabled(debate.isResultEnabled())
+					.build();
 
 			DebateMetaDataResponse response = DebateMetaDataResponse.builder()
-				.debateRoomResponse(roomResponse)
-				.currentCount(currentCount)
-				.maxCount(maxCount)
-				.build();
+					.debateRoomResponse(roomResponse)
+					.currentCount(currentCount)
+					.maxCount(maxCount)
+					.build();
 
 			responses.add(response);
 		}
 		return responses;
 	}
+
 
 
 
