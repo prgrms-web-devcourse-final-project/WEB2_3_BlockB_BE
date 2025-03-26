@@ -47,7 +47,7 @@ public class NotificationService {
     private static final String NOTIFICATION_AGREE_PREFIX = "notification_allowed:";
     private static final String FOLLOW_MESSAGE = "%s님이 당신을 팔로우했습니다.";
     private static final String REPORT_MESSAGE = "%s(으)로 운영자에게 %s(을)를 처분받았습니다.";
-    private static final String CHAT_MESSAGE = "참가 중인 채팅방의 대기가 완료되었습니다.";
+    private static final String CHAT_MESSAGE = "참가 중인 토론방의 대기가 완료되었습니다.";
     private static final String NOTIFICATION_STRING = "%d,%s,%d,%s,%s";
 
     // 접속중인 사용자의 id 값을 전달해주면 그와 관련된 알림을 조회하여 반환합니다.

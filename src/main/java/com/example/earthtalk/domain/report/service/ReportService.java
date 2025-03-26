@@ -40,8 +40,6 @@ public class ReportService {
     private final UserRepository userRepository;
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
-    // 신고하는 로직 간단하게 구현해놨습니다. 예외처리 따로 안되어있어요.
-    // 각 위치에서 신고에 대한 기능 만들 때 예외 처리 해야합니다.
     public Long saveReport(InsertReportRequest request) {
         if (request == null) {
             throw new IllegalArgumentException(ErrorCode.INVALID_REQUEST_BODY.getMessage());

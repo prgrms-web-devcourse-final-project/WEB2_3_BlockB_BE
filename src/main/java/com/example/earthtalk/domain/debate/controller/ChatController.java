@@ -1,5 +1,7 @@
 package com.example.earthtalk.domain.debate.controller;
 
+import com.example.earthtalk.config.RabbitMQConfig;
+import com.example.earthtalk.domain.debate.service.RabbitMQService;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -32,6 +34,7 @@ public class ChatController {
 	private final DebateMessageStore debateMessageStore;
 	private final ObserverMessageStore observerMessageStore;
 	private final WebSocketIdleSessionMonitor webSocketIdleSessionMonitor;
+	private final RabbitMQService rabbitMQService;
 
 	/**
 	 * 토론 메시지를 처리하여 검증된 DebateMessage를 브로드캐스트합니다.
@@ -48,9 +51,10 @@ public class ChatController {
 	 */
 	@MessageMapping("/debate/{roomId}")
 	@SendTo("/topic/debate/{roomId}")
-	public DebateMessage sendDebateMessage(@DestinationVariable String roomId,
-		@Payload DebateMessage message,
-		SimpMessageHeaderAccessor headerAccessor
+	public DebateMessage sendDebateMessage(
+			@DestinationVariable String roomId,
+			@Payload DebateMessage message,
+			SimpMessageHeaderAccessor headerAccessor
 	) {
 
 		String sessionId = headerAccessor.getSessionId();
@@ -62,6 +66,7 @@ public class ChatController {
 		}
 
 		debateMessageStore.addDebateMessage(roomId, message);
+		rabbitMQService.sendRabbitMq(roomId, message);
 
 		return message;
 	}
@@ -95,6 +100,7 @@ public class ChatController {
 		}
 
 		observerMessageStore.addObserverMessage(roomId, message);
+		rabbitMQService.sendRabbitMq(roomId, message);
 
 		return message;
 	}

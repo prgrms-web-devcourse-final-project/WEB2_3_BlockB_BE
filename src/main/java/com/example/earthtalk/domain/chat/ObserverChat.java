@@ -18,6 +18,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import java.time.LocalDateTime;
+
 @Entity(name = "observerChats")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
@@ -40,4 +42,7 @@ public class ObserverChat extends BaseTimeEntity {
 
     @Column(nullable = false)
     private String content;
+
+    @Column(nullable = false)
+    private LocalDateTime time;
 }
