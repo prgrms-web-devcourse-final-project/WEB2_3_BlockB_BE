@@ -1,10 +1,8 @@
 package com.example.earthtalk.domain.debate.service;
 
 import com.example.earthtalk.config.RabbitMQConfig;
-import com.example.earthtalk.domain.chat.repository.ObserverChatRepository;
 import com.example.earthtalk.domain.debate.dto.DebateMessage;
 import com.example.earthtalk.domain.debate.dto.ObserverMessage;
-import com.example.earthtalk.domain.debate.repository.DebateChatRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Binding;
@@ -26,6 +24,7 @@ public class RabbitMQService {
     private final RabbitTemplate rabbitTemplate;
 
     public void bindRabbitMQ(String roomId) {
+        log.info("RabbitMQ 바인딩 : ${}", roomId);
         rabbitAdmin.declareExchange(exchange);
 
         Queue debateQueue = createQueue(roomId, RabbitMQConfig.DEBATE_SUFFIX);

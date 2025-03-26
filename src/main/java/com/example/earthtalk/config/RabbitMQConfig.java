@@ -1,7 +1,9 @@
 package com.example.earthtalk.config;
 
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.DirectExchange;
+import org.springframework.amqp.rabbit.annotation.EnableRabbit;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
@@ -12,6 +14,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
+@EnableRabbit
+@Slf4j
 public class RabbitMQConfig {
 
     @Value("${spring.rabbitmq.host}")
@@ -35,6 +39,7 @@ public class RabbitMQConfig {
 
     @Bean
     public ConnectionFactory connectionFactory() {
+        log.info("connectionFactory 생성");
         CachingConnectionFactory connectionFactory = new CachingConnectionFactory();
         connectionFactory.setHost(rabbit_host);
         connectionFactory.setUsername(rabbit_username);
@@ -45,21 +50,25 @@ public class RabbitMQConfig {
 
     @Bean
     public RabbitListenerEndpointRegistry rabbitListenerEndpointRegistry() {
+        log.info("rabbitListenerEndpointRegistry 생성");
         return new RabbitListenerEndpointRegistry();
     }
 
     @Bean
     public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory) {
+        log.info("rabbitTemplate 생성");
         return new RabbitTemplate(connectionFactory);
     }
 
     @Bean
     public DirectExchange exchange() {
+        log.info("exchange 생성");
         return new DirectExchange(EXCHANGE_NAME, true, false);
     }
 
     @Bean
     public RabbitAdmin rabbitAdmin(ConnectionFactory connectionFactory) {
+        log.info("rabbitAdmin 생성");
         return new RabbitAdmin(connectionFactory);
     }
 
