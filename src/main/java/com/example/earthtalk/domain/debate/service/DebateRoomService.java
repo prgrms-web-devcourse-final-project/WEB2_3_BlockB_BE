@@ -1,17 +1,14 @@
 package com.example.earthtalk.domain.debate.service;
 
-import com.example.earthtalk.domain.debate.dto.VoteResponse;
 import com.example.earthtalk.domain.debate.entity.VoteStatus;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
-
 import com.example.earthtalk.domain.debate.entity.*;
 import com.example.earthtalk.domain.debate.store.ObserverRoomStore;
 import com.example.earthtalk.domain.news.entity.MemberNumberType;
-import com.example.earthtalk.domain.news.entity.TimeType;
 import com.example.earthtalk.global.constant.ContinentType;
 import com.example.earthtalk.global.exception.NotFoundException;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,11 +20,9 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
 import com.example.earthtalk.domain.debate.dto.CreateDebateRoomRequest;
 import com.example.earthtalk.domain.debate.dto.DebateRoomResponse;
 import com.example.earthtalk.domain.debate.dto.DebateUserResponse;
-import com.example.earthtalk.domain.debate.dto.VoteRequest;
 import com.example.earthtalk.domain.debate.dto.WaitRoomResponse;
 import com.example.earthtalk.domain.debate.repository.DebateParticipantsRepository;
 import com.example.earthtalk.domain.debate.repository.DebateRepository;
@@ -40,7 +35,6 @@ import com.example.earthtalk.domain.user.repository.UserRepository;
 import com.example.earthtalk.global.exception.ErrorCode;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 /**
  * ChatRoomService는 채팅방 생성 및 관리를 위한 서비스를 제공합니다.
  * <p>
@@ -53,7 +47,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @Slf4j
 @RequiredArgsConstructor
 public class DebateRoomService {
-
 	private final DebateRoomStore debateRoomStore;
 	private final DebateRepository debateRepository;
 	private final NewsRepository newsRepository;
@@ -61,6 +54,7 @@ public class DebateRoomService {
 	private final DebateUserStore debateUserStore;
 	private final DebateParticipantsRepository debateParticipantsRepository;
 	private final ObserverRoomStore observerRoomStore;
+	private final RabbitMQService rabbitMQService;
 
 	/**
 	 * 새로운 채팅방을 생성하고 저장소에 등록합니다.
@@ -105,26 +99,26 @@ public class DebateRoomService {
 		try {
 			// Debate 객체 생성 전 필드 값 로깅
 			log.debug("Debate 객체 생성 시작 - title: {}, description: {}, member: {}, continent: {}, category: {}, speakCount: {}, time: {}",
-				request.getTitle(), request.getDescription(), request.getMemberNumber(),
-				request.getContinent(), request.getCategory(), request.getSpeakCount(), request.getTime());
+					request.getTitle(), request.getDescription(), request.getMemberNumber(),
+					request.getContinent(), request.getCategory(), request.getSpeakCount(), request.getTime());
 
 			Debate debate = Debate.builder()
-				.uuid(UUID.fromString(roomId))
-				.news(news)
-				.title(request.getTitle())
-				.description(request.getDescription())
-				.member(request.getMemberNumber())
-				.continent(request.getContinent())
-				.category(request.getCategory())
-				.speakCount(request.getSpeakCount())
-				.resultEnabled(request.isResultEnabled())
-				.time(request.getTime())
-				.cachedTime(LocalDateTime.now())
-				.status(RoomType.WAITING) // 기본 상태 설정
-				.agreeNumber(0L)         // 초기 찬성 수
-				.disagreeNumber(0L)      // 초기 반대 수
-				.neutralNumber(0L)       // 초기 중립 수
-				.build();
+					.uuid(UUID.fromString(roomId))
+					.news(news)
+					.title(request.getTitle())
+					.description(request.getDescription())
+					.member(request.getMemberNumber())
+					.continent(request.getContinent())
+					.category(request.getCategory())
+					.speakCount(request.getSpeakCount())
+					.resultEnabled(request.isResultEnabled())
+					.time(request.getTime())
+					.cachedTime(LocalDateTime.now())
+					.status(RoomType.WAITING) // 기본 상태 설정
+					.agreeNumber(0L)         // 초기 찬성 수
+					.disagreeNumber(0L)      // 초기 반대 수
+					.neutralNumber(0L)       // 초기 중립 수
+					.build();
 			log.debug("Debate 객체 생성 완료 - {}", debate);
 
 			debateRepository.save(debate);
@@ -135,6 +129,8 @@ public class DebateRoomService {
 
 			observerRoomStore.initializeRoom(roomId);
 			log.info("ObserverRoomStore 초기화 완료 - roomId: {}", roomId);
+
+			rabbitMQService.bindRabbitMQ(roomId);
 
 			// 토론방 생성 완료 로그
 			log.info("createDebateRoom 완료 - 생성된 토론방 ID: {}", roomId);
@@ -172,9 +168,8 @@ public class DebateRoomService {
 	@Transactional
 	public Debate getDebate(String roomId) {
 		return debateRepository.findByUuid(UUID.fromString(roomId))
-			.orElseThrow(() -> new IllegalArgumentException(ErrorCode.DEBATEROOM_NOT_FOUND.getMessage()));
+				.orElseThrow(() -> new IllegalArgumentException(ErrorCode.DEBATEROOM_NOT_FOUND.getMessage()));
 	}
-
 	public Page<DebateRoomResponse> getFinishDebateRooms(String query, ContinentType continent, CategoryType category, MemberNumberType member, int page, String sort) {
 		Pageable pageable = PageRequest.of(page, 15);
 		Page<Debate> debatePage = debateRepository.findFinishDebatesByParams(query, continent, category, member, sort, pageable);
@@ -187,27 +182,26 @@ public class DebateRoomService {
 		}
 		return new PageImpl<>(responses, pageable, debatePage.getTotalElements());
 	}
-
 	/**
 	 * 주어진 roomId에 해당하는 채팅방 정보를 저장소에서 제거합니다.
 	 *
 	 * @param roomId 채팅방의 고유 식별자
 	 */
 	public void removeDebateRoom(String roomId) {
+		rabbitMQService.deleteRabbitMq(roomId);
 		debateRoomStore.remove(roomId);
 	}
 
 	@Transactional
 	public FlagType processDebateResult(UUID roomId, VoteStatus voteStatus) {
 		Debate debate = debateRepository.findByUuid(roomId)
-			.orElseThrow(() -> new IllegalArgumentException(ErrorCode.DEBATEROOM_NOT_FOUND.getMessage()));
+				.orElseThrow(() -> new IllegalArgumentException(ErrorCode.DEBATEROOM_NOT_FOUND.getMessage()));
 		Set<User> modifiedUsers = new HashSet<>();
 		log.info("Service - processDebateResult : resultEnabled = {} | roomId = {}", debate.isResultEnabled(), roomId);
 		boolean proWins = true, draw = false;
 		if (debate.isResultEnabled()) {
 			proWins = voteStatus.getPro() > voteStatus.getCon();
 			draw = voteStatus.getPro().equals(voteStatus.getCon());
-
 			log.info("Service - processDebateResult : pro = {}", voteStatus.getPro());
 			log.info("Service - processDebateResult : con = {}", voteStatus.getCon());
 			log.info("Service - processDebateResult : participants = {}", debate.getParticipants().size());
@@ -217,12 +211,11 @@ public class DebateRoomService {
 					if (draw) {
 						user.incrementDrawNumber();
 					} else if ((participants.getPosition() == FlagType.PRO && proWins) ||
-						(participants.getPosition() != FlagType.PRO && !proWins)) {
+							(participants.getPosition() != FlagType.PRO && !proWins)) {
 						user.incrementWinNumber();
 					} else {
 						user.incrementDefeatNumber();
 					}
-
 					modifiedUsers.add(user);
 				}
 			}catch (Exception e){
@@ -242,47 +235,44 @@ public class DebateRoomService {
 				.orElseThrow(() -> new IllegalArgumentException(ErrorCode.DEBATEROOM_NOT_FOUND.getMessage()));
 		debate.updateRoomType(RoomType.CLOSED);
 	}
-
 	public WaitRoomResponse buildWaitRoomResponse(Debate debate, UUID roomId) {
 		Set<String> proUsers = debateUserStore.getProUsers(roomId.toString());
 		Set<DebateUserResponse> proResponse = convertUsernamesToUserResponses(proUsers);
-
 		Set<String> conUsers  = debateUserStore.getConUsers(roomId.toString());
 		Set<DebateUserResponse> conResponse = convertUsernamesToUserResponses(conUsers);
-
 		return WaitRoomResponse.builder()
-			.roomId(debate.getUuid())
-			.title(debate.getTitle())
-			.description(debate.getDescription())
-			.memberNumberType(debate.getMember().getValue())
-			.categoryType(debate.getCategory())
-			.continentType(debate.getContinent())
-			.newsUrl(debate.getNews() != null ? debate.getNews().getLink() : null)
-			.status(debate.getStatus())
-			.timeType(debate.getTime().getValue())
-			.speakCountType(debate.getSpeakCount().getValue())
-			.proUsers(proResponse)
-			.conUsers(conResponse)
-			.resultEnabled(debate.isResultEnabled())
-			.build();
+				.roomId(debate.getUuid())
+				.title(debate.getTitle())
+				.description(debate.getDescription())
+				.memberNumberType(debate.getMember().getValue())
+				.categoryType(debate.getCategory())
+				.continentType(debate.getContinent())
+				.newsUrl(debate.getNews() != null ? debate.getNews().getLink() : null)
+				.status(debate.getStatus())
+				.timeType(debate.getTime().getValue())
+				.speakCountType(debate.getSpeakCount().getValue())
+				.proUsers(proResponse)
+				.conUsers(conResponse)
+				.resultEnabled(debate.isResultEnabled())
+				.build();
 	}
 
 	private Set<DebateUserResponse> convertUsernamesToUserResponses(Set<String> usernames) {
 		return usernames.stream()
-			.map(userRepository::findByNickname)
-			.filter(Optional::isPresent)
-			.map(Optional::get)
-			.map(user -> DebateUserResponse.builder()
-				.id(user.getId())
-				.nickname(user.getNickname())
-				.email(user.getEmail())
-				.introduction(user.getIntroduction())
-				.profileUrl(user.getProfileUrl())
-				.winNumber(user.getWinNumber())
-				.defeatNumber(user.getDefeatNumber())
-				.drawNumber(user.getDrawNumber())
-				.build())
-			.collect(Collectors.toSet());
+				.map(userRepository::findByNickname)
+				.filter(Optional::isPresent)
+				.map(Optional::get)
+				.map(user -> DebateUserResponse.builder()
+						.id(user.getId())
+						.nickname(user.getNickname())
+						.email(user.getEmail())
+						.introduction(user.getIntroduction())
+						.profileUrl(user.getProfileUrl())
+						.winNumber(user.getWinNumber())
+						.defeatNumber(user.getDefeatNumber())
+						.drawNumber(user.getDrawNumber())
+						.build())
+				.collect(Collectors.toSet());
 	}
 
 	public DebateRoomResponse buildDebateRoomResponse(Debate debate, UUID roomId) {
@@ -293,96 +283,96 @@ public class DebateRoomService {
 		Set<DebateUserResponse> conResponse = new HashSet<>();
 
 		if ((debate.getMember().getValue() != 1
-			&& ((proUsers.size() <= 1 || conUsers.size() <= 1)
-			&& debate.getAgreeNumber() == 0
-			&& debate.getDisagreeNumber() == 0
-			&& debate.getNeutralNumber() == 0))
-			|| (debate.getMember().getValue() == 1
-			&& (proUsers.isEmpty() || conUsers.isEmpty()
-			&& debate.getAgreeNumber() == 0
-			&& debate.getDisagreeNumber() == 0
-			&& debate.getNeutralNumber() == 0))) {
+				&& ((proUsers.size() <= 1 || conUsers.size() <= 1)
+				&& debate.getAgreeNumber() == 0
+				&& debate.getDisagreeNumber() == 0
+				&& debate.getNeutralNumber() == 0))
+				|| (debate.getMember().getValue() == 1
+				&& (proUsers.isEmpty() || conUsers.isEmpty()
+				&& debate.getAgreeNumber() == 0
+				&& debate.getDisagreeNumber() == 0
+				&& debate.getNeutralNumber() == 0))) {
 			proUsers.clear();
 			conUsers.clear();
 			List<DebateParticipants> dbProUser = debate.getParticipants();
 			for (DebateParticipants participants : dbProUser) {
 				if (participants.getPosition() == FlagType.PRO) {
 					proResponse.add(DebateUserResponse.builder()
-						.id(participants.getId())
-						.email(participants.getUser().getEmail())
-						.nickname(participants.getUser().getNickname())
-						.introduction(participants.getUser().getIntroduction())
-						.profileUrl(participants.getUser().getProfileUrl())
-						.winNumber(participants.getUser().getWinNumber())
-						.drawNumber(participants.getUser().getDrawNumber())
-						.defeatNumber(participants.getUser().getDefeatNumber())
-						.position(FlagType.PRO)
-						.build());
+							.id(participants.getId())
+							.email(participants.getUser().getEmail())
+							.nickname(participants.getUser().getNickname())
+							.introduction(participants.getUser().getIntroduction())
+							.profileUrl(participants.getUser().getProfileUrl())
+							.winNumber(participants.getUser().getWinNumber())
+							.drawNumber(participants.getUser().getDrawNumber())
+							.defeatNumber(participants.getUser().getDefeatNumber())
+							.position(FlagType.PRO)
+							.build());
 				} else if (participants.getPosition() == FlagType.CON) {
 					conResponse.add(DebateUserResponse.builder()
-						.id(participants.getId())
-						.email(participants.getUser().getEmail())
-						.nickname(participants.getUser().getNickname())
-						.introduction(participants.getUser().getIntroduction())
-						.profileUrl(participants.getUser().getProfileUrl())
-						.winNumber(participants.getUser().getWinNumber())
-						.drawNumber(participants.getUser().getDrawNumber())
-						.defeatNumber(participants.getUser().getDefeatNumber())
-						.position(FlagType.CON)
-						.build());
+							.id(participants.getId())
+							.email(participants.getUser().getEmail())
+							.nickname(participants.getUser().getNickname())
+							.introduction(participants.getUser().getIntroduction())
+							.profileUrl(participants.getUser().getProfileUrl())
+							.winNumber(participants.getUser().getWinNumber())
+							.drawNumber(participants.getUser().getDrawNumber())
+							.defeatNumber(participants.getUser().getDefeatNumber())
+							.position(FlagType.CON)
+							.build());
 				}
 			}
 		}else {
 			for (String proUser : proUsers) {
 				User user = userRepository.findByNickname(proUser)
-					.orElseThrow(() -> new IllegalArgumentException(ErrorCode.USER_NOT_FOUND.getMessage()));
+						.orElseThrow(() -> new IllegalArgumentException(ErrorCode.USER_NOT_FOUND.getMessage()));
 
 				proResponse.add(DebateUserResponse.builder()
-					.id(user.getId())
-					.email(user.getEmail())
-					.nickname(user.getNickname())
-					.introduction(user.getIntroduction())
-					.profileUrl(user.getProfileUrl())
-					.winNumber(user.getWinNumber())
-					.drawNumber(user.getDrawNumber())
-					.defeatNumber(user.getDefeatNumber())
-					.position(FlagType.PRO)
-					.build());
+						.id(user.getId())
+						.email(user.getEmail())
+						.nickname(user.getNickname())
+						.introduction(user.getIntroduction())
+						.profileUrl(user.getProfileUrl())
+						.winNumber(user.getWinNumber())
+						.drawNumber(user.getDrawNumber())
+						.defeatNumber(user.getDefeatNumber())
+						.position(FlagType.PRO)
+						.build());
 			}
 
 			for (String conUser : conUsers) {
 				User user = userRepository.findByNickname(conUser)
-					.orElseThrow(() -> new IllegalArgumentException(ErrorCode.USER_NOT_FOUND.getMessage()));
+						.orElseThrow(() -> new IllegalArgumentException(ErrorCode.USER_NOT_FOUND.getMessage()));
 				conResponse.add(DebateUserResponse.builder()
-					.id(user.getId())
-					.email(user.getEmail())
-					.nickname(user.getNickname())
-					.introduction(user.getIntroduction())
-					.profileUrl(user.getProfileUrl())
-					.winNumber(user.getWinNumber())
-					.drawNumber(user.getDrawNumber())
-					.defeatNumber(user.getDefeatNumber())
-					.position(FlagType.CON)
-					.build());
+						.id(user.getId())
+						.email(user.getEmail())
+						.nickname(user.getNickname())
+						.introduction(user.getIntroduction())
+						.profileUrl(user.getProfileUrl())
+						.winNumber(user.getWinNumber())
+						.drawNumber(user.getDrawNumber())
+						.defeatNumber(user.getDefeatNumber())
+						.position(FlagType.CON)
+						.build());
 			}
 		}
 
 		// 로그: DebateRoomResponse 빌더를 사용하여 응답 객체 생성 시작
 		DebateRoomResponse response = DebateRoomResponse.builder()
-			.uuid(debate.getUuid())
-			.title(debate.getTitle())
-			.description(debate.getDescription())
-			.memberNumberType(debate.getMember().getValue())
-			.categoryType(debate.getCategory())
-			.continentType(debate.getContinent())
-			.newsUrl(debate.getNews() != null ? debate.getNews().getLink() : null)
-			.status(debate.getStatus())
-			.timeType(debate.getTime().getValue())
-			.speakCountType(debate.getSpeakCount().getValue())
-			.proUsers(proResponse)
-			.conUsers(conResponse)
-			.resultEnabled(debate.isResultEnabled())
-			.build();
+				.uuid(debate.getUuid())
+				.title(debate.getTitle())
+				.description(debate.getDescription())
+				.memberNumberType(debate.getMember().getValue())
+				.categoryType(debate.getCategory())
+				.continentType(debate.getContinent())
+				.newsUrl(debate.getNews() != null ? debate.getNews().getLink() : null)
+				.status(debate.getStatus())
+				.timeType(debate.getTime().getValue())
+				.speakCountType(debate.getSpeakCount().getValue())
+				.proUsers(proResponse)
+				.conUsers(conResponse)
+				.resultEnabled(debate.isResultEnabled())
+				.build();
 
 		return response;
 	}

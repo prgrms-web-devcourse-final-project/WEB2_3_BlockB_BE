@@ -81,6 +81,9 @@ dependencies {
 
     implementation 'javax.persistence:javax.persistence-api:2.2'
 
+// https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-amqp
+    implementation 'org.springframework.boot:spring-boot-starter-amqp:3.4.1'
+
 }
 
 tasks.named('test') {
