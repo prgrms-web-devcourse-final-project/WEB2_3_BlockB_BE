@@ -26,6 +26,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.Set;
@@ -42,6 +43,7 @@ public class NotificationService {
     private final ReportRepository reportRepository;
     private final DebateRepository debateRepository;
     private final RedisTemplate<String, Object> redisTemplate;
+    private final SimpMessagingTemplate simpMessagingTemplate;
 
     private static final int size = 10;
     private static final String NOTIFICATION_AGREE_PREFIX = "notification_allowed:";
@@ -123,6 +125,12 @@ public class NotificationService {
                 notification.getNotificationTypeId(),
                 notification.getContent(),
                 notification.getStatusType().name());
+
+        simpMessagingTemplate.convertAndSendToUser(
+                request.userId().toString(),
+                "/queue/notification",
+                notificationString
+        );
 
         firebaseService.pushNotification(fcmTokens, content, request.userId(), notificationString);
     }

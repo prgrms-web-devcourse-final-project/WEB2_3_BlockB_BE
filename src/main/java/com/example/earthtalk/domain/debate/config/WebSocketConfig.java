@@ -1,5 +1,6 @@
 package com.example.earthtalk.domain.debate.config;
 
+import com.example.earthtalk.domain.debate.component.UserIdInterceptor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
@@ -20,12 +21,14 @@ import com.example.earthtalk.domain.debate.component.StompConnectInterceptor;
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
 	private final StompConnectInterceptor stompConnectInterceptor;
+	private final UserIdInterceptor userIdInterceptor;
 
 	@Override
 	public void configureMessageBroker(MessageBrokerRegistry config) {
-		config.enableSimpleBroker("/topic");
+		config.enableSimpleBroker("/topic", "/queue");
 		config.setApplicationDestinationPrefixes("/app");
-		log.info("Message Broker configured: simple broker '/topic', application destination prefix '/app'");
+		config.setUserDestinationPrefix("/user");
+		log.info("Message Broker configured: simple broker '/topic', application destination prefix '/app', user prefix '/user'");
 	}
 
 	@Override
@@ -43,6 +46,10 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 		registry.addEndpoint("/room-list/filtered")
 			.setAllowedOrigins("*")
 			.addInterceptors(new QueryHandshakeInterceptor());
+
+		registry.addEndpoint("/notification")
+				.setAllowedOrigins("*")
+				.addInterceptors(userIdInterceptor);
 	}
 
 	@Override
