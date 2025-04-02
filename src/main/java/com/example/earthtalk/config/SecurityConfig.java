@@ -51,7 +51,8 @@ public class SecurityConfig {
         "/api/chat/**",
         "/room-list/**", "/debate/**", "/observer/**",
         "/topic/**",
-        "/app/**"
+        "/app/**",
+        "/user/**", "/notification/**"
     };
 
     @Bean
