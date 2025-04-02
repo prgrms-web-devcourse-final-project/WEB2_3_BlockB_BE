@@ -40,8 +40,12 @@ public class UserIdInterceptor implements HandshakeInterceptor {
             if (request instanceof ServletServerHttpRequest) {
                 ServletServerHttpRequest servletServerHttpRequest = (ServletServerHttpRequest) request;
                 HttpServletRequest httpServletRequest = servletServerHttpRequest.getServletRequest();
+                String authHeader = httpServletRequest.getHeader(JwtAuthenticationFilter.AUTHORIZATION_HEADER);
+                log.info("Authorization Header: {}", authHeader);
 
                 String token = jwtTokenProvider.parseBearerToken(httpServletRequest.getHeader(JwtAuthenticationFilter.AUTHORIZATION_HEADER));
+                log.info("Jwt Token: {}", token);
+
                 if(token != null && jwtTokenProvider.validateAccessToken(token)) {
                     Claims claims = jwtTokenProvider.getClaims(token);
                     User user = userRepository.findByEmail(claims.getSubject()).orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
