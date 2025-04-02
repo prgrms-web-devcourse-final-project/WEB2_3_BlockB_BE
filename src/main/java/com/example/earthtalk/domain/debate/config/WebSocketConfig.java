@@ -50,6 +50,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 		registry.addEndpoint("/notification")
 				.setAllowedOrigins("*")
 				.addInterceptors(userIdInterceptor);
+		log.info("Registered STOMP endpoint: /notification");
 	}
 
 	@Override
