@@ -93,7 +93,7 @@ public class DebateUserService {
 			if ("pro".equalsIgnoreCase(position)) {
 				if (debateUserStore.getProUserCounts().getOrDefault(roomId, 0) >= maxMembers) {
 					Map<String, String> errorMessage = Map.of(
-						"event", "error",
+						"event", "ERROR",
 						"roomId", roomId,
 						"kickedUserName", userName,
 						"message", ErrorCode.TOO_MANY_PARTICIPANTS.getMessage()
@@ -106,7 +106,7 @@ public class DebateUserService {
 			} else if ("con".equalsIgnoreCase(position)) {
 				if (debateUserStore.getConUserCounts().getOrDefault(roomId, 0) >= maxMembers) {
 					Map<String, String> errorMessage = Map.of(
-						"event", "error",
+						"event", "ERROR",
 						"roomId", roomId,
 						"kickedUserName", userName,
 						"message", ErrorCode.TOO_MANY_PARTICIPANTS.getMessage()
@@ -336,7 +336,7 @@ public class DebateUserService {
 	 */
 	private void sendUserJoinMessage(String roomId, String userName) {
 		Map<String, String> userJoinedMessage = Map.of(
-			"event", "user_joined",
+			"event", "USER_JOINED",
 			"roomId", roomId,
 			"userName", userName,
 			"message", userName + "님이 방에 입장했습니다."
@@ -355,7 +355,7 @@ public class DebateUserService {
 	 */
 	private void sendUserLeftMessage(String roomId, String userName) {
 		Map<String, String> message = Map.of(
-			"event", "user_left",
+			"event", "USER_LEFT",
 			"roomId", roomId,
 			"userName", userName,
 			"message", userName + "님이 방을 떠났습니다."
