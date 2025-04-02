@@ -119,6 +119,8 @@ public class NotificationService {
         Notification notification = saveNotificationRequest.toEntity(user);
         notificationRepository.save(notification);
 
+        log.info("알림 전송");
+
         String notificationString = String.format(NOTIFICATION_STRING,
                 notification.getId(),
                 notification.getNotificationType().name(),

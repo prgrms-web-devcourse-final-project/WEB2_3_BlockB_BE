@@ -34,6 +34,8 @@ public class UserIdInterceptor implements HandshakeInterceptor {
                                    WebSocketHandler wsHandler,
                                    Map<String, Object> attributes) throws Exception {
 
+        log.info("알림 webSocket 연결 시도");
+
         try {
             if (request instanceof ServletServerHttpRequest) {
                 ServletServerHttpRequest servletServerHttpRequest = (ServletServerHttpRequest) request;
@@ -52,6 +54,8 @@ public class UserIdInterceptor implements HandshakeInterceptor {
         } catch (Exception e) {
             log.info("알림 webSocket Jwt 검증 실패 : {}", e.getMessage());
         }
+
+        log.info("알림 webSocket 연결 실패");
 
         return false;
     }
