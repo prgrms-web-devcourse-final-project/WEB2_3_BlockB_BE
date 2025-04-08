@@ -17,10 +17,11 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class 	StompConnectInterceptor implements ChannelInterceptor {
+public class StompConnectInterceptor implements ChannelInterceptor {
 
 	private final UserRepository userRepository;
 	private final JwtTokenProvider jwtTokenProvider;
+	private final NotificationSessionStore notificationSessionStore;
 
 	@Override
 	public Message<?> preSend(Message<?> message, MessageChannel channel) {
@@ -40,9 +41,13 @@ public class 	StompConnectInterceptor implements ChannelInterceptor {
 					if (jwtTokenProvider.validateAccessToken(token)) {
 						String email = jwtTokenProvider.getClaims(token).getSubject();
 						User user = userRepository.findByEmail(email).orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
-						accessor.getSessionAttributes().put("userId", user.getId());
+						String sessionId = accessor.getSessionId();
 
 						log.info("알림 webSocket jwt 인증 성공 : {}", user.getId());
+						log.info("알림 webSocket session : {}", sessionId);
+
+						accessor.getSessionAttributes().put("userId", user.getId());
+						notificationSessionStore.registerSession(user.getId(), sessionId);
 					}
 				}
 			} else {

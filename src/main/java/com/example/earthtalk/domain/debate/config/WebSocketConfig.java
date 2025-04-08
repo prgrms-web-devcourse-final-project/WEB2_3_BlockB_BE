@@ -10,8 +10,6 @@ import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBr
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
-import org.springframework.web.socket.config.annotation.WebSocketTransportRegistration;
-
 @Slf4j
 @Configuration
 @EnableWebSocketMessageBroker
@@ -20,14 +18,12 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
 	private final StompConnectInterceptor stompConnectInterceptor;
 	private final UserIdInterceptor userIdInterceptor;
-	private final CustomHandShakeHandler customHandShakeHandler;
 
 	@Override
 	public void configureMessageBroker(MessageBrokerRegistry config) {
 		config.enableSimpleBroker("/topic", "/queue");
 		config.setApplicationDestinationPrefixes("/app");
-		config.setUserDestinationPrefix("/user");
-		log.info("Message Broker configured: simple broker '/topic', application destination prefix '/app', user prefix '/user'");
+		log.info("Message Broker configured: simple broker '/topic', '/queue', application destination prefix '/app'");
 	}
 
 	@Override
@@ -48,7 +44,6 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
 		registry.addEndpoint("/notification")
 				.setAllowedOrigins("*")
-				.setHandshakeHandler(customHandShakeHandler)
 				.addInterceptors(userIdInterceptor);
 		log.info("Registered STOMP endpoint: /notification");
 	}
