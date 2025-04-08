@@ -27,6 +27,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.messaging.simp.user.SimpUser;
+import org.springframework.messaging.simp.user.SimpUserRegistry;
 import org.springframework.stereotype.Service;
 
 import java.util.Set;
@@ -44,6 +46,7 @@ public class NotificationService {
     private final DebateRepository debateRepository;
     private final RedisTemplate<String, Object> redisTemplate;
     private final SimpMessagingTemplate simpMessagingTemplate;
+    private final SimpUserRegistry registry;
 
     private static final int size = 10;
     private static final String NOTIFICATION_AGREE_PREFIX = "notification_allowed:";
@@ -51,6 +54,7 @@ public class NotificationService {
     private static final String REPORT_MESSAGE = "%s(으)로 운영자에게 %s(을)를 처분받았습니다.";
     private static final String CHAT_MESSAGE = "참가 중인 토론방의 대기가 완료되었습니다.";
     private static final String NOTIFICATION_STRING = "%d,%s,%d,%s,%s";
+    private final SimpUserRegistry simpUserRegistry;
 
     // 접속중인 사용자의 id 값을 전달해주면 그와 관련된 알림을 조회하여 반환합니다.
     public NotificationListResponseWithUnreadCount getNotifications(Long userId, int page) {
@@ -119,6 +123,10 @@ public class NotificationService {
         Notification notification = saveNotificationRequest.toEntity(user);
         notificationRepository.save(notification);
 
+        for(SimpUser simpUser : registry.getUsers()) {
+            log.info("알림 webSocket 에 연결된 유저 : {}", simpUser.getName());
+        }
+
         log.info("알림 전송");
 
         String notificationString = String.format(NOTIFICATION_STRING,
@@ -129,10 +137,12 @@ public class NotificationService {
                 notification.getStatusType().name());
 
         simpMessagingTemplate.convertAndSendToUser(
-                request.userId().toString(),
+                user.getId().toString(),
                 "/queue/notification",
                 notificationString
         );
+
+        log.info("전송 대상 유저 ID : {}", request.userId());
 
         firebaseService.pushNotification(fcmTokens, content, request.userId(), notificationString);
     }
