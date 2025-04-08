@@ -52,8 +52,6 @@ public class WebSocketEventListener {
 	private final DebateUserService debateUserService;
 	private final DebateRoomService debateRoomService;
 
-	private final DebateChatManagementService debateChatManagementService;
-	private final ObserverChatManagementService observerChatManagementService;
 	private final ObserverUserService observerUserService;
 
 	private final WebSocketIdleSessionMonitor webSocketIdleSessionMonitor;
@@ -63,12 +61,7 @@ public class WebSocketEventListener {
 
 	private final Map<String, String> observerSessionMap = new ConcurrentHashMap<>();
 
-	private final DebateMessageStore debateMessageStore;
-	private final ObserverMessageStore observerMessageStore;
-
-	private final DebateRoomStore debateRoomStore;
-	private final DebateUserStore debateUserStore;
-	private final ObserverRoomStore observerRoomStore;
+	private final NotificationSessionStore notificationSessionStore;
 
 	/**
 	 * WebSocket 연결 이벤트를 처리하여 세션 정보를 저장하고, 해당 채팅방에 사용자를 추가합니다.
@@ -212,6 +205,10 @@ public class WebSocketEventListener {
 				observerUserService.removeUser(observerRoomId, userNameAttr);
 				log.debug("Observer 사용자 제거 완료");
 			}
+		}
+
+		if (notificationSessionStore.hasSession(sessionId)) {
+			notificationSessionStore.removeSessionBySessionId(sessionId);
 		}
 
 		// 로그: 웹소켓 Idle 세션 모니터에서 세션 등록 해제

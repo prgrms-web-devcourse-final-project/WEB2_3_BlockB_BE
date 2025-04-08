@@ -1,5 +1,6 @@
 package com.example.earthtalk.domain.notification.service;
 
+import com.example.earthtalk.domain.debate.component.NotificationSessionStore;
 import com.example.earthtalk.domain.debate.repository.DebateRepository;
 import com.example.earthtalk.domain.notification.dto.request.CheckTokenRequest;
 import com.example.earthtalk.domain.notification.dto.request.SaveNotificationRequest;
@@ -47,14 +48,15 @@ public class NotificationService {
     private final RedisTemplate<String, Object> redisTemplate;
     private final SimpMessagingTemplate simpMessagingTemplate;
     private final SimpUserRegistry registry;
+    private final NotificationSessionStore notificationSessionStore;
 
     private static final int size = 10;
+    private static final String NOTIFICATION_PREFIX = "/queue/notification-";
     private static final String NOTIFICATION_AGREE_PREFIX = "notification_allowed:";
     private static final String FOLLOW_MESSAGE = "%s님이 당신을 팔로우했습니다.";
     private static final String REPORT_MESSAGE = "%s(으)로 운영자에게 %s(을)를 처분받았습니다.";
     private static final String CHAT_MESSAGE = "참가 중인 토론방의 대기가 완료되었습니다.";
     private static final String NOTIFICATION_STRING = "%d,%s,%d,%s,%s";
-    private final SimpUserRegistry simpUserRegistry;
 
     // 접속중인 사용자의 id 값을 전달해주면 그와 관련된 알림을 조회하여 반환합니다.
     public NotificationListResponseWithUnreadCount getNotifications(Long userId, int page) {
@@ -136,11 +138,9 @@ public class NotificationService {
                 notification.getContent(),
                 notification.getStatusType().name());
 
-        simpMessagingTemplate.convertAndSendToUser(
-                user.getId().toString(),
-                "/queue/notification",
-                notificationString
-        );
+        String sessionId = notificationSessionStore.getSession(user.getId());
+        String destination = NOTIFICATION_PREFIX + sessionId;
+        simpMessagingTemplate.convertAndSend(destination, notificationString);
 
         log.info("전송 대상 유저 ID : {}", request.userId());
 
