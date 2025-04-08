@@ -1,6 +1,6 @@
 package com.example.earthtalk.domain.debate.config;
 
-import com.example.earthtalk.domain.debate.component.UserIdInterceptor;
+import com.example.earthtalk.domain.debate.component.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
@@ -10,9 +10,7 @@ import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBr
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
-import com.example.earthtalk.domain.debate.component.QueryHandshakeInterceptor;
-import com.example.earthtalk.domain.debate.component.RoomIdInterceptor;
-import com.example.earthtalk.domain.debate.component.StompConnectInterceptor;
+import org.springframework.web.socket.config.annotation.WebSocketTransportRegistration;
 
 @Slf4j
 @Configuration
@@ -22,6 +20,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
 	private final StompConnectInterceptor stompConnectInterceptor;
 	private final UserIdInterceptor userIdInterceptor;
+	private final CustomHandShakeHandler customHandShakeHandler;
 
 	@Override
 	public void configureMessageBroker(MessageBrokerRegistry config) {
@@ -49,6 +48,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
 		registry.addEndpoint("/notification")
 				.setAllowedOrigins("*")
+				.setHandshakeHandler(customHandShakeHandler)
 				.addInterceptors(userIdInterceptor);
 		log.info("Registered STOMP endpoint: /notification");
 	}
@@ -57,5 +57,4 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 	public void configureClientInboundChannel(ChannelRegistration registration) {
 		registration.interceptors(stompConnectInterceptor);
 	}
-
 }

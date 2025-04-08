@@ -40,7 +40,6 @@ public class 	StompConnectInterceptor implements ChannelInterceptor {
 					if (jwtTokenProvider.validateAccessToken(token)) {
 						String email = jwtTokenProvider.getClaims(token).getSubject();
 						User user = userRepository.findByEmail(email).orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
-						accessor.setUser(new StompPrincipal(String.valueOf(user.getId())));
 						accessor.getSessionAttributes().put("userId", user.getId());
 
 						log.info("알림 webSocket jwt 인증 성공 : {}", user.getId());

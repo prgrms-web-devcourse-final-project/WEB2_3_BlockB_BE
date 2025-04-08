@@ -25,9 +25,6 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class UserIdInterceptor implements HandshakeInterceptor {
 
-    private final UserRepository userRepository;
-    private final JwtTokenProvider jwtTokenProvider;
-
     @Override
     public boolean beforeHandshake(ServerHttpRequest request,
                                    ServerHttpResponse response,
