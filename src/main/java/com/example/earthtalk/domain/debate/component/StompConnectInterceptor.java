@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class StompConnectInterceptor implements ChannelInterceptor {
+public class 	StompConnectInterceptor implements ChannelInterceptor {
 
 	private final UserRepository userRepository;
 	private final JwtTokenProvider jwtTokenProvider;
