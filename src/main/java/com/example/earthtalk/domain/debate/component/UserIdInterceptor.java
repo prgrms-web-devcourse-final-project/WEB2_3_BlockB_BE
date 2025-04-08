@@ -36,32 +36,14 @@ public class UserIdInterceptor implements HandshakeInterceptor {
 
         log.info("알림 webSocket 연결 시도");
 
-        try {
-            if (request instanceof ServletServerHttpRequest) {
-                ServletServerHttpRequest servletServerHttpRequest = (ServletServerHttpRequest) request;
-                HttpServletRequest httpServletRequest = servletServerHttpRequest.getServletRequest();
-                String authHeader = httpServletRequest.getHeader(JwtAuthenticationFilter.AUTHORIZATION_HEADER);
-                log.info("Authorization Header: {}", authHeader);
+        if (request instanceof ServletServerHttpRequest serverHttpRequest) {
+            String uri = serverHttpRequest.getServletRequest().getRequestURI();
+            attributes.put("uri", uri);
 
-                String token = jwtTokenProvider.parseBearerToken(httpServletRequest.getHeader(JwtAuthenticationFilter.AUTHORIZATION_HEADER));
-                log.info("Jwt Token: {}", token);
-
-                if(token != null && jwtTokenProvider.validateAccessToken(token)) {
-                    Claims claims = jwtTokenProvider.getClaims(token);
-                    User user = userRepository.findByEmail(claims.getSubject()).orElseThrow(() -> new NotFoundException(ErrorCode.USER_NOT_FOUND));
-                    attributes.put("userId", user.getId());
-                    log.info("알림 webSocket 연결 성공 : userId {}", user.getId());
-                    return true;
-                }
-            }
-
-        } catch (Exception e) {
-            log.info("알림 webSocket Jwt 검증 실패 : {}", e.getMessage());
+            log.info("알림 webSocket 연결 : {}", uri);
         }
 
-        log.info("알림 webSocket 연결 실패");
-
-        return false;
+        return true;
     }
 
     @Override
