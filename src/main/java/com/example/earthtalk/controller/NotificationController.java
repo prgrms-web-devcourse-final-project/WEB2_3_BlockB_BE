@@ -13,6 +13,7 @@ import com.example.earthtalk.global.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @Tag(name = "notification", description = "알람 기능 관련 api")
@@ -125,6 +127,7 @@ public class NotificationController {
     @MessageMapping("/noti")
     public void getSession(@Payload String tempId, SimpMessageHeaderAccessor accessor) {
         String sessionId = accessor.getSessionId();
+        log.info("sessionId 매칭 tempId : {} | sessionId : {}", tempId, sessionId);
         messagingTemplate.convertAndSend("/queue/handshake-" + tempId, sessionId);
     }
 }
