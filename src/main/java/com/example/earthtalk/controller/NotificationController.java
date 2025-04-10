@@ -15,6 +15,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,6 +28,7 @@ import java.util.List;
 @RequestMapping("/api/notifications")
 public class NotificationController {
 
+    private final SimpMessagingTemplate messagingTemplate;
     private final NotificationService notificationService;
     private final FcmTokenService fcmTokenService;
 
@@ -115,5 +119,11 @@ public class NotificationController {
     public ResponseEntity<ApiResponse<Void>> removeAllNotification(@PathVariable("userId") Long userId) {
         notificationService.removeAllNotifications(userId);
         return ResponseEntity.ok(ApiResponse.createSuccess(null));
+    }
+
+    @MessageMapping("/noti")
+    public void getSession(SimpMessageHeaderAccessor accessor) {
+        String sessionId = accessor.getSessionId();
+        messagingTemplate.convertAndSend("/queue/sessionId-" + sessionId, sessionId);
     }
 }
