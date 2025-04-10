@@ -9,6 +9,7 @@ import com.example.earthtalk.domain.notification.dto.request.SendNotificationReq
 import com.example.earthtalk.domain.notification.dto.response.CheckTokenResponse;
 import com.example.earthtalk.domain.notification.dto.response.NotificationListResponse;
 import com.example.earthtalk.domain.notification.dto.response.NotificationListResponseWithUnreadCount;
+import com.example.earthtalk.domain.notification.dto.response.NotificationResponse;
 import com.example.earthtalk.domain.notification.entity.Notification;
 import com.example.earthtalk.domain.notification.entity.NotificationType;
 import com.example.earthtalk.domain.notification.repository.NotificationRepository;
@@ -140,7 +141,7 @@ public class NotificationService {
 
         String sessionId = notificationSessionStore.getSession(user.getId());
         String destination = NOTIFICATION_PREFIX + sessionId;
-        simpMessagingTemplate.convertAndSend(destination, notificationString);
+        simpMessagingTemplate.convertAndSend(destination, NotificationResponse.from(notification));
 
         log.info("전송 대상 유저 ID : {}", request.userId());
 
