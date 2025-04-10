@@ -44,9 +44,9 @@ public class StompConnectInterceptor implements ChannelInterceptor {
 						String sessionId = accessor.getSessionId();
 
 						log.info("알림 webSocket jwt 인증 성공 : {}", user.getId());
+						log.info("알림 webSocket user : {}", user.getId());
 						log.info("알림 webSocket session : {}", sessionId);
 
-						accessor.getSessionAttributes().put("userId", user.getId());
 						notificationSessionStore.registerSession(user.getId(), sessionId);
 					}
 				}

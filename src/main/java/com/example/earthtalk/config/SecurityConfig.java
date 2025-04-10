@@ -50,7 +50,7 @@ public class SecurityConfig {
         "/api/debates/**",
         "/api/chat/**",
         "/room-list/**", "/debate/**", "/observer/**",
-        "/topic/**",
+        "/topic/**", "/queue/**",
         "/app/**",
         "/user/**", "/notification/**"
     };

@@ -5,7 +5,6 @@ import com.example.earthtalk.domain.notification.dto.request.RemoveTokenRequest;
 import com.example.earthtalk.domain.notification.dto.request.SaveTokenRequest;
 import com.example.earthtalk.domain.notification.dto.request.SendNotificationRequest;
 import com.example.earthtalk.domain.notification.dto.response.CheckTokenResponse;
-import com.example.earthtalk.domain.notification.dto.response.NotificationListResponse;
 import com.example.earthtalk.domain.notification.dto.response.NotificationListResponseWithUnreadCount;
 import com.example.earthtalk.domain.notification.service.FcmTokenService;
 import com.example.earthtalk.domain.notification.service.NotificationService;
@@ -13,23 +12,19 @@ import com.example.earthtalk.global.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @Tag(name = "notification", description = "알람 기능 관련 api")
 @RequestMapping("/api/notifications")
 public class NotificationController {
 
-    private final SimpMessagingTemplate messagingTemplate;
     private final NotificationService notificationService;
     private final FcmTokenService fcmTokenService;
 
@@ -122,9 +117,4 @@ public class NotificationController {
         return ResponseEntity.ok(ApiResponse.createSuccess(null));
     }
 
-    @MessageMapping("/noti")
-    public void getSession(@Payload String tempId, SimpMessageHeaderAccessor accessor) {
-        String sessionId = accessor.getSessionId();
-        messagingTemplate.convertAndSend("/queue/handshake-" + tempId, sessionId);
-    }
 }
