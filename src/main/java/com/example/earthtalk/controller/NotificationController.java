@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
@@ -122,8 +123,8 @@ public class NotificationController {
     }
 
     @MessageMapping("/noti")
-    public void getSession(SimpMessageHeaderAccessor accessor) {
+    public void getSession(@Payload String tempId, SimpMessageHeaderAccessor accessor) {
         String sessionId = accessor.getSessionId();
-        messagingTemplate.convertAndSend("/queue/sessionId-" + sessionId, sessionId);
+        messagingTemplate.convertAndSend("/queue/handshake-" + tempId, sessionId);
     }
 }
