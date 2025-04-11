@@ -33,7 +33,7 @@ public class NewsFilterRepositoryImpl implements NewsFilterRepository {
 
         List<NewsListResponse> newsList = jpaQueryFactory
             .select(Projections.constructor(NewsListResponse.class,
-                news, like.count(), bookmark.count()))
+                news, like.id.countDistinct(), bookmark.id.countDistinct()))
             .from(news)
             .leftJoin(like).on(news.id.eq(like.news.id))
             .leftJoin(bookmark).on(news.id.eq(bookmark.news.id))
@@ -55,7 +55,7 @@ public class NewsFilterRepositoryImpl implements NewsFilterRepository {
         QLike like = QLike.like;
         return jpaQueryFactory
             .select(Projections.constructor(NewsListResponse.class,
-                news, like.count(), bookmark.count()))
+                news, like.id.countDistinct(), bookmark.id.countDistinct()))
             .from(news)
             .leftJoin(like).on(news.id.eq(like.news.id))
             .leftJoin(bookmark).on(news.id.eq(bookmark.news.id))
