@@ -74,4 +74,4 @@ jobs:
         port: 22
         script: |
           docker stop earthtalk && docker rm earthtalk && docker rmi ${{ secrets.DOCKERHUB_USERNAME }}/earthtalk:latest
-          docker run -d -p 8080:8080 -p 8443:8443 -v /etc/letsencrypt/live/earthtalk.shop/keystore.p12:/etc/letsencrypt/live/earthtalk.shop/keystore.p12 --name earthtalk ${{ secrets.DOCKERHUB_USERNAME }}/earthtalk:latest
+          docker run -d -p 8080:8080 -p 8443:8443 -v /etc/letsencrypt/live/earthtalk.shop/keystore.p12:/etc/letsencrypt/live/earthtalk.shop/keystore.p12 --name earthtalk --network rabbit-network ${{ secrets.DOCKERHUB_USERNAME }}/earthtalk:latest
